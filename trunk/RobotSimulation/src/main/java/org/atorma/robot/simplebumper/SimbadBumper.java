@@ -15,7 +15,7 @@ import org.atorma.robot.discretization.IdFunction;
 import simbad.sim.RangeSensorBelt;
 import simbad.sim.RobotFactory;
 
-public class Bumper extends SimbadRobot {
+public class SimbadBumper extends SimbadRobot {
 	
 	private RangeSensorBelt ultrasonicSensor;
 	
@@ -26,7 +26,7 @@ public class Bumper extends SimbadRobot {
 	private EpsilonGreedyPolicy epsilonGreedyPolicy = new EpsilonGreedyPolicy(actions, actionIdMap, 0.1);
 	private Map<Integer, SimbadAction> actionMap;
 
-	public Bumper(Vector3d startingPosition, String name) {
+	public SimbadBumper(Vector3d startingPosition, String name) {
 		super(startingPosition, name);
 		
 		ultrasonicSensor = RobotFactory.addSonarBeltSensor(this);
@@ -54,6 +54,7 @@ public class Bumper extends SimbadRobot {
 	@Override
 	public void updatePolicy(PolicyIdMap policy) {
 		epsilonGreedyPolicy.setDeterministicPolicy(policy);
+		System.out.println("Policy updated: " + policy);
 	}
 	
 	
@@ -61,7 +62,8 @@ public class Bumper extends SimbadRobot {
 		
 		@Override
 		public void perform() {
-			Bumper.this.setTranslationalVelocity(0.5);
+			SimbadBumper.this.setRotationalVelocity(0);
+			SimbadBumper.this.setTranslationalVelocity(0.5);
 		}
 
 		@Override
@@ -75,7 +77,8 @@ public class Bumper extends SimbadRobot {
 
 		@Override
 		public void perform() {
-			Bumper.this.setTranslationalVelocity(-0.5);
+			SimbadBumper.this.setRotationalVelocity(0);
+			SimbadBumper.this.setTranslationalVelocity(-0.5);
 		}
 
 		@Override
@@ -89,7 +92,8 @@ public class Bumper extends SimbadRobot {
 
 		@Override
 		public void perform() {
-			Bumper.this.rotateY(15);
+			SimbadBumper.this.setTranslationalVelocity(0);
+			SimbadBumper.this.rotateY(0.262); // rad, 15 deg
 		}
 
 		@Override
@@ -103,7 +107,8 @@ public class Bumper extends SimbadRobot {
 
 		@Override
 		public void perform() {
-			Bumper.this.rotateY(15);
+			SimbadBumper.this.setTranslationalVelocity(0);
+			SimbadBumper.this.rotateY(-0.263); // rad, 15 deg
 		}
 
 		@Override

@@ -15,7 +15,7 @@ import org.atorma.robot.PolicyIdMap;
 import org.atorma.robot.State;
 import org.atorma.robot.discretization.IdFunction;
 
-public class Bumper extends NxtRobot {
+public class NxtBumper extends NxtRobot {
 	
 	public static final double WHEEL_DIAMETER_CM = 5.6;
 	
@@ -29,7 +29,7 @@ public class Bumper extends NxtRobot {
 	private Map<Integer, NxtAction> nxtActionMap;
 	
 
-	public Bumper() {
+	public NxtBumper() {
 		nxtActionMap = new HashMap<Integer, NxtAction>(actions.length);
 		for (NxtAction nxtAction : actions) {
 			nxtActionMap.put(actionIdMap.getId(nxtAction.getValues()), nxtAction);
@@ -114,7 +114,7 @@ public class Bumper extends NxtRobot {
 	
 
 	public static void main(String[] args) {
-		NxtRobot robot = new Bumper();
+		NxtRobot robot = new NxtBumper();
 		robot.run();
 	}
 
