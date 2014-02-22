@@ -9,7 +9,7 @@ import simbad.gui.Simbad;
 public class BumperSimulation {
 
 	public static void main(String[] args) {
-		Bumper robot = new Bumper(new Vector3d(0, 0, 0), "Toveri");
+		SimbadBumper robot = new SimbadBumper(new Vector3d(0, 0, 0), "Toveri");
 
 		// request antialising
         System.setProperty("j3d.implicitAntialiasing", "true");
