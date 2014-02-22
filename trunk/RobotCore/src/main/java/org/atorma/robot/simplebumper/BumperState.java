@@ -10,7 +10,11 @@ public class BumperState implements State {
 	private final double[] values;
 
 	public BumperState(int distanceToObstacle) {
-		this.values = new double[] {distanceToObstacle};
+		this.values = new double[] {distanceToObstacle, 0};
+	}
+	
+	public BumperState(int distanceToObstacle, boolean isCollided) {
+		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0};
 	}
 	
 	public BumperState(double[] values) {
@@ -26,4 +30,7 @@ public class BumperState implements State {
 		return (int) values[0];
 	}
 	
+	public boolean isCollided() {
+		return values[1] > 0;
+	}
 }

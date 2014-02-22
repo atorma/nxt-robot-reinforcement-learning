@@ -29,6 +29,11 @@ public class SimbadBumper extends SimbadRobot {
 	public SimbadBumper(Vector3d startingPosition, String name) {
 		super(startingPosition, name);
 		
+		this.height = 6f/100; // 6 cm height
+		this.radius = 9f/100; // 9 cm radius
+
+		//ultrasonicSensor = new RangeSensorBelt((float) Math.PI/180*15, 0/100, 255.0f/100, 1, RangeSensorBelt.TYPE_SONAR, RangeSensorBelt.FLAG_SHOW_FULL_SENSOR_RAY);
+		//this.addSensorDevice(ultrasonicSensor, new Vector3d(0, 0, 0), 0);
 		ultrasonicSensor = RobotFactory.addSonarBeltSensor(this);
 		
 		actionMap = new HashMap<Integer, SimbadAction>(actions.length);
@@ -39,7 +44,7 @@ public class SimbadBumper extends SimbadRobot {
 
 	@Override
 	public State getCurrentState() {
-		BumperState state = new BumperState((int) (ultrasonicSensor.getMeasurement(0)*100));
+		BumperState state = new BumperState((int) (ultrasonicSensor.getMeasurement(0)*100), this.collisionDetected());
 		return state;
 	}
 	
@@ -77,6 +82,7 @@ public class SimbadBumper extends SimbadRobot {
 
 		@Override
 		public void perform() {
+			System.out.println("Reversing");
 			SimbadBumper.this.setRotationalVelocity(0);
 			SimbadBumper.this.setTranslationalVelocity(-0.5);
 		}
