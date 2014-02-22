@@ -10,14 +10,14 @@ public class BumperRewardFunction implements RewardFunction {
 		BumperState toState = (BumperState) transition.getToState();
 		BumperAction action = (BumperAction) transition.getAction();
 		
-		if (toState.getDistanceToObstacle() < BumperState.MIN_ULTRASONIC_DIST + 5) {
+		if (toState.isCollided()) {
 			return -100;
-		} else if (action.equals(BumperAction.FORWARD)) {
-			return +1;
-		} else if (action.equals(BumperAction.LEFT) || action.equals(BumperAction.RIGHT)){
+		} else if (toState.getDistanceToObstacle() < BumperState.MIN_ULTRASONIC_DIST + 5) {
 			return -5;
+		} else if (action.equals(BumperAction.FORWARD)) {
+			return 0;
 		} else {
-			return -10;
+			return -1;
 		}
 	}
 }

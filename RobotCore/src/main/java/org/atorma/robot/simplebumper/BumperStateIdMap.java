@@ -10,7 +10,7 @@ public class BumperStateIdMap implements IdFunction {
 	private DiscretizationBasedIdFunction idFunction;
 
 	public BumperStateIdMap() {
-		idFunction = new DiscretizationBasedIdFunction(getUltrasonicDistanceDiscretizer());
+		idFunction = new DiscretizationBasedIdFunction(getUltrasonicDistanceDiscretizer(), getCollisionDiscretizer());
 	}
 
 	private Discretizer getUltrasonicDistanceDiscretizer() {
@@ -20,6 +20,21 @@ public class BumperStateIdMap implements IdFunction {
 		}
 		Discretizer discretizer = new CustomBinsDiscretizer(bins);
 		return discretizer;
+	}
+	
+	private Discretizer getCollisionDiscretizer() {
+		return new Discretizer() {
+			
+			@Override
+			public int getNumberOfBins() {
+				return 2;
+			}
+			
+			@Override
+			public int discretize(double value) {
+				return value == 0 ? 0 : 1;
+			}
+		};
 	}
 	
 	@Override

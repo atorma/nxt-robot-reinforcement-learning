@@ -18,7 +18,8 @@ public class SimbadCommunications implements RobotCommunications {
 
 	@Override
 	public synchronized void updatePolicy(PolicyIdMap policy) {
-		this.policy = policy;
+		// must clone to prevent concurrent modification problems because now we're not really transmitting data
+		this.policy = (PolicyIdMap) policy.clone(); 
 	}
 
 	@Override
@@ -34,7 +35,7 @@ public class SimbadCommunications implements RobotCommunications {
 				values = statesAndActions.take();
 			} catch (InterruptedException e) {}
 		}
-		System.out.println("State taken, now " + statesAndActions.size());
+		//System.out.println("State taken, now " + statesAndActions.size());
 		return values;
 	}
 
@@ -45,7 +46,7 @@ public class SimbadCommunications implements RobotCommunications {
 	
 	public void pushStateAndAction(State currentState, SimbadAction action) {
 		statesAndActions.add(new StateAndAction(currentState.getValues(), action.getValues()));
-		System.out.println("State queued, now " + statesAndActions.size());
+		//System.out.println("State queued, now " + statesAndActions.size());
 	}
 
 	public synchronized boolean isPolicyAvailable() {
