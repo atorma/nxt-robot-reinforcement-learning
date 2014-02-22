@@ -13,21 +13,32 @@ public class RobotTestEnvironment extends EnvironmentDescription {
 	public RobotTestEnvironment(SimbadRobot robot) {
 		add(robot);
 		
+		setWorldSize(4);
+		
+		usePhysics = true;
+		
 		light1IsOn = true;
         light2IsOn = false;
-        Wall w1 = new Wall(new Vector3d(9, 0, 0), 19, 1, this);
+        Wall w1 = new Wall(new Vector3d(2, 0, 0), 4, 0.1f, this);
         w1.rotate90(1);
         add(w1);
-        Wall w2 = new Wall(new Vector3d(-9, 0, 0), 19, 2, this);
+        Wall w2 = new Wall(new Vector3d(-2, 0, 0), 4, 0.1f, this);
         w2.rotate90(1);
         add(w2);
-        Wall w3 = new Wall(new Vector3d(0, 0, 9), 19, 1, this);
+        Wall w3 = new Wall(new Vector3d(0, 0, 2), 4, 0.1f, this);
         add(w3);
-        Wall w4 = new Wall(new Vector3d(0, 0, -9), 19, 2, this);
+        Wall w4 = new Wall(new Vector3d(0, 0, -2), 4, 0.1f, this);
         add(w4);
-        Box b1 = new Box(new Vector3d(-3, 0, -3), new Vector3f(1, 1, 1), this);
+        Box b1 = new Box(new Vector3d(-1.5, 0, -1.2), new Vector3f(0.3f, 0.2f, 0.5f), this);
         add(b1);
-        add(new Arch(new Vector3d(3, 0, -3), this));
+        Box b2 = new Box(new Vector3d(-0.2, 0, -0.4), new Vector3f(0.5f, 0.2f, 0.3f), this);
+        add(b2);
+        Box b3 = new Box(new Vector3d(1, 0, -1), new Vector3f(0.3f, 0.2f, 0.2f), this);
+        add(b3);
+        Box b4 = new Box(new Vector3d(1, 0, 1), new Vector3f(0.3f, 0.2f, 0.4f), this);
+        add(b4);
+        Box b5 = new Box(new Vector3d(-1, 0, 0.7), new Vector3f(0.3f, 0.2f, 0.4f), this);
+        add(b5);
 	}
 	
 	
