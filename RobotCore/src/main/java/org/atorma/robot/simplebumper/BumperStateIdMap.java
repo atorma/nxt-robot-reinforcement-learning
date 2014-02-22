@@ -14,14 +14,11 @@ public class BumperStateIdMap implements IdFunction {
 	}
 
 	private Discretizer getUltrasonicDistanceDiscretizer() {
-		double[] bins = new double[5];
-		for (int i = 0; i < bins.length; i++) {
-				bins[i] = BumperState.MIN_ULTRASONIC_DIST * (i + 1);
-		}
+		double[] bins = new double[] {7, 18, 35, 55};  
 		Discretizer discretizer = new CustomBinsDiscretizer(bins);
 		return discretizer;
 	}
-	
+		
 	private Discretizer getCollisionDiscretizer() {
 		return new Discretizer() {
 			

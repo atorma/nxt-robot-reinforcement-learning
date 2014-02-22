@@ -42,6 +42,12 @@ public class StateActionIds {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "StateActionIds [stateId=" + stateId + ", actionId=" + actionId
+				+ "]";
+	}
 	
 	
 	

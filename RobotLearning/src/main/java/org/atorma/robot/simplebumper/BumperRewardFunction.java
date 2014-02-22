@@ -12,12 +12,10 @@ public class BumperRewardFunction implements RewardFunction {
 		
 		if (toState.isCollided()) {
 			return -100;
-		} else if (toState.getDistanceToObstacle() < BumperState.MIN_ULTRASONIC_DIST + 5) {
-			return -5;
 		} else if (action.equals(BumperAction.FORWARD)) {
-			return 0;
+			return 1;
 		} else {
-			return -1;
+			return 0;
 		}
 	}
 }

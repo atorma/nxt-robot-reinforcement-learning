@@ -45,6 +45,11 @@ public class QLearningBumper implements Runnable {
 		BumperState toState = new BumperState(stateAndAction.getStateValues()); 
 		Transition transition = new Transition(fromState, action, toState);
 		
+		System.out.println("Ultrasonic: " + toState.getDistanceToObstacle());
+		if (toState.isCollided()) {
+			System.out.println("Collided!");
+		}
+		
 		previousStateAndAction = stateAndAction;
 		
 		return transition;
