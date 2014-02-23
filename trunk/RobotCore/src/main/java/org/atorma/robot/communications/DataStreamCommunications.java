@@ -17,15 +17,13 @@ public class DataStreamCommunications {
 		this.dis = dis;
 		this.dos = dos;
 	}
-	
-	
 
 	public void flushInt(int data) {
         try {
             dos.writeInt(data);
             dos.flush();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CommunicationException(e);
         }
     }
 	
@@ -34,7 +32,7 @@ public class DataStreamCommunications {
             dos.writeDouble(data);
             dos.flush();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CommunicationException(e);
         }
     }
 
@@ -47,7 +45,7 @@ public class DataStreamCommunications {
                 buffer[i] = dis.readInt();
             }
         } catch (IOException e) {
-        	throw new RuntimeException(e);
+        	throw new CommunicationException(e);
         }
         return buffer;
     }
@@ -68,7 +66,7 @@ public class DataStreamCommunications {
                 buffer[i] = dis.readDouble();
             }
         } catch (IOException e) {
-        	throw new RuntimeException(e);
+        	throw new CommunicationException(e);
         }
         return buffer;
     }
@@ -80,49 +78,93 @@ public class DataStreamCommunications {
         }
     }
     
-    public void closeDataStreams() throws IOException {
-    	dis.close();
-    	dos.close();
+    public void closeDataStreams() {
+    	try {
+    		dis.close();
+    		dos.close();
+    	} catch (IOException e) {
+    		throw new CommunicationException(e);
+    	}
     }
 
-	public final boolean readBoolean() throws IOException {
-		return dis.readBoolean();
+	public final boolean readBoolean() {
+		try {
+			return dis.readBoolean();
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final char readChar() throws IOException {
-		return dis.readChar();
+	public final char readChar() {
+		try {
+			return dis.readChar();
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final double readDouble() throws IOException {
-		return dis.readDouble();
+	public final double readDouble() {
+		try {
+			return dis.readDouble();
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final int readInt() throws IOException {
-		return dis.readInt();
+	public final int readInt() {
+		try {
+			return dis.readInt();
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final String readUTF() throws IOException {
-		return dis.readUTF();
+	public final String readUTF()  {
+		try {
+			return dis.readUTF();
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final void writeBoolean(boolean v) throws IOException {
-		dos.writeBoolean(v);
+	public final void writeBoolean(boolean v) {
+		try {
+			dos.writeBoolean(v);
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final void writeChar(int v) throws IOException {
-		dos.writeChar(v);
+	public final void writeChar(int v) {
+		try {
+			dos.writeChar(v);
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final void writeDouble(double v) throws IOException {
-		dos.writeDouble(v);
+	public final void writeDouble(double v) {
+		try {
+			dos.writeDouble(v);
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final void writeInt(int v) throws IOException {
-		dos.writeInt(v);
+	public final void writeInt(int v) {
+		try {
+			dos.writeInt(v);
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
-	public final void writeUTF(String s) throws IOException {
-		dos.writeUTF(s);
+	public final void writeUTF(String s) {
+		try {
+			dos.writeUTF(s);
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
 	}
 
 }

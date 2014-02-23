@@ -3,10 +3,13 @@ package org.atorma.robot.simplebumper;
 import java.util.HashMap;
 import java.util.Map;
 
+import lejos.nxt.LightSensor;
 import lejos.nxt.Motor;
 import lejos.nxt.SensorPort;
+import lejos.nxt.TouchSensor;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.navigation.DifferentialPilot;
+import lejos.robotics.objectdetection.TouchFeatureDetector;
 
 import org.atorma.robot.EpsilonGreedyPolicy;
 import org.atorma.robot.NxtAction;
@@ -19,8 +22,10 @@ public class NxtBumper extends NxtRobot {
 	
 	public static final double WHEEL_DIAMETER_CM = 5.6;
 	
-	private UltrasonicSensor ultrasonicSensor = new UltrasonicSensor(SensorPort.S4);
-	private DifferentialPilot pilot = new DifferentialPilot(WHEEL_DIAMETER_CM, 18 - WHEEL_DIAMETER_CM, Motor.C, Motor.A, false);
+	private UltrasonicSensor ultrasonicSensor = new UltrasonicSensor(SensorPort.S3);
+	private LightSensor lightSensor = new LightSensor(SensorPort.S1, false);
+	private TouchSensor touchSensor = new TouchSensor(SensorPort.S4);
+	private DifferentialPilot pilot = new DifferentialPilot(WHEEL_DIAMETER_CM, 18 - WHEEL_DIAMETER_CM, Motor.A, Motor.C, false);
 	private IdFunction stateIdMap = new BumperStateIdMap();
 	
 	private NxtAction[] actions = new NxtAction[] {new DriveForward(), new DriveBackward(), new TurnLeft(), new TurnRight()};
@@ -38,7 +43,7 @@ public class NxtBumper extends NxtRobot {
 	
 	@Override
 	public State getCurrentState() {
-		BumperState state = new BumperState(ultrasonicSensor.getDistance());
+		BumperState state = new BumperState(ultrasonicSensor.getDistance(), touchSensor.isPressed(), lightSensor.readNormalizedValue());
 		return state;
 	}
 	

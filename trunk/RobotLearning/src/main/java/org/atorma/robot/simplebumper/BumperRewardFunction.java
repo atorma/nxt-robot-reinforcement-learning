@@ -14,6 +14,8 @@ public class BumperRewardFunction implements RewardFunction {
 			return -100;
 		} else if (action.equals(BumperAction.FORWARD)) {
 			return 1;
+		} else if (action.equals(BumperAction.BACKWARD)) {
+			return -1;
 		} else {
 			return 0;
 		}

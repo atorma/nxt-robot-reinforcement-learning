@@ -1,5 +1,7 @@
 package org.atorma.robot.simplebumper;
 
+import org.atorma.robot.PolicyIdMap;
+import org.atorma.robot.communications.CommunicationException;
 import org.atorma.robot.communications.RobotCommunications;
 import org.atorma.robot.communications.StateAndAction;
 import org.atorma.robot.learning.QLearning;
@@ -27,11 +29,15 @@ public class QLearningBumper implements Runnable {
 		previousStateAndAction = comms.takeStateAndAction();
 		
 		while (true) {
-			for (int updates = 0; updates < 20; updates++) {
-				qLearning.update(getNextTransition());
-				System.out.println("Total reward " + qLearning.getAccumulatedReward());
+			try {
+				//for (int updates = 0; updates < 20; updates++) {
+					qLearning.update(getNextTransition());
+					System.out.println("Total reward " + qLearning.getAccumulatedReward());
+				//}
+				comms.updatePolicy((PolicyIdMap) qLearning.getLearnedPolicy().clone());
+			} catch (CommunicationException e) {
+				System.err.println("Communication error");
 			}
-			comms.updatePolicy(qLearning.getLearnedPolicy());
 		}
 		
 	}
@@ -45,10 +51,7 @@ public class QLearningBumper implements Runnable {
 		BumperState toState = new BumperState(stateAndAction.getStateValues()); 
 		Transition transition = new Transition(fromState, action, toState);
 		
-		System.out.println("Ultrasonic: " + toState.getDistanceToObstacle());
-		if (toState.isCollided()) {
-			System.out.println("Collided!");
-		}
+		System.out.println(toState);
 		
 		previousStateAndAction = stateAndAction;
 		
