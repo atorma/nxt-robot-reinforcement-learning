@@ -18,8 +18,7 @@ public class SimbadCommunications implements RobotCommunications {
 
 	@Override
 	public synchronized void updatePolicy(PolicyIdMap policy) {
-		// must clone to prevent concurrent modification problems because now we're not really transmitting data
-		this.policy = (PolicyIdMap) policy.clone(); 
+		this.policy = policy; 
 	}
 
 	@Override

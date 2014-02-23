@@ -14,7 +14,11 @@ public class BumperState implements State {
 	}
 	
 	public BumperState(int distanceToObstacle, boolean isCollided) {
-		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0};
+		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0, 0};
+	}
+	
+	public BumperState(int distanceToObstacle, boolean isCollided, int lightValue) {
+		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0, lightValue};
 	}
 	
 	public BumperState(double[] values) {
@@ -33,4 +37,17 @@ public class BumperState implements State {
 	public boolean isCollided() {
 		return values[1] > 0;
 	}
+	
+	public int getLightValue() {
+		return (int) values[2];
+	}
+
+	@Override
+	public String toString() {
+		return "BumperState [getDistanceToObstacle()="
+				+ getDistanceToObstacle() + ", isCollided()=" + isCollided()
+				+ ", getLightValue()=" + getLightValue() + "]";
+	}
+	
+	
 }

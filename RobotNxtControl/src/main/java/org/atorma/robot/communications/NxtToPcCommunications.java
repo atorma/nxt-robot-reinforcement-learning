@@ -1,6 +1,5 @@
 package org.atorma.robot.communications;
 
-import java.io.IOException;
 import java.util.Queue;
 
 import lejos.nxt.Button;
@@ -71,10 +70,8 @@ public class NxtToPcCommunications implements Runnable {
 					break;
 				}
 				
-			} catch (IOException e) {
+			} catch (CommunicationException e) {
 				System.out.println("Communication error!");
-				disconnect(); // TODO OK?
-				break;
 			}
 		}
 	}
@@ -105,15 +102,11 @@ public class NxtToPcCommunications implements Runnable {
 	
 	private void receivePolicy() {
 		PolicyIdMap policy = new PolicyIdMap();
-		try {
-			int numEntries = comms.readInt();
-			for (int i=0; i<numEntries; i++) {
-				int stateId = comms.readInt();
-				int actionId = comms.readInt();
-				policy.put(stateId, actionId);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException("Error when receiving policy");
+		int numEntries = comms.readInt();
+		for (int i=0; i<numEntries; i++) {
+			int stateId = comms.readInt();
+			int actionId = comms.readInt();
+			policy.put(stateId, actionId);
 		}
 		setPolicy(policy);
 	}
