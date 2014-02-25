@@ -15,7 +15,7 @@ public class BumperStateIdMap implements IdFunction {
 	}
 
 	private Discretizer getUltrasonicDistanceDiscretizer() {
-		double[] bins = new double[] {7, 18, 35, 55};  
+		double[] bins = new double[] {7, 18, 35, 55, 80};  
 		Discretizer discretizer = new CustomBinsDiscretizer(bins);
 		return discretizer;
 	}
