@@ -3,9 +3,9 @@
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RobotCore"/>
-	<classpathentry exported="true" kind="lib" path="C:/Robot workspace/robot-trunk/Libraries/simbad-1.4.jar" sourcepath="C:/Robot workspace/robot-trunk/Libraries/simbad-1.4-src.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/Robot workspace/robot-trunk/Libraries/vecmath.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RobotLearning"/>
-	<classpathentry kind="lib" path="C:/Robot workspace/robot-trunk/Libraries/simbad-1.4-src.jar"/>
+	<classpathentry kind="lib" path="lib/simbad-1.4-src.jar"/>
+	<classpathentry kind="lib" path="lib/simbad-1.4.jar"/>
+	<classpathentry kind="lib" path="lib/vecmath.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
