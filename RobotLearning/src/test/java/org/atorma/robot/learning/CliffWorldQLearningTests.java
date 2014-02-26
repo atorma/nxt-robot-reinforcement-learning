@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.atorma.robot.Action;
+import org.atorma.robot.DiscreteAction;
 import org.atorma.robot.DiscretePolicy;
 import org.atorma.robot.EpsilonGreedyPolicy;
 import org.atorma.robot.RewardFunction;
@@ -13,11 +13,11 @@ import org.atorma.robot.discretization.IdFunction;
 import org.junit.Before;
 import org.junit.Test;
 
-public class QLearningTests {
+public class CliffWorldQLearningTests {
 
 	private QLearning qLearning;
 	private DiscretePolicy learnedPolicy;
-	private ArrayHashCode idFunction = new ArrayHashCode();
+	private ArrayHashCode stateIdFunction = new ArrayHashCode();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
 	private int episode;
@@ -25,7 +25,7 @@ public class QLearningTests {
 	
 	@Before
 	public void setUp() {
-		qLearning = new QLearning(idFunction, idFunction, rewardFunction, 0.1, 1);
+		qLearning = new QLearning(stateIdFunction, rewardFunction, 0.1, 1);
 	}
 	
 	@Test
@@ -51,14 +51,14 @@ public class QLearningTests {
 	}
 	
 	private void assertExpectedActionEqualsLearnedAction(CliffWorldAction expectedAction, CliffWorldState currentState) {
-		int expectedActionId = idFunction.getId(expectedAction.getValues());
-		int currentStateId = idFunction.getId(currentState.getValues());
+		int expectedActionId = expectedAction.getId();
+		int currentStateId = stateIdFunction.getId(currentState.getValues());
 		int learnedActionId = learnedPolicy.getActionId(currentStateId);
 		assertEquals(expectedActionId, learnedActionId);
 	}
 
 	private void learnPolicy() {
-		EpsilonGreedyPolicy agent = new EpsilonGreedyPolicy(new Action[] {CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT}, idFunction, 0.1);
+		EpsilonGreedyPolicy agent = new EpsilonGreedyPolicy(new DiscreteAction[] {CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT}, 0.1);
 		
 		int numEpisodes = 500;
 		
@@ -69,7 +69,7 @@ public class QLearningTests {
 			CliffWorldState toState;
 			
 			do {
-				int fromStateId = idFunction.getId(fromState.getValues());
+				int fromStateId = stateIdFunction.getId(fromState.getValues());
 				Integer byActionId = agent.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
@@ -98,8 +98,8 @@ public class QLearningTests {
 
 		public static final CliffWorldState START = new CliffWorldState(X_MIN, Y_MIN);
 		
-		private final double x;
-		private final double y;
+		private final int x;
+		private final int y;
 		
 		public CliffWorldState(int x, int y) {
 			this.x = x;
@@ -126,7 +126,7 @@ public class QLearningTests {
 		}
 		
 		public CliffWorldState getNextState(CliffWorldAction action) {
-			CliffWorldState nextState = new CliffWorldState((int) (x + action.getValues()[0]), (int) (y + action.getValues()[1]));
+			CliffWorldState nextState = new CliffWorldState(x + action.dx, y + action.dy);
 			if (nextState.isOutOfBounds() || isGoal()) {
 				return this;
 			} else if (nextState.isCliff()) {
@@ -137,33 +137,36 @@ public class QLearningTests {
 		}
 	}
 	
-	public static class CliffWorldAction implements Action {
+	public static class CliffWorldAction implements DiscreteAction {
 		
-		public static final CliffWorldAction UP = new CliffWorldAction(0, 1);
-		public static final CliffWorldAction DOWN = new CliffWorldAction(0, -1);
-		public static final CliffWorldAction LEFT = new CliffWorldAction(-1, 0);
-		public static final CliffWorldAction RIGHT = new CliffWorldAction(1, 0);
+		public static final CliffWorldAction UP = new CliffWorldAction(0, 1, 0);
+		public static final CliffWorldAction DOWN = new CliffWorldAction(0, -1, 1);
+		public static final CliffWorldAction LEFT = new CliffWorldAction(-1, 0, 2);
+		public static final CliffWorldAction RIGHT = new CliffWorldAction(1, 0, 3);
 		
-		private final double[] values;
+		public final int dx;
+		public final int dy;
+		public final int id; 
 		
-		public CliffWorldAction(int dx, int dy) {
-			this.values = new double[] {dx, dy};
+		public CliffWorldAction(int dx, int dy, int id) {
+			this.dx = dx;
+			this.dy = dy;
+			this.id = id;
 		}
 
 		@Override
-		public double[] getValues() {
-			return values;
+		public int getId() {
+			return id;
 		}
 		
 		public static CliffWorldAction getActionById(int id) {
-			IdFunction idMap = new ArrayHashCode();
-			if (id == idMap.getId(UP.getValues())) {
+			if (id == UP.id) {
 				return UP;
-			} else if (id == idMap.getId(DOWN.getValues())) {
+			} else if (id == DOWN.id) {
 				return DOWN;
-			} else if (id == idMap.getId(LEFT.getValues())) {
+			} else if (id == LEFT.id) {
 				return LEFT;
-			} else if (id == idMap.getId(RIGHT.getValues())) {
+			} else if (id == RIGHT.id) {
 				return RIGHT;
 			} else {
 				throw new IllegalArgumentException();

@@ -1,6 +1,5 @@
 package org.atorma.robot;
 
-import org.atorma.robot.discretization.IdFunction;
 import org.atorma.robot.util.Ranmar;
 
 public class EpsilonGreedyPolicy implements DiscretePolicy {
@@ -15,10 +14,10 @@ public class EpsilonGreedyPolicy implements DiscretePolicy {
 		this.epsilon = epsilon;
 	}
 		
-	public EpsilonGreedyPolicy(Action[] allActions, IdFunction actionIdMap, double epsilon) {
+	public EpsilonGreedyPolicy(DiscreteAction[] allActions, double epsilon) {
 		this.allActionIds = new int[allActions.length]; 
 		for (int i=0; i<allActions.length; i++) {
-			this.allActionIds[i] = actionIdMap.getId(allActions[i].getValues());
+			this.allActionIds[i] = allActions[i].getId();
 		}
 		this.epsilon = epsilon;
 	}

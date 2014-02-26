@@ -1,31 +1,24 @@
 package org.atorma.robot.simplebumper;
 
-import java.util.Arrays;
+import org.atorma.robot.DiscreteAction;
 
-import org.atorma.robot.Action;
-
-public class BumperAction implements Action {
+public class BumperAction implements DiscreteAction {
 	
 	public static final BumperAction FORWARD = new BumperAction(0, "Drive forward");
 	public static final BumperAction BACKWARD = new BumperAction(1, "Drive backward");
 	public static final BumperAction LEFT = new BumperAction(2, "Turn left");
 	public static final BumperAction RIGHT = new BumperAction(3, "Turn right");
 
-	private final double[] values;
+	private final int id;
 	private final String name;
 
-	public BumperAction(int value, String name) {
-		this.values = new double[] {value};
+	public BumperAction(int id, String name) {
+		this.id = id;
 		this.name = name;
 	}
-	
-	public BumperAction(double[] values, String name) {
-		this.values = values;
-		this.name = name;
-	}
-	
+
 	public int getId() {
-		return (int) this.values[0];
+		return id;
 	}
 
 	public String getName() {
@@ -33,13 +26,11 @@ public class BumperAction implements Action {
 	}
 
 	@Override
-	public double[] getValues() {
-		return values;
-	}
-
-	@Override
 	public int hashCode() {
-		return (int) values[0];
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
 	}
 
 	@Override
@@ -51,7 +42,7 @@ public class BumperAction implements Action {
 		if (getClass() != obj.getClass())
 			return false;
 		BumperAction other = (BumperAction) obj;
-		if (!Arrays.equals(values, other.values))
+		if (id != other.id)
 			return false;
 		return true;
 	}

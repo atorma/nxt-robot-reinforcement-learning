@@ -1,15 +1,15 @@
 package org.atorma.robot.learning;
 
-import org.atorma.robot.Action;
+import org.atorma.robot.DiscreteAction;
 import org.atorma.robot.State;
 
 public class Transition {
 	
 	private final State fromState;
-	private final Action byAction;
+	private final DiscreteAction byAction;
 	private final State toState;
 	
-	public Transition(State fromState, Action byAction, State toState) {
+	public Transition(State fromState, DiscreteAction byAction, State toState) {
 		if (fromState == null || byAction == null || toState == null) {
 			throw new NullPointerException();
 		}
@@ -22,7 +22,7 @@ public class Transition {
 		return fromState;
 	}
 
-	public Action getAction() {
+	public DiscreteAction getAction() {
 		return byAction;
 	}
 
