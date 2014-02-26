@@ -5,11 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class DataStreamCommunications {
-	
-	public final static int DISCONNECT = -1;
-	public final static int STATE_AND_ACTION = 10;
-	public final static int POLICY_VALUES = 20;
-	
+		
 	protected DataOutputStream dos;
 	protected DataInputStream dis;
 	
@@ -166,5 +162,14 @@ public class DataStreamCommunications {
 			throw new CommunicationException(e);
 		}
 	}
+	
+	public final void flush() {
+		try {
+			dos.flush();
+		} catch (IOException e) {
+			throw new CommunicationException(e);
+		}
+	}
+	
 
 }

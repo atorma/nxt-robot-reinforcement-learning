@@ -1,33 +1,22 @@
 package org.atorma.robot.simplebumper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.vecmath.Vector3d;
 
-import org.atorma.robot.EpsilonGreedyPolicy;
-import org.atorma.robot.PolicyIdMap;
 import org.atorma.robot.SimbadAction;
 import org.atorma.robot.SimbadRobot;
 import org.atorma.robot.State;
-import org.atorma.robot.discretization.IdFunction;
+import org.atorma.robot.communications.ActionIdProvider;
 
 import simbad.sim.RangeSensorBelt;
-import simbad.sim.RobotFactory;
 
 public class SimbadBumper extends SimbadRobot {
 	
 	private RangeSensorBelt ultrasonicSensor;
-	
-	private IdFunction stateIdMap = new BumperStateIdMap();
-	
+		
 	private SimbadAction[] actions = new SimbadAction[] {new DriveForward(), new DriveBackward(), new TurnLeft(), new TurnRight()};
-	private IdFunction actionIdMap = new BumperActionIdMap();
-	private EpsilonGreedyPolicy epsilonGreedyPolicy = new EpsilonGreedyPolicy(actions, actionIdMap, 0.1);
-	private Map<Integer, SimbadAction> actionMap;
 
-	public SimbadBumper(Vector3d startingPosition, String name) {
-		super(startingPosition, name);
+	public SimbadBumper(ActionIdProvider actionIdProvider) {
+		super(actionIdProvider, new Vector3d(0, 0, 0), "Toveri");
 		
 		this.height = 6f/100; // 6 cm height
 		this.radius = 9f/100; // 9 cm radius
@@ -36,11 +25,6 @@ public class SimbadBumper extends SimbadRobot {
 		ultrasonicSensor.setUpdatePerSecond(60);
 		this.addSensorDevice(ultrasonicSensor, new Vector3d(0, 0, 0), 0);
 		//ultrasonicSensor = RobotFactory.addSonarBeltSensor(this);
-		
-		actionMap = new HashMap<Integer, SimbadAction>(actions.length);
-		for (SimbadAction nxtAction : actions) {
-			actionMap.put(actionIdMap.getId(nxtAction.getValues()), nxtAction);
-		}
 	}
 
 	@Override
@@ -50,20 +34,11 @@ public class SimbadBumper extends SimbadRobot {
 	}
 	
 	@Override
-	public SimbadAction getAction(State state) {
-		int stateId = stateIdMap.getId(state.getValues());
-		int actionId = epsilonGreedyPolicy.getActionId(stateId);
-		return actionMap.get(actionId);
+	public SimbadAction getAction(int actionId) {
+		return actions[actionId];
 	}
 
 
-	@Override
-	public void updatePolicy(PolicyIdMap policy) {
-		epsilonGreedyPolicy.setDeterministicPolicy(policy);
-		System.out.println("Policy updated: " + policy);
-	}
-	
-	
 	private class DriveForward implements SimbadAction {
 		
 		@Override

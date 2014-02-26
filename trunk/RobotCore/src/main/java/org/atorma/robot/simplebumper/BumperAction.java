@@ -6,22 +6,32 @@ import org.atorma.robot.Action;
 
 public class BumperAction implements Action {
 	
-	public static final BumperAction FORWARD = new BumperAction(0);
-	public static final BumperAction BACKWARD = new BumperAction(1);
-	public static final BumperAction LEFT = new BumperAction(2);
-	public static final BumperAction RIGHT = new BumperAction(3);
+	public static final BumperAction FORWARD = new BumperAction(0, "Drive forward");
+	public static final BumperAction BACKWARD = new BumperAction(1, "Drive backward");
+	public static final BumperAction LEFT = new BumperAction(2, "Turn left");
+	public static final BumperAction RIGHT = new BumperAction(3, "Turn right");
 
 	private final double[] values;
+	private final String name;
 
-	public BumperAction(int value) {
+	public BumperAction(int value, String name) {
 		this.values = new double[] {value};
+		this.name = name;
 	}
 	
-	public BumperAction(double[] values) {
+	public BumperAction(double[] values, String name) {
 		this.values = values;
+		this.name = name;
 	}
 	
-	
+	public int getId() {
+		return (int) this.values[0];
+	}
+
+	public String getName() {
+		return name;
+	}
+
 	@Override
 	public double[] getValues() {
 		return values;
@@ -45,6 +55,19 @@ public class BumperAction implements Action {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "BumperAction [name=" + name + "]";
+	}
 	
-	
+	public static BumperAction getAction(int actionId) {
+		switch(actionId) {
+		case 0: return FORWARD;
+		case 1: return BACKWARD;
+		case 2: return LEFT;
+		case 3: return RIGHT;
+		default: throw new IllegalArgumentException("Unknown action id " + actionId);
+		}
+	}
 }
