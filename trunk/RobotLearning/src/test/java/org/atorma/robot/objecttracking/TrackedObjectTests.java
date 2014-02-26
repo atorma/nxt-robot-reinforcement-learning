@@ -3,6 +3,8 @@ package org.atorma.robot.objecttracking;
 import static org.junit.Assert.assertEquals;
 import static java.lang.Math.*;
 
+import org.apfloat.Apfloat;
+import org.apfloat.ApfloatMath;
 import org.junit.Test;
 
 public class TrackedObjectTests {
@@ -40,6 +42,17 @@ public class TrackedObjectTests {
 	}
 	
 	@Test
+	public void enter_object_in_cartesian_coordinates() {
+		TrackedObject object;
+		
+		System.out.println(ApfloatMath.atan2(new Apfloat(1, 100), new Apfloat(0, 100)));
+		
+		object = TrackedObject.inCartesianCoordinates(-1, 0);
+		assertEquals(1, object.getDistanceCm(), 0);
+		assertEquals(270, object.getAngleDeg(), 0);
+	}
+	
+	@Test
 	public void from_polar_to_cartesian_coordinates_and_back() {
 		TrackedObject objectEnteredInPolarCoordinates = new TrackedObject(2, 0); // straight ahead, 2 cm away
 		assertEquals(0, objectEnteredInPolarCoordinates.getXCm(), 0.0001);
@@ -49,7 +62,7 @@ public class TrackedObjectTests {
 		assertEquals(2, objectEnteredInCartesianCoordinates.getDistanceCm(), 0);
 		assertEquals(0, objectEnteredInCartesianCoordinates.getAngleDeg(), 0);
 	}
-	
+		
 	@Test
 	public void compute_new_location_when_observer_rotates() {
 		// Object 45 degrees to the right
@@ -88,18 +101,16 @@ public class TrackedObjectTests {
 	@Test
 	public void compute_new_location_when_observer_does_several_moves() {
 		// This case you can plot on a 7x7 mm square grid paper.
-		// Agent start facing right, the object is located 5 units to the right, 2 units up
-		TrackedObject objectBefore = new TrackedObject(sqrt(pow(5, 2) + pow(2, 2)), -toDegrees(atan(2.0/5.0)));
+		// Agent start facing north (up), the object is located 5 units to the right, 2 units up in global coordinates
+		TrackedObject objectBefore = TrackedObject.inCartesianCoordinates(5, 2);
 		System.out.println(objectBefore);
 		
 		TrackedObject objectAfter = objectBefore
-				.afterObserverMoves(1)
-				.afterObserverRotates(-90)
-				.afterObserverMoves(2); // one right, two up from starting point
-		assertEquals(4, objectAfter.getDistanceCm(), 0.01);
-		assertEquals(90, objectAfter.getAngleDeg(), 0.01);
-				objectAfter = objectAfter.afterObserverRotates(90)
-				.afterObserverMoves(3)
+				.afterObserverMoves(2)
+				.afterObserverRotates(90)
+				.afterObserverMoves(1); // two up, one right from starting point, agent now facing right
+		assertEquals(4, objectAfter.getDistanceCm(), 0);
+			objectAfter = objectAfter.afterObserverMoves(3)
 				.afterObserverRotates(-90)
 				.afterObserverMoves(1)
 				.afterObserverRotates(90)
