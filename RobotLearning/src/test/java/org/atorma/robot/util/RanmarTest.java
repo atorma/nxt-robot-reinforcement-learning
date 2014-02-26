@@ -25,7 +25,6 @@ public class RanmarTest {
 		}
 		
 		for (int i = 0; i <= 2; i++) {
-			System.out.println(counts[i]);
 			assertTrue(counts[i] <= 10286);
 			assertTrue(counts[i] >= 9716);
 		}

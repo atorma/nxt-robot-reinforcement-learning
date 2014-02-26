@@ -28,7 +28,6 @@ public class LejosRandomTest {
 		}
 		
 		for (int i = 0; i <= 3; i++) {
-			System.out.println(counts[i]);
 			assertTrue(counts[i] <= 10286);
 			assertTrue(counts[i] >= 9716);
 		}

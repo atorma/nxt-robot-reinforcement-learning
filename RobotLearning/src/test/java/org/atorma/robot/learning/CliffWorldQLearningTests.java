@@ -82,7 +82,7 @@ public class CliffWorldQLearningTests {
 
 			} while (!toState.isGoal());
 			
-			System.out.println("episode " + episode +", reward " + episodeReward);
+			//System.out.println("episode " + episode +", reward " + episodeReward);
 		}
 		
 		learnedPolicy = qLearning.getLearnedPolicy();
