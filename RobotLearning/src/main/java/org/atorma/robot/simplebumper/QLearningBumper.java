@@ -1,14 +1,11 @@
 package org.atorma.robot.simplebumper;
 
-import org.atorma.robot.PolicyIdMap;
-import org.atorma.robot.communications.CommunicationException;
-import org.atorma.robot.communications.RobotCommunications;
-import org.atorma.robot.communications.StateAndAction;
+import org.atorma.robot.EpsilonGreedyPolicy;
+import org.atorma.robot.communications.ActionIdProvider;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.learning.Transition;
 
-public class QLearningBumper implements Runnable {
-	private RobotCommunications comms;
+public class QLearningBumper implements ActionIdProvider {
 	
 	private BumperStateIdMap stateIdMap = new BumperStateIdMap();
 	private BumperActionIdMap actionIdMap = new BumperActionIdMap();
@@ -16,46 +13,44 @@ public class QLearningBumper implements Runnable {
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
 	private QLearning qLearning;
-	private StateAndAction previousStateAndAction;
 	
-	public QLearningBumper(RobotCommunications comms) {
-		this.comms = comms;
+	private double epsilon = 0.1;
+	private EpsilonGreedyPolicy epsilonGreedyPolicy;
+	
+	private BumperState previousState;
+	private BumperAction previousAction;
+	
+	public QLearningBumper() {
+		
 		qLearning = new QLearning(stateIdMap, actionIdMap, rewardFunction, learningRate, discountFactor);
+		
+		epsilonGreedyPolicy = new EpsilonGreedyPolicy(new int[] {
+				BumperAction.FORWARD.getId(), BumperAction.BACKWARD.getId(),
+				BumperAction.LEFT.getId(), BumperAction.RIGHT.getId()}, 
+				epsilon);
 	}
-
+	
+	
+	// One step of Q-learning is so fast that there's no point in doing learning in a separate thread
 	@Override
-	public void run() {
-		
-		previousStateAndAction = comms.takeStateAndAction();
-		
-		while (true) {
-			try {
-				//for (int updates = 0; updates < 20; updates++) {
-					qLearning.update(getNextTransition());
-					System.out.println("Total reward " + qLearning.getAccumulatedReward());
-				//}
-				comms.updatePolicy((PolicyIdMap) qLearning.getLearnedPolicy().clone());
-			} catch (CommunicationException e) {
-				System.err.println("Communication error");
-			}
+	public int getActionId(double[] state) {
+		BumperState currentState = new BumperState(state);
+		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateIdMap.getId(state)));
+		System.out.println("State: " + currentState);
+		System.out.println("Action: " + currentAction);
+
+		if (previousState != null) {
+			Transition transition = new Transition(previousState, previousAction, currentState);
+			qLearning.update(transition);
+			System.out.println("Total reward: " + qLearning.getAccumulatedReward());
+			epsilonGreedyPolicy.setDeterministicPolicy(qLearning.getLearnedPolicy());
 		}
 		
-	}
-	
-	private Transition getNextTransition() {
+		previousState = currentState;
+		previousAction = currentAction;
 		
-		StateAndAction stateAndAction = comms.takeStateAndAction();
-		
-		BumperState fromState = new BumperState(previousStateAndAction.getStateValues());
-		BumperAction action = new BumperAction(previousStateAndAction.getActionValues());
-		BumperState toState = new BumperState(stateAndAction.getStateValues()); 
-		Transition transition = new Transition(fromState, action, toState);
-		
-		System.out.println(toState);
-		
-		previousStateAndAction = stateAndAction;
-		
-		return transition;
+		return currentAction.getId();
+			
 	}
 
 }
