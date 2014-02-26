@@ -1,5 +1,6 @@
 package itest.org.atorma.robot.communications;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import lejos.pc.comm.NXTCommException;
@@ -14,11 +15,11 @@ public class CommunicationsTests {
 
 		DiscreteActionPolicy policy = new DiscreteActionPolicy() {
 			
-			private Random random;
+			private Random random = new Random();
 			
 			@Override
 			public int getActionId(double[] state) {
-				System.out.println("Received state: " + state);
+				System.out.println("Received state: " + Arrays.toString(state));
 				return random.nextInt();
 			}
 		};
