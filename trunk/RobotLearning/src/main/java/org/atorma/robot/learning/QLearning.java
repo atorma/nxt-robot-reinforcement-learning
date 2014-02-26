@@ -18,7 +18,6 @@ public class QLearning {
 	private Set<Integer> actionIds = new HashSet<>();
 	
 	private IdFunction stateIdMap;
-	private IdFunction actionIdMap;
 	private RewardFunction rewardFunction;
 	private double learningRate;
 	private double discountFactor;
@@ -27,9 +26,8 @@ public class QLearning {
 	
 	private double defaultStateActionValue = 0;
 	
-	public QLearning(IdFunction stateIdMap, IdFunction actionIdMap, RewardFunction rewardFunction, double learningRate, double discountFactor) {
+	public QLearning(IdFunction stateIdMap, RewardFunction rewardFunction, double learningRate, double discountFactor) {
 		this.stateIdMap = stateIdMap;
-		this.actionIdMap = actionIdMap;
 		this.rewardFunction = rewardFunction;
 		this.learningRate = learningRate;
 		this.discountFactor = discountFactor;
@@ -38,7 +36,7 @@ public class QLearning {
 
 	public void update(Transition transition) {
 		int fromStateId = stateIdMap.getId(transition.getFromState().getValues());
-		int byActionId = actionIdMap.getId(transition.getAction().getValues());
+		int byActionId = transition.getAction().getId();
 		int toStateId = stateIdMap.getId(transition.getToState().getValues());
 		double reward = rewardFunction.getReward(transition);
 		accumulatedReward += reward;
@@ -92,8 +90,6 @@ public class QLearning {
 	public double getAccumulatedReward() {
 		return accumulatedReward;
 	}
-
-
 
 
 	private static class ActionValue {

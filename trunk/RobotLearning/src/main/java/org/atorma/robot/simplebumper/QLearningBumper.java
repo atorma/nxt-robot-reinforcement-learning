@@ -8,7 +8,6 @@ import org.atorma.robot.learning.Transition;
 public class QLearningBumper implements ActionIdProvider {
 	
 	private BumperStateIdMap stateIdMap = new BumperStateIdMap();
-	private BumperActionIdMap actionIdMap = new BumperActionIdMap();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
@@ -22,7 +21,7 @@ public class QLearningBumper implements ActionIdProvider {
 	
 	public QLearningBumper() {
 		
-		qLearning = new QLearning(stateIdMap, actionIdMap, rewardFunction, learningRate, discountFactor);
+		qLearning = new QLearning(stateIdMap, rewardFunction, learningRate, discountFactor);
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(new int[] {
 				BumperAction.FORWARD.getId(), BumperAction.BACKWARD.getId(),

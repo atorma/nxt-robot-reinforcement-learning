@@ -42,8 +42,8 @@ public class NxtBumper extends NxtRobot {
 		}
 
 		@Override
-		public double[] getValues() {
-			return BumperAction.FORWARD.getValues();  
+		public int getId() {
+			return BumperAction.FORWARD.getId();  
 		}
 
 	}
@@ -56,8 +56,8 @@ public class NxtBumper extends NxtRobot {
 		}
 
 		@Override
-		public double[] getValues() {
-			return BumperAction.BACKWARD.getValues();  
+		public int getId() {
+			return BumperAction.BACKWARD.getId();  
 		}
 
 	}
@@ -70,8 +70,8 @@ public class NxtBumper extends NxtRobot {
 		}
 
 		@Override
-		public double[] getValues() {
-			return BumperAction.LEFT.getValues();  
+		public int getId() {
+			return BumperAction.LEFT.getId();  
 		}
 		
 	}
@@ -84,8 +84,8 @@ public class NxtBumper extends NxtRobot {
 		}
 
 		@Override
-		public double[] getValues() {
-			return BumperAction.RIGHT.getValues();
+		public int getId() {
+			return BumperAction.RIGHT.getId();
 		}
 
 	}
