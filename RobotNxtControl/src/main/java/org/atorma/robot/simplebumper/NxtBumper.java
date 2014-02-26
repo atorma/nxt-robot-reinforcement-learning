@@ -14,11 +14,13 @@ import org.atorma.robot.State;
 public class NxtBumper extends NxtRobot {
 	
 	public static final double WHEEL_DIAMETER_CM = 5.6;
+	public static final double WHEEL_WIDTH_CM = 2.6;
+	public static final double TRACK_WIDTH_EDGE_TO_EDGE_CM = 19.3;
 	
 	private UltrasonicSensor ultrasonicSensor = new UltrasonicSensor(SensorPort.S3);
 	private LightSensor lightSensor = new LightSensor(SensorPort.S1, false);
 	private TouchSensor touchSensor = new TouchSensor(SensorPort.S4);
-	private DifferentialPilot pilot = new DifferentialPilot(WHEEL_DIAMETER_CM, 18 - WHEEL_DIAMETER_CM, Motor.A, Motor.C, false);
+	private DifferentialPilot pilot = new DifferentialPilot(WHEEL_DIAMETER_CM, TRACK_WIDTH_EDGE_TO_EDGE_CM - WHEEL_WIDTH_CM , Motor.A, Motor.C, false);
 	
 	private NxtAction driveForward = new DriveForward();
 	private NxtAction driveBackward = new DriveBackward();
