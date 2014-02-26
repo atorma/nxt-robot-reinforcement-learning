@@ -20,30 +20,35 @@ public class NxtBumper extends NxtRobot {
 	private TouchSensor touchSensor = new TouchSensor(SensorPort.S4);
 	private DifferentialPilot pilot = new DifferentialPilot(WHEEL_DIAMETER_CM, 18 - WHEEL_DIAMETER_CM, Motor.A, Motor.C, false);
 	
-	private NxtAction[] actions = new NxtAction[] {new DriveForward(), new DriveBackward(), new TurnLeft(), new TurnRight()};
+	private NxtAction driveForward = new DriveForward();
+	private NxtAction driveBackward = new DriveBackward();
+	private NxtAction turnLeft = new TurnLeft();
+	private NxtAction turnRight = new TurnRight();
 
 	
 	@Override
 	public State getCurrentState() {
-		BumperState state = new BumperState(ultrasonicSensor.getDistance(), touchSensor.isPressed(), lightSensor.readNormalizedValue());
+		BumperPercept state = new BumperPercept(ultrasonicSensor.getDistance(), touchSensor.isPressed(), lightSensor.readNormalizedValue());
 		return state;
 	}
 	
 	@Override
 	public NxtAction getAction(int actionId) {
-		return actions[actionId];
+		BumperAction bumperAction = BumperAction.getAction(actionId);
+		switch (bumperAction) {
+		case FORWARD: return driveForward;
+		case BACKWARD: return driveBackward;
+		case LEFT: return turnLeft;
+		case RIGHT: return turnRight;
+		default: throw new IllegalArgumentException();
+		}
 	}
 
 	private class DriveForward implements NxtAction {
 		
 		@Override
 		public void perform() {
-			pilot.travel(WHEEL_DIAMETER_CM * 0.5);
-		}
-
-		@Override
-		public int getId() {
-			return BumperAction.FORWARD.getId();  
+			pilot.travel(BumperAction.DRIVE_DISTANCE_CM); 
 		}
 
 	}
@@ -52,12 +57,7 @@ public class NxtBumper extends NxtRobot {
 
 		@Override
 		public void perform() {
-			pilot.travel(-1 * WHEEL_DIAMETER_CM * 0.5);
-		}
-
-		@Override
-		public int getId() {
-			return BumperAction.BACKWARD.getId();  
+			pilot.travel(-BumperAction.DRIVE_DISTANCE_CM);
 		}
 
 	}
@@ -66,12 +66,7 @@ public class NxtBumper extends NxtRobot {
 
 		@Override
 		public void perform() {
-			pilot.rotate(15); // degrees
-		}
-
-		@Override
-		public int getId() {
-			return BumperAction.LEFT.getId();  
+			pilot.rotate(BumperAction.TURN_DEGREES); 
 		}
 		
 	}
@@ -80,12 +75,7 @@ public class NxtBumper extends NxtRobot {
 
 		@Override
 		public void perform() {
-			pilot.rotate(-15);
-		}
-
-		@Override
-		public int getId() {
-			return BumperAction.RIGHT.getId();
+			pilot.rotate(-BumperAction.TURN_DEGREES);
 		}
 
 	}

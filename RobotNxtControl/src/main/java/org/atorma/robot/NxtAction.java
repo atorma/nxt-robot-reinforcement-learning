@@ -2,7 +2,7 @@ package org.atorma.robot;
 
 
 
-public interface NxtAction extends DiscreteAction {
+public interface NxtAction {
 	
 	void perform();
 	

@@ -2,7 +2,7 @@ package org.atorma.robot.simplebumper;
 
 import org.atorma.robot.State;
 
-public class BumperState implements State {
+public class BumperPercept implements State {
 	
 	public static final int MAX_ULTRASONIC_DIST = 255;
 	public static final int MIN_ULTRASONIC_DIST = 7;
@@ -10,19 +10,19 @@ public class BumperState implements State {
 	private final double[] values;
 	
 
-	public BumperState(int distanceToObstacle) {
+	public BumperPercept(int distanceToObstacle) {
 		this.values = new double[] {distanceToObstacle, 0};
 	}
 	
-	public BumperState(int distanceToObstacle, boolean isCollided) {
+	public BumperPercept(int distanceToObstacle, boolean isCollided) {
 		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0, 0};
 	}
 	
-	public BumperState(int distanceToObstacle, boolean isCollided, int lightValue) {
+	public BumperPercept(int distanceToObstacle, boolean isCollided, int lightValue) {
 		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0, lightValue};
 	}
 	
-	public BumperState(double[] values) {
+	public BumperPercept(double[] values) {
 		this.values = values;
 	}
 

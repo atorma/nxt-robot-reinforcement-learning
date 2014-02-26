@@ -4,15 +4,15 @@ import java.util.Random;
 
 import lejos.pc.comm.NXTCommException;
 
+import org.atorma.robot.DiscreteActionPolicy;
 import org.atorma.robot.communications.PcToNxtCommunication;
-import org.atorma.robot.communications.ActionIdProvider;
 
 public class CommunicationsTests {
 	
 	
 	public static void main(String[] args) throws NXTCommException {
 
-		ActionIdProvider policy = new ActionIdProvider() {
+		DiscreteActionPolicy policy = new DiscreteActionPolicy() {
 			
 			private Random random;
 			
