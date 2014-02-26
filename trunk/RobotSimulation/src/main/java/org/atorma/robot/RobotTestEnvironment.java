@@ -3,7 +3,6 @@ package org.atorma.robot;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import simbad.sim.Arch;
 import simbad.sim.Box;
 import simbad.sim.EnvironmentDescription;
 import simbad.sim.Wall;

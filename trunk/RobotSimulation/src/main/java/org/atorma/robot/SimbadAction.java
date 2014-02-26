@@ -1,6 +1,6 @@
 package org.atorma.robot;
 
-public interface SimbadAction extends DiscreteAction {
+public interface SimbadAction {
 	
 	void perform();
 

@@ -1,8 +1,11 @@
 package org.atorma.robot.communications;
 
 import static org.atorma.robot.communications.MessageConstants.*;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+
+import org.atorma.robot.DiscreteActionPolicy;
 
 import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTCommFactory;
@@ -15,12 +18,12 @@ import lejos.pc.comm.NXTConnector;
  */
 public class PcToNxtCommunication implements Runnable {
 
-	private ActionIdProvider policy;
+	private DiscreteActionPolicy policy;
 	private DataStreamCommunications comms;
 	private NXTConnector nxtConnector;
 	private volatile boolean isOpen;
 
-	public PcToNxtCommunication(String nxtName, ActionIdProvider policy) throws NXTCommException {
+	public PcToNxtCommunication(String nxtName, DiscreteActionPolicy policy) throws NXTCommException {
 		
 		if (policy == null) {
 			throw new IllegalArgumentException("Policy must not be null");

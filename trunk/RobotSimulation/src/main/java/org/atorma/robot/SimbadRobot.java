@@ -2,18 +2,16 @@ package org.atorma.robot;
 
 import javax.vecmath.Vector3d;
 
-import org.atorma.robot.communications.ActionIdProvider;
-
 import simbad.gui.Simbad;
 import simbad.sim.Agent;
 
 public abstract class SimbadRobot extends Agent {
 	
-	private final ActionIdProvider actionIdProvider;
+	private final DiscreteActionPolicy policy;
 
-	public SimbadRobot(ActionIdProvider actionIdProvider, Vector3d startingPosition, String name) {
+	public SimbadRobot(DiscreteActionPolicy actionIdProvider, Vector3d startingPosition, String name) {
 		super(startingPosition, name);
-		this.actionIdProvider = actionIdProvider;
+		this.policy = actionIdProvider;
 	}
 	
 	public abstract State getCurrentState();
@@ -32,7 +30,7 @@ public abstract class SimbadRobot extends Agent {
     public void performBehavior() {
 
 		State currentState = getCurrentState();
-		int actionId = actionIdProvider.getActionId(currentState.getValues());
+		int actionId = policy.getActionId(currentState.getValues());
 		SimbadAction action = getAction(actionId);
 		action.perform();
 		
