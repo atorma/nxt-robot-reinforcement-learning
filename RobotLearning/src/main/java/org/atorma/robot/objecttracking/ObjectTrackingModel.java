@@ -9,7 +9,7 @@ public class ObjectTrackingModel {
 	private List<TrackedObject> objects = new ArrayList<>();
 
 	public void addObservation(double distanceCm, double angleDegrees) {
-		TrackedObject object = new TrackedObject(distanceCm, angleDegrees);
+		TrackedObject object = TrackedObject.inPolarDegreeCoordinates(distanceCm, angleDegrees);
 		objects.add(object);
 	}
 

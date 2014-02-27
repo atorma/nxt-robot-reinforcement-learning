@@ -1,145 +1,122 @@
 package org.atorma.robot.objecttracking;
 
-import static org.apfloat.ApfloatMath.*;
-
-import org.apfloat.Apfloat;
+import static java.lang.Math.*;
 
 /**
  * Represents the location of an object with respect to the agent.
- * The agent is always facing degree zero in polar coordinates.
+ * The agent is always facing degree zero in polar coordinates
+ * and along the positive y-axis in Cartesian coordinates.
  */
 public class TrackedObject {
-	
-	private static final long APFLOAT_PRECISION = 100;
-	
-	private static final Apfloat RAD_360 = pi(APFLOAT_PRECISION).multiply(new Apfloat(2));
-	private static final Apfloat RAD_90 = pi(APFLOAT_PRECISION).divide(new Apfloat(2));
-	private static final Apfloat PI = pi(APFLOAT_PRECISION);
-	
+		
 	// Polar coordinate representation
-	private Apfloat distanceCm;
-	private Apfloat angleRad;
+	private double distance;
+	private double angleRad;
 	
 	// Cartesian coordinate representation
-	private Apfloat x;
-	private Apfloat y;
+	private double x;
+	private double y;
 	
 	private TrackedObject() {
 		
 	}
 	
-	public TrackedObject(double distanceCm, double angleDeg) {
-		this(asApfloat(distanceCm), toRadians(asApfloat(angleDeg)));
-	}
-	
-	private TrackedObject(Apfloat distanceCm, Apfloat angleRad) {
-		if (distanceCm.signum() < 0) {
+	private TrackedObject(double distanceCm, double angleRad) {
+		if (distanceCm < 0) {
 			throw new IllegalArgumentException("Negative distance");
 		}
 		
-		this.distanceCm = distanceCm;
-		this.angleRad = angleRad;
-		
-		if (this.angleRad.signum() == 0) {
-			this.x = asApfloat(0);
-			this.y = distanceCm;
-		} else if (this.angleRad.equals(RAD_90)) {
-			this.x = distanceCm;
-			this.y = asApfloat(0);
-		} else if (this.angleRad.equals(asApfloat(180))) {
-			this.x = asApfloat(0);
-			this.y = distanceCm.multiply(asApfloat(-1));
-		} else if (this.angleRad.equals(asApfloat(270))) {
-			this.x = distanceCm.multiply(asApfloat(-1));
-			this.y = asApfloat(0);
-		} else {
-			this.x = distanceCm.multiply(cos(RAD_90.subtract(this.angleRad)));
-			this.y = distanceCm.multiply(sin(RAD_90.subtract(this.angleRad)));
-		}
+		this.distance = distanceCm;
+		this.angleRad = normalize(angleRad);
 		
 		
+		this.x = distanceCm * cos(PI/2 - angleRad);
+		this.y = distanceCm * sin(PI/2 - angleRad);
 	}
 
-	public double getDistanceCm() {
-		return distanceCm.doubleValue();
+	public double getDistance() {
+		return distance;
+	}
+	
+	public double getAngleRad() {
+		return angleRad;
 	}
 
 	public double getAngleDeg() {
-		return toDegrees(normalize(angleRad)).doubleValue();
+		return toDegrees(angleRad);
 	}
 	
-	public double getXCm() {
-		return x.doubleValue();
+	public double getX() {
+		return x;
 	}
 	
-	public double getYCm() {
-		return y.doubleValue();
+	public double getY() {
+		return y;
 	}
 
-	public TrackedObject afterObserverRotates(double observerRotationDegrees) {
-		Apfloat rotationRad = toRadians(asApfloat(observerRotationDegrees));
-		Apfloat newAngleRad = this.angleRad.subtract(rotationRad);
-		return new TrackedObject(this.distanceCm, newAngleRad);
+	public TrackedObject afterObserverRotatesDeg(double observerRotationDeg) {
+		return afterObserverRotatesRad(toRadians(observerRotationDeg));
 	}
-
-	public TrackedObject afterObserverMoves(double observerMoveCm) {
 	
-		Apfloat moveCm = asApfloat(observerMoveCm);
-		/*
-
-		Apfloat distanceAfter = sqrt(sum(
-				pow(moveCm, 2), 
-				pow(distanceCm, 2), 
-				new Apfloat(-2).multiply(moveCm).multiply(distanceCm).multiply(cos(angleRad))
-			));
-		
-		Apfloat numerator = pow(distanceCm, 2).add(pow(distanceAfter, 2)).subtract(pow(moveCm, 2));
-		Apfloat denominator = new Apfloat(2).multiply(distanceCm).multiply(distanceAfter);
-		Apfloat angleDelta = acos(numerator.divide(denominator));
-		Apfloat angleAfter = angleRad.add(angleDelta);
-		
-		return new TrackedObject(distanceAfter, angleAfter);
-		*/
-		
-		return inCartesianCoordinates(this.x, this.y.subtract(moveCm));
+	public TrackedObject afterObserverRotatesRad(double observerRotationRad) {
+		double newAngleRad = this.angleRad - observerRotationRad;
+		TrackedObject o = new TrackedObject(this.distance, newAngleRad);
+		return o;
 	}
+
+	public TrackedObject afterObserverMoves(double observerMove) {
+		double angleBefore;
+		boolean objectRight;
+		if (this.angleRad <= PI) {
+			angleBefore = this.angleRad;
+			objectRight = true;
+		} else {
+			angleBefore = 2*PI - this.angleRad;
+			objectRight = false;
+		}
+		
+		double distanceAfter = sqrt(pow(observerMove, 2) + pow(distance, 2) -2*observerMove*distance*cos(angleBefore));
+		
+		double numerator = pow(distance, 2) + pow(distanceAfter, 2) - pow(observerMove, 2);
+		double denominator = 2*distance*distanceAfter;
+		double angleDelta = acos(numerator/denominator);
+		double angleAfter = angleBefore + angleDelta; // between 0 and PI
+		
+		TrackedObject o;
+		if (objectRight) {
+			o = new TrackedObject(distanceAfter, angleAfter);
+		} else {
+			o = new TrackedObject(distanceAfter, 2*PI - angleAfter); 
+		}
+		return o;
+		//return inCartesianCoordinates(this.x, this.y - observerMove);
+	}
+
 
 	@Override
 	public String toString() {
-		return "TrackedObject [distanceCm=" + distanceCm + ", angleDeg="
-				+ angleRad + "]";
+		return "TrackedObject [distance=" + getDistance() + ", angleDeg=" + getAngleDeg() + "]";
+	}
+
+	/** Normalizes an angle in radians to [0, 2*PI). */
+	private static double normalize(double angleRad) {
+		angleRad =  angleRad % (2*PI);
+		return angleRad < 0 ? (2*PI) + angleRad : angleRad;
 	}
 	
-	public static TrackedObject inPolarCoordinates(double distanceCm, double angleDeg) {
-		return new TrackedObject(distanceCm, angleDeg);
+	public static TrackedObject inPolarDegreeCoordinates(double distance, double angleDeg) {
+		return new TrackedObject(distance, toRadians(angleDeg));
 	}
 	
+	public static TrackedObject inPolarRadianCoordinates(double distance, double angleRad) {
+		return new TrackedObject(distance, angleRad);
+	}
+
 	public static TrackedObject inCartesianCoordinates(double x, double y) {
-		return inCartesianCoordinates(asApfloat(x), asApfloat(y));
-	}
-
-	private static Apfloat asApfloat(double d) {
-		return new Apfloat(d, APFLOAT_PRECISION);
-	}
-	
-	private static Apfloat normalize(Apfloat angleRad) {
-		angleRad =  angleRad.mod(RAD_360);
-		return angleRad.signum() < 0 ? RAD_360.add(angleRad) : angleRad;
-	}
-	
-	private static Apfloat toRadians(Apfloat angleDeg) {
-		return angleDeg.multiply(PI).divide(asApfloat(180));
-	}
-	
-	private static Apfloat toDegrees(Apfloat angleRad) {
-		return angleRad.divide(PI).multiply(asApfloat(180));
-	}
-
-	private static TrackedObject inCartesianCoordinates(Apfloat x, Apfloat y) {
 		TrackedObject o = new TrackedObject();
 		o.x = x;
 		o.y = y;
-		o.distanceCm = sqrt(pow(x, 2).add(pow(y, 2)));
+		o.distance = sqrt(pow(x, 2) + pow(y, 2));
 		o.angleRad = normalize(atan2(x, y));
 		return o;
 	}
