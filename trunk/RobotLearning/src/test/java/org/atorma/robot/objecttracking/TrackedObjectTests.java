@@ -1,7 +1,6 @@
 package org.atorma.robot.objecttracking;
 
 import static org.junit.Assert.*;
-import static java.lang.Math.*;
 
 import org.junit.Test;
 
@@ -105,16 +104,15 @@ public class TrackedObjectTests {
 	
 	@Test
 	public void compute_new_location_when_observer_does_several_moves() {
-		// This case you can plot on a 7x7 mm square grid paper.
-		// Agent start facing north (up), the object is located 5 units to the right, 2 units up in global coordinates
+		// This case you can plot on a square grid paper.
+		// Agent start facing north (up), the object is located 5 units to the right, 2 units up relative to the agent.
 		TrackedObject objectBefore = TrackedObject.inCartesianCoordinates(5, 2);
 		
 		TrackedObject objectAfter = objectBefore
 				.afterObserverMoves(2)
 				.afterObserverRotatesDeg(90)
-				.afterObserverMoves(1); // two up, one right from starting point, agent now facing right
-		assertEquals(4, objectAfter.getDistance(), 0);
-			objectAfter = objectAfter.afterObserverMoves(3)
+				.afterObserverMoves(1) // two up, one right from starting point, agent now facing right
+				.afterObserverMoves(3)
 				.afterObserverRotatesDeg(-90)
 				.afterObserverMoves(1)
 				.afterObserverRotatesDeg(90)
@@ -124,8 +122,8 @@ public class TrackedObjectTests {
 				.afterObserverMoves(2)
 				.afterObserverRotatesDeg(90)
 				.afterObserverMoves(2)
-				.afterObserverRotatesDeg(90);
-			objectAfter = objectAfter.afterObserverMoves(1);
+				.afterObserverRotatesDeg(90)
+				.afterObserverMoves(1);
 		
 		// Should be one unit away, 90 degrees to the left
 		assertEquals(1, objectAfter.getDistance(), 0.0001);
