@@ -88,12 +88,19 @@ public class TrackedObjectTests {
 
 	@Test
 	public void compute_new_location_when_observer_moves() {
-		// Object at sqrt(3^2 + 3^2) cm distance, 45 degrees to the right.
-		// This case is a simple right angle triangle computation 
-		TrackedObject objectBefore = TrackedObject.inPolarDegreeCoordinates(sqrt(18), 45);
+		// Object at Cartesian coordinates (3,3).
+		TrackedObject objectBefore = TrackedObject.inCartesianCoordinates(3, 3);
+		
+		// Agent moves forward 3 so that the object should be directly to the right.
+		// This is a simple right angle triangle case. 
 		TrackedObject objectAfter = objectBefore.afterObserverMoves(3);
 		assertEquals(3, objectAfter.getDistance(), 0.001);
 		assertEquals(90, objectAfter.getAngleDeg(), 0.001);
+		
+		// Agent moves very, very far backward. We expect to see the object far in the horizon to the front.
+		objectAfter = objectBefore.afterObserverMoves(-999999999.9);
+		assertTrue(objectAfter.getDistance() >= 999999999.9);
+		assertEquals(0, objectAfter.getAngleDeg(), 0.001);
 	}
 	
 	@Test
