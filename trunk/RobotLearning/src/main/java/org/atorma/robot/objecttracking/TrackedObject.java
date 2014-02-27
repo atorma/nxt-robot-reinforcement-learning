@@ -65,31 +65,7 @@ public class TrackedObject {
 	}
 
 	public TrackedObject afterObserverMoves(double observerMove) {
-		double angleBefore;
-		boolean objectRight;
-		if (this.angleRad <= PI) {
-			angleBefore = this.angleRad;
-			objectRight = true;
-		} else {
-			angleBefore = 2*PI - this.angleRad;
-			objectRight = false;
-		}
-		
-		double distanceAfter = sqrt(pow(observerMove, 2) + pow(distance, 2) -2*observerMove*distance*cos(angleBefore));
-		
-		double numerator = pow(distance, 2) + pow(distanceAfter, 2) - pow(observerMove, 2);
-		double denominator = 2*distance*distanceAfter;
-		double angleDelta = acos(numerator/denominator);
-		double angleAfter = angleBefore + angleDelta; // between 0 and PI
-		
-		TrackedObject o;
-		if (objectRight) {
-			o = new TrackedObject(distanceAfter, angleAfter);
-		} else {
-			o = new TrackedObject(distanceAfter, 2*PI - angleAfter); 
-		}
-		return o;
-		//return inCartesianCoordinates(this.x, this.y - observerMove);
+		return inCartesianCoordinates(this.x, this.y - observerMove);
 	}
 
 
