@@ -7,7 +7,7 @@ import static java.lang.Math.*;
  * The agent is always facing degree zero in polar coordinates
  * and along the positive y-axis in Cartesian coordinates.
  */
-public class TrackedObject {
+public class TrackedObject implements Comparable<TrackedObject> {
 		
 	// Polar coordinate representation
 	private double distance;
@@ -27,7 +27,7 @@ public class TrackedObject {
 		}
 		
 		this.distance = distanceCm;
-		this.angleRad = normalize(angleRad);
+		this.angleRad = ObjectTrackingUtils.normalizeRadians(angleRad);
 		
 		
 		this.x = distanceCm * cos(PI/2 - angleRad);
@@ -73,12 +73,17 @@ public class TrackedObject {
 	public String toString() {
 		return "TrackedObject [distance=" + getDistance() + ", angleDeg=" + getAngleDeg() + "]";
 	}
-
-	/** Normalizes an angle in radians to [0, 2*PI). */
-	private static double normalize(double angleRad) {
-		angleRad =  angleRad % (2*PI);
-		return angleRad < 0 ? (2*PI) + angleRad : angleRad;
+	
+	@Override
+	public int compareTo(TrackedObject o) {
+		int angleComparison = (int) signum(this.angleRad - o.angleRad);
+		if (angleComparison != 0) {
+			return angleComparison;
+		} else {
+			return (int) signum(this.distance - o.distance);
+		}
 	}
+
 	
 	public static TrackedObject inPolarDegreeCoordinates(double distance, double angleDeg) {
 		return new TrackedObject(distance, toRadians(angleDeg));
@@ -93,9 +98,11 @@ public class TrackedObject {
 		o.x = x;
 		o.y = y;
 		o.distance = sqrt(pow(x, 2) + pow(y, 2));
-		o.angleRad = normalize(atan2(x, y));
+		o.angleRad = ObjectTrackingUtils.normalizeRadians(atan2(x, y));
 		return o;
 	}
+
+	
 
 	
 	
