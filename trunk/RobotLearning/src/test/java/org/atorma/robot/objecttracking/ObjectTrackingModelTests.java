@@ -30,12 +30,12 @@ public class ObjectTrackingModelTests {
 		assertEquals(2, objectLocations.size());
 		
 		TrackedObject object1 = objectLocations.get(0);
-		assertEquals(distanceCm1, object1.getDistanceCm(), 0);
-		assertEquals(angleDeg1, object1.getAngleDeg(), 0);
+		assertEquals(distanceCm1, object1.getDistance(), 0.0001);
+		assertEquals(angleDeg1, object1.getAngleDeg(), 0.0001);
 		
 		TrackedObject object2 = objectLocations.get(1);
-		assertEquals(distanceCm2, object2.getDistanceCm(), 0);
-		assertEquals(angleDeg2, object2.getAngleDeg(), 0);
+		assertEquals(distanceCm2, object2.getDistance(), 0.0001);
+		assertEquals(angleDeg2, object2.getAngleDeg(), 0.0001);
 	}
 	
 	@Test(expected = IllegalArgumentException.class) 
@@ -49,23 +49,23 @@ public class ObjectTrackingModelTests {
 		
 		model.addObservation(1, 360);
 		object = model.getObjectLocations().get(0);
-		assertEquals(0, object.getAngleDeg(), 0);
+		assertEquals(0, object.getAngleDeg(), 0.0001);
 		
 		model.addObservation(2, 370);
 		object = model.getObjectLocations().get(1);
-		assertEquals(10, object.getAngleDeg(), 0);
+		assertEquals(10, object.getAngleDeg(), 0.0001);
 		
 		model.addObservation(4, 730);
 		object = model.getObjectLocations().get(2);
-		assertEquals(10, object.getAngleDeg(), 0);
+		assertEquals(10, object.getAngleDeg(), 0.0001);
 		
 		model.addObservation(3, -10);
 		object = model.getObjectLocations().get(3);
-		assertEquals(350, object.getAngleDeg(), 0);
+		assertEquals(350, object.getAngleDeg(), 0.0001);
 		
 		model.addObservation(3, -730);
 		object = model.getObjectLocations().get(4);
-		assertEquals(350, object.getAngleDeg(), 0);
+		assertEquals(350, object.getAngleDeg(), 0.0001);
 	}
 	
 	
