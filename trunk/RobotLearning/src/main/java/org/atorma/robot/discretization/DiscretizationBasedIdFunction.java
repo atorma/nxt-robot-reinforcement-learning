@@ -1,5 +1,9 @@
 package org.atorma.robot.discretization;
 
+/**
+ * Produces a scalar id representing a discretized vector value.
+ * Each dimension of the vector is assigned its own discretizer.
+ */
 public class DiscretizationBasedIdFunction implements IdFunction {
 
 	private final Discretizer[] discretizers;
@@ -16,8 +20,14 @@ public class DiscretizationBasedIdFunction implements IdFunction {
 		int n = discretizers[0].getNumberOfBins();
 		for (int i = 1; i < discretizers.length; i++) {
 			n = n*discretizers[i].getNumberOfBins(); 
+			
+			// Check against overflow. Number of state combinations easily explode and cause overflow!
+			if (n < 0) {
+				throw new IllegalArgumentException("Number of states overflow!");
+			}
 		}
 		this.numberOfValues = n;
+
 	}
 
 	/**
@@ -26,7 +36,7 @@ public class DiscretizationBasedIdFunction implements IdFunction {
 	@Override
 	public int getId(double[] value) {
 		if (value.length != discretizers.length) {
-			throw new IllegalArgumentException("Illegal value dimensions");
+			throw new IllegalArgumentException("Illegal value dimensions. There are " + discretizers.length + " discretizers but " + value.length + " values were given.");
 		}
 		
 		int id = discretizers[0].discretize(value[0]);

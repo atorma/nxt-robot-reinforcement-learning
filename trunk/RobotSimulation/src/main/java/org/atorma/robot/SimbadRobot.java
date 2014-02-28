@@ -8,6 +8,8 @@ import simbad.sim.Agent;
 public abstract class SimbadRobot extends Agent {
 	
 	private final DiscreteActionPolicy policy;
+	
+	private SimbadAction currentAction;
 
 	public SimbadRobot(DiscreteActionPolicy actionIdProvider, Vector3d startingPosition, String name) {
 		super(startingPosition, name);
@@ -29,11 +31,14 @@ public abstract class SimbadRobot extends Agent {
 	@Override
     public void performBehavior() {
 
-		State currentState = getCurrentState();
-		int actionId = policy.getActionId(currentState.getValues());
-		SimbadAction action = getAction(actionId);
-		action.perform();
-		
+		if (currentAction == null || currentAction.isCompleted()) {
+			State currentState = getCurrentState();
+			int actionId = policy.getActionId(currentState.getValues());
+			currentAction = getAction(actionId);
+		}
+
+		currentAction.perform();
+
     }
 	
 	public void startSimulationGUI() {

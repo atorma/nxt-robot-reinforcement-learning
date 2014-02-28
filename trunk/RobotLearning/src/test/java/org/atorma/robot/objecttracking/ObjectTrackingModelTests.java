@@ -35,7 +35,7 @@ public class ObjectTrackingModelTests {
 		model.agentMoves(agentMove);
 		model.agentRotatesDeg(agentTurnDeg);
 		
-		List<TrackedObject> objects = new ArrayList<>(model.getObjectLocations());
+		List<TrackedObject> objects = new ArrayList<>(model.getObjects());
 		Collections.sort(objects); // natural order is first by angle [0, 360), then by distance
 				
 		TrackedObject expected1 = obj1.afterObserverMoves(agentMove).afterObserverRotatesDeg(agentTurnDeg);
@@ -91,10 +91,49 @@ public class ObjectTrackingModelTests {
 		
 		model.addObservation(TrackedObject.inPolarDegreeCoordinates(50, 0));
 		
-		assertEquals(1, model.getObjectLocations().size());
-		
-		TrackedObject obj = model.getObjectLocations().get(0);
+		assertEquals(1, model.getObjects().size());
+		TrackedObject obj = model.getObjects().iterator().next();
 		assertEquals(50, obj.getDistance(), 0);
 		assertEquals(0, obj.getAngleDeg(), 0);
+	}
+	
+	@Test
+	public void copy_model_with_same_number_of_sectors_maintains_all_estimates() {
+		TrackedObject obj1 = TrackedObject.inPolarDegreeCoordinates(61, 0);
+		TrackedObject obj2 = TrackedObject.inPolarDegreeCoordinates(25, 35);
+		TrackedObject obj3 = TrackedObject.inPolarDegreeCoordinates(76, 360 - 35);
+		model.addObservation(obj1);
+		model.addObservation(obj2);
+		model.addObservation(obj3);
+		
+		ObjectTrackingModel copy = model.copy();
+		
+		List<TrackedObject> objectsInCopy = new ArrayList<>(copy.getObjects());
+		Collections.sort(objectsInCopy);
+		
+		assertEquals(61, objectsInCopy.get(0).getDistance(), 0);
+		assertEquals(0, objectsInCopy.get(0).getAngleDeg(), 0);
+		assertEquals(25, objectsInCopy.get(1).getDistance(), 0);
+		assertEquals(35, objectsInCopy.get(1).getAngleDeg(), 0);
+		assertEquals(76, objectsInCopy.get(2).getDistance(), 0);
+		assertEquals(360 - 35, objectsInCopy.get(2).getAngleDeg(), 0);
+	}
+	
+	@Test
+	public void copy_model_with_samller_number_of_sectors_leaves_closest_object_per_sector() {
+		// These are all within the 90 degree forward facing sector
+		TrackedObject obj1 = TrackedObject.inPolarDegreeCoordinates(61, 0);
+		TrackedObject obj2 = TrackedObject.inPolarDegreeCoordinates(25, 35);
+		TrackedObject obj3 = TrackedObject.inPolarDegreeCoordinates(76, 360 - 35);
+		model.addObservation(obj1);
+		model.addObservation(obj2);
+		model.addObservation(obj3);
+		
+		ObjectTrackingModel copy = model.copyAndChangeNumberOfSectors(4);
+		
+		List<TrackedObject> objectsInCopy = new ArrayList<>(copy.getObjects());
+		assertEquals(1, objectsInCopy.size());
+		assertEquals(25, objectsInCopy.get(0).getDistance(), 0);
+		assertEquals(35, objectsInCopy.get(0).getAngleDeg(), 0);
 	}
 }

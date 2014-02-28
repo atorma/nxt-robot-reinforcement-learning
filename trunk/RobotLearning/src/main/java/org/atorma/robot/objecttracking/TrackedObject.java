@@ -3,35 +3,42 @@ package org.atorma.robot.objecttracking;
 import static java.lang.Math.*;
 
 /**
- * Represents the location of an object with respect to the agent.
- * The agent is always facing degree zero in polar coordinates
+ * An immutable value object that represents the location 
+ * of an object with respect to an observer.
+ * <p>
+ * The observer is always facing degree zero in polar coordinates
  * and along the positive y-axis in Cartesian coordinates.
  */
 public class TrackedObject implements Comparable<TrackedObject> {
 		
 	// Polar coordinate representation
-	private double distance;
-	private double angleRad;
+	private final double distance;
+	private final double angleRad;
 	
 	// Cartesian coordinate representation
-	private double x;
-	private double y;
+	private final double x;
+	private final double y;
 	
-	private TrackedObject() {
-		
+
+	private TrackedObject(double distance, double angleRad) {
+		this(
+			distance, 
+			angleRad, 
+			distance * cos(PI/2 - angleRad),
+			distance * sin(PI/2 - angleRad)
+		);
 	}
 	
-	private TrackedObject(double distanceCm, double angleRad) {
+	private TrackedObject(double distanceCm, double angleRad, double x, double y) {
 		if (distanceCm < 0) {
 			throw new IllegalArgumentException("Negative distance");
 		}
 		
 		this.distance = distanceCm;
 		this.angleRad = ObjectTrackingUtils.normalizeRadians(angleRad);
-		
-		
-		this.x = distanceCm * cos(PI/2 - angleRad);
-		this.y = distanceCm * sin(PI/2 - angleRad);
+
+		this.x = x;
+		this.y = y;
 	}
 
 	public double getDistance() {
@@ -71,7 +78,7 @@ public class TrackedObject implements Comparable<TrackedObject> {
 
 	@Override
 	public String toString() {
-		return "TrackedObject [distance=" + getDistance() + ", angleDeg=" + getAngleDeg() + "]";
+		return "TrackedObject [distance=" + round(getDistance()*100)/100 + ", angleDeg=" + round(getAngleDeg()*100)/100 + "]";
 	}
 	
 	@Override
@@ -94,11 +101,12 @@ public class TrackedObject implements Comparable<TrackedObject> {
 	}
 
 	public static TrackedObject inCartesianCoordinates(double x, double y) {
-		TrackedObject o = new TrackedObject();
-		o.x = x;
-		o.y = y;
-		o.distance = sqrt(pow(x, 2) + pow(y, 2));
-		o.angleRad = ObjectTrackingUtils.normalizeRadians(atan2(x, y));
+		TrackedObject o = new TrackedObject(
+			sqrt(pow(x, 2) + pow(y, 2)),
+			atan2(x, y),
+			x,
+			y
+		);
 		return o;
 	}
 

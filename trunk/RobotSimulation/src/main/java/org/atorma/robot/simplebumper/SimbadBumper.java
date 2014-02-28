@@ -1,8 +1,5 @@
 package org.atorma.robot.simplebumper;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.vecmath.Vector3d;
 
 import org.atorma.robot.DiscreteActionPolicy;
@@ -15,8 +12,6 @@ import simbad.sim.RangeSensorBelt;
 public class SimbadBumper extends SimbadRobot {
 	
 	private RangeSensorBelt ultrasonicSensor;
-	private Map<BumperAction, SimbadAction> actionMap = new HashMap<>();
-	
 
 	public SimbadBumper(DiscreteActionPolicy actionIdProvider) {
 		super(actionIdProvider, new Vector3d(0, 0, 0), "Toveri");
@@ -27,12 +22,6 @@ public class SimbadBumper extends SimbadRobot {
 		ultrasonicSensor = new RangeSensorBelt(this.radius, 7f/100, 255.0f/100, 1, RangeSensorBelt.TYPE_SONAR, RangeSensorBelt.FLAG_SHOW_FULL_SENSOR_RAY);
 		ultrasonicSensor.setUpdatePerSecond(60);
 		this.addSensorDevice(ultrasonicSensor, new Vector3d(0, 0, 0), 0);
-		//ultrasonicSensor = RobotFactory.addSonarBeltSensor(this);
-		
-		actionMap.put(BumperAction.FORWARD, new DriveForward());
-		actionMap.put(BumperAction.BACKWARD, new DriveBackward());
-		actionMap.put(BumperAction.LEFT, new TurnLeft());
-		actionMap.put(BumperAction.RIGHT, new TurnRight());
 	}
 
 	@Override
@@ -44,46 +33,81 @@ public class SimbadBumper extends SimbadRobot {
 	@Override
 	public SimbadAction getAction(int actionId) {
 		BumperAction bumperAction = BumperAction.getAction(actionId);
-		return actionMap.get(bumperAction);
+		if (bumperAction == BumperAction.FORWARD) {
+			return new Drive(true);
+		} else if (bumperAction == BumperAction.BACKWARD) {
+			return new Drive(false);
+		} else if (bumperAction == BumperAction.LEFT) {
+			return new TurnLeft();
+		} else if (bumperAction == BumperAction.RIGHT) {
+			return new TurnRight();
+		} else {
+			throw new IllegalArgumentException();
+		}
 	}
 
 
-	private class DriveForward implements SimbadAction {
+	private class Drive implements SimbadAction {
+		
+		private static final double VELOCITY_CM_PER_SEC = 20.0;
+		
+		private double distanceTraveledCm = -1;
+		private boolean isForward;
+		
+		public Drive(boolean isForward) {
+			this.isForward = isForward;
+		}
 		
 		@Override
 		public void perform() {
-			SimbadBumper.this.setRotationalVelocity(0);
-			SimbadBumper.this.setTranslationalVelocity(0.5);
+			if (distanceTraveledCm < 0) {
+				SimbadBumper.this.setRotationalVelocity(0);
+				SimbadBumper.this.setTranslationalVelocity(isForward ? VELOCITY_CM_PER_SEC/100 : -VELOCITY_CM_PER_SEC/100);
+				distanceTraveledCm = 0;
+			} else {
+				distanceTraveledCm += SimbadBumper.this.getOdometer()*100;
+			}
 		}
-
-	}
-	
-	private class DriveBackward implements SimbadAction {
 
 		@Override
-		public void perform() {
-			SimbadBumper.this.setRotationalVelocity(0);
-			SimbadBumper.this.setTranslationalVelocity(-0.5);
+		public boolean isCompleted() {
+			return distanceTraveledCm >= BumperAction.DRIVE_DISTANCE_CM;
 		}
 
 	}
-	
+		
 	private class TurnLeft implements SimbadAction {
+		
+		private boolean isCompleted = false;
 
 		@Override
 		public void perform() {
 			SimbadBumper.this.setTranslationalVelocity(0);
 			SimbadBumper.this.rotateY(0.262); // rad, 15 deg
+			isCompleted = true;
+		}
+
+		@Override
+		public boolean isCompleted() {
+			return isCompleted;
 		}
 
 	}
 	
 	private class TurnRight implements SimbadAction {
+		
+		private boolean isCompleted = false;
 
 		@Override
 		public void perform() {
 			SimbadBumper.this.setTranslationalVelocity(0);
-			SimbadBumper.this.rotateY(-0.263); // rad, 15 deg
+			SimbadBumper.this.rotateY(-0.262); // rad, 15 deg
+			isCompleted = true;
+		}
+
+		@Override
+		public boolean isCompleted() {
+			return isCompleted;
 		}
 
 	}
