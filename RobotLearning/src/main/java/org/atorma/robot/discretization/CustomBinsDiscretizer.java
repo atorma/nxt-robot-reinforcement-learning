@@ -22,9 +22,6 @@ public class CustomBinsDiscretizer implements Discretizer {
 
 	@Override
 	public int discretize(double value) {
-		if (bins.length == 0) {
-			return 0;
-		}
 		
 		int index = Arrays.binarySearch(bins, value);
 		if (index >= 0) {
