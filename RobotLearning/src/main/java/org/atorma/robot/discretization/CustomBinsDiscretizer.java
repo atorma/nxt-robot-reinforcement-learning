@@ -1,5 +1,7 @@
 package org.atorma.robot.discretization;
 
+import java.util.Arrays;
+
 /**
  * A discretizer with bin widths defined by user given divider points:
  * [-Inf,bins[0]), [bins[0],bins[1]), ... , [bins[n-1],Inf) 
@@ -13,6 +15,7 @@ public class CustomBinsDiscretizer implements Discretizer {
 		if (bins == null) {
 			throw new NullPointerException();
 		}
+		Arrays.sort(bins);
 		this.bins = bins;
 	}
 	
@@ -23,13 +26,12 @@ public class CustomBinsDiscretizer implements Discretizer {
 			return 0;
 		}
 		
-		for (int i = 0; i < bins.length; i++) {
-			if (value < bins[i]) {
-				return i;
-			}
+		int index = Arrays.binarySearch(bins, value);
+		if (index >= 0) {
+			return index + 1;
+		} else {
+			return -index - 1;
 		}
-		
-		return bins.length;
 	}
 
 	@Override
