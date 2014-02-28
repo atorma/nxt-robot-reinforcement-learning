@@ -9,7 +9,7 @@ import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
 
-public class QLearningBumper implements DiscreteActionPolicy {
+public class ObjectTrackingQLearningBumper implements DiscreteActionPolicy {
 	
 	private BumperStateIdFunction stateIdMap = new BumperStateIdFunction();
 	
@@ -28,7 +28,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 	private ObjectTrackingModel objectTrackingModel;
 	
 	
-	public QLearningBumper() {
+	public ObjectTrackingQLearningBumper() {
 		
 		qLearning = new QLearning(stateIdMap, rewardFunction, learningRate, discountFactor);
 		
@@ -46,7 +46,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		updateObjectTrackingModel(currentPercept);
 		ModeledBumperState currentState = new ModeledBumperState(objectTrackingModel);
-		System.out.println(currentState);
+		//System.out.println(currentState);
 		
 		int currentStateId = stateIdMap.getId(currentState.getValues());
 		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
@@ -54,7 +54,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 		if (previousState != null) {
 			Transition transition = new Transition(previousState, previousAction, currentState);
 			qLearning.update(transition);
-			System.out.println("Total reward: " + qLearning.getAccumulatedReward());
+			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
 			epsilonGreedyPolicy.setDeterministicPolicy(qLearning.getLearnedPolicy());
 		}
 		
@@ -67,7 +67,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 	
 	private void updateObjectTrackingModel(BumperPercept currentPercept) {
 		if (previousAction != null) {
-			System.out.println("Action: " + previousAction);
+			//System.out.println("Action: " + previousAction);
 			switch(previousAction) {
 			case FORWARD:
 				objectTrackingModel.agentMoves(BumperAction.DRIVE_DISTANCE_CM);
@@ -88,6 +88,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 			objectTrackingModel.addObservation(TrackedObject.inPolarDegreeCoordinates(0, 0));
 		}
 		//System.out.println(objectTrackingModel);
+		//System.out.println("Number of objects: " + objectTrackingModel.getObjects().size());
 	}
 
 }
