@@ -7,7 +7,7 @@ import org.atorma.robot.learning.Transition;
 
 public class QLearningBumper implements DiscreteActionPolicy {
 	
-	private BumperStateIdMap stateIdMap = new BumperStateIdMap();
+	private BumperStateIdFunction stateIdFunction = new BumperStateIdFunction();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
@@ -21,7 +21,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 	
 	public QLearningBumper() {
 		
-		qLearning = new QLearning(stateIdMap, rewardFunction, learningRate, discountFactor);
+		qLearning = new QLearning(stateIdFunction, rewardFunction, learningRate, discountFactor);
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(new int[] {
 				BumperAction.FORWARD.getId(), BumperAction.BACKWARD.getId(),
@@ -34,7 +34,7 @@ public class QLearningBumper implements DiscreteActionPolicy {
 	@Override
 	public int getActionId(double[] state) {
 		BumperPercept currentState = new BumperPercept(state);
-		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateIdMap.getId(state)));
+		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateIdFunction.getId(state)));
 		System.out.println("State: " + currentState);
 		System.out.println("Action: " + currentAction);
 

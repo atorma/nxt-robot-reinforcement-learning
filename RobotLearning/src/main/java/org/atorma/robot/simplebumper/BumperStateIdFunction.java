@@ -6,11 +6,11 @@ import org.atorma.robot.discretization.Discretizer;
 import org.atorma.robot.discretization.EqualWidthDiscretizer;
 import org.atorma.robot.discretization.IdFunction;
 
-public class BumperStateIdMap implements IdFunction {
+public class BumperStateIdFunction implements IdFunction {
 		
 	private DiscretizationBasedIdFunction idFunction;
 
-	public BumperStateIdMap() {
+	public BumperStateIdFunction() {
 		idFunction = new DiscretizationBasedIdFunction(getUltrasonicDistanceDiscretizer(), getCollisionDiscretizer(), getLightValueDiscretizer());
 	}
 
