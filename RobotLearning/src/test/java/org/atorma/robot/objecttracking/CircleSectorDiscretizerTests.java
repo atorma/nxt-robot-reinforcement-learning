@@ -17,9 +17,17 @@ public class CircleSectorDiscretizerTests {
 		assertEquals(0, discretizer.discretize(330));
 		assertEquals(0, discretizer.discretize(-30));
 		assertEquals(0, discretizer.discretize(29.9));
+		
 		assertEquals(1, discretizer.discretize(30));
 		assertEquals(1, discretizer.discretize(60));
 		assertEquals(1, discretizer.discretize(89.9));
+		
+		assertEquals(2, discretizer.discretize(95));
+		
+		assertEquals(3, discretizer.discretize(180));
+		
+		assertEquals(4, discretizer.discretize(265));
+
 		assertEquals(5, discretizer.discretize(329.9));
 	}
 }

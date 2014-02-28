@@ -1,12 +1,6 @@
 package org.atorma.robot.objecttracking;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Tracks objects by dividing the circle around the agent into a number of sectors
