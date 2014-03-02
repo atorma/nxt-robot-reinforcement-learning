@@ -22,7 +22,7 @@ public class ModeledBumperState implements State {
 		values = new double[NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING + 1];
 		
 		for (int i = 0; i < NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING; i++) {
-			values[i] = BumperPercept.MAX_ULTRASONIC_DIST;
+			values[i] = BumperPercept.MAX_ULTRASONIC_DIST*50;
 		}
 		for (Entry<Integer, TrackedObject> e : reducedModel.getObjectsBySectors()) {
 			values[e.getKey()] = e.getValue().getDistance();

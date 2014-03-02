@@ -14,8 +14,6 @@ public class RobotTestEnvironment extends EnvironmentDescription {
 		
 		setWorldSize(4);
 		
-		usePhysics = true;
-		
 		light1IsOn = true;
         light2IsOn = false;
         Wall w1 = new Wall(new Vector3d(2, 0, 0), 4, 0.1f, this);
