@@ -5,7 +5,7 @@ import java.util.Random;
 
 import lejos.pc.comm.NXTCommException;
 
-import org.atorma.robot.DiscreteActionController;
+import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.communications.PcToNxtCommunication;
 
 public class CommunicationsTests {
@@ -13,7 +13,7 @@ public class CommunicationsTests {
 	
 	public static void main(String[] args) throws NXTCommException {
 
-		DiscreteActionController policy = new DiscreteActionController() {
+		DiscreteRobotController policy = new DiscreteRobotController() {
 			
 			private Random random = new Random();
 			
