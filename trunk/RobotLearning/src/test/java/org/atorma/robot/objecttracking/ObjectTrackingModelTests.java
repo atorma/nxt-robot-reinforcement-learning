@@ -98,6 +98,19 @@ public class ObjectTrackingModelTests {
 	}
 	
 	@Test
+	public void closer_estimate_replaces_further_estimate_in_same_sector() {
+		model = new ObjectTrackingModel(10);
+		model.addObservation(TrackedObject.inCartesianCoordinates(1, 1));
+		model.addObservation(TrackedObject.inPolarDegreeCoordinates(1000, 90));
+		model.agentMoves(1); // the first observation should be close on the right, "obscuring" the further one
+
+		assertEquals(1, model.getObjects().size());
+		TrackedObject obj = model.getObjects().iterator().next();
+		assertEquals(1, obj.getDistance(), 0);
+		assertEquals(90, obj.getAngleDeg(), 0);
+	}
+	
+	@Test
 	public void copy_model_with_same_number_of_sectors_maintains_all_estimates() {
 		TrackedObject obj1 = TrackedObject.inPolarDegreeCoordinates(61, 0);
 		TrackedObject obj2 = TrackedObject.inPolarDegreeCoordinates(25, 35);
@@ -136,4 +149,5 @@ public class ObjectTrackingModelTests {
 		assertEquals(25, objectsInCopy.get(0).getDistance(), 0);
 		assertEquals(35, objectsInCopy.get(0).getAngleDeg(), 0);
 	}
+	
 }

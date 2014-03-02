@@ -54,11 +54,8 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		}
 		updateObjectTrackingModel(currentPercept);
 		ModeledBumperState currentState = new ModeledBumperState(objectTrackingModel, currentPercept.isCollided());
-		System.out.println(currentState);
-		
-		int currentStateId = stateDiscretizer.getId(currentState.getValues());
-		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
-		
+		//System.out.println(currentState);
+
 		if (previousState != null) {
 			Transition transition = new Transition(previousState, previousAction, currentState);
 			qLearning.update(transition);
@@ -69,15 +66,20 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
 		}
 		
-		previousState = currentState;
-		previousAction = currentAction;
+		int currentStateId = stateDiscretizer.getId(currentState.getValues());
+		BumperAction action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
 		
-		return currentAction.getId();
+		previousState = currentState;
+		previousAction = action;
+		
+		return action.getId();
 			
 	}
 	
 	private void updateObjectTrackingModel(BumperPercept currentPercept) {
+		//System.out.println(currentPercept);
 		if (previousAction != null) {
+			//System.out.println(previousAction);
 			switch(previousAction) {
 			case FORWARD:
 				objectTrackingModel.agentMoves(BumperAction.DRIVE_DISTANCE_CM);

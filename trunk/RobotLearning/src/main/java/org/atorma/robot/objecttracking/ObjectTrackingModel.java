@@ -45,7 +45,7 @@ public class ObjectTrackingModel {
 		Map<Integer, TrackedObject> oldObjects = objectsBySector;
 		this.objectsBySector = new HashMap<>(internalNumberOfSectors);
 		for (TrackedObject o : oldObjects.values()) {
-			addObservation(o.afterObserverMoves(agentMove));
+			addEstimate(o.afterObserverMoves(agentMove));
 		}
 	}
 
@@ -53,7 +53,15 @@ public class ObjectTrackingModel {
 		Map<Integer, TrackedObject> oldObjects = objectsBySector;
 		this.objectsBySector = new HashMap<>(internalNumberOfSectors);
 		for (TrackedObject o : oldObjects.values()) {
-			addObservation(o.afterObserverRotatesDeg(agentTurnDeg));
+			addEstimate(o.afterObserverRotatesDeg(agentTurnDeg));
+		}
+	}
+	
+	private void addEstimate(TrackedObject obj) {
+		int sectorIndex = circleSectorDiscretizer.discretize(obj.getAngleDeg());
+		TrackedObject existing = objectsBySector.get(sectorIndex);
+		if (existing == null || existing.getDistance() > obj.getDistance()) {
+			objectsBySector.put(sectorIndex, obj);
 		}
 	}
 
@@ -68,21 +76,13 @@ public class ObjectTrackingModel {
 	}
 
 	public ObjectTrackingModel copy() {
-		ObjectTrackingModel copy = new ObjectTrackingModel(this.internalNumberOfSectors);
-		for (TrackedObject o : this.getObjects()) {
-			copy.addObservation(o);
-		}
-		return copy;
+		return copyAndChangeNumberOfSectors(this.internalNumberOfSectors);
 	}
 
 	public ObjectTrackingModel copyAndChangeNumberOfSectors(int numberOfSectors) {
 		ObjectTrackingModel copy = new ObjectTrackingModel(numberOfSectors);
 		for (TrackedObject o : this.getObjects()) {
-			int sectorInCopy = copy.circleSectorDiscretizer.discretize(o.getAngleDeg());
-			TrackedObject existing = copy.objectsBySector.get(sectorInCopy);
-			if (existing == null || o.getDistance() < existing.getDistance()) {
-				copy.objectsBySector.put(sectorInCopy, o);
-			}
+			copy.addEstimate(o);
 		}
 		return copy;
 	}
