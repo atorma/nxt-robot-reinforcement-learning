@@ -4,11 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.atorma.robot.DiscreteAction;
-import org.atorma.robot.DiscretePolicy;
-import org.atorma.robot.EpsilonGreedyPolicy;
-import org.atorma.robot.RewardFunction;
-import org.atorma.robot.State;
+import org.atorma.robot.*;
 import org.atorma.robot.discretization.VectorDiscretizer;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,14 +12,13 @@ import org.junit.Test;
 public class CliffWorldQLearningTests {
 
 	private QLearning qLearning;
-	private DiscretePolicy learnedPolicy;
-	private ArrayHashCode stateIdFunction = new ArrayHashCode();
+	private ArrayHashCode stateDiscretizer = new ArrayHashCode();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
 	
 	@Before
 	public void setUp() {
-		qLearning = new QLearning(stateIdFunction, rewardFunction, 0.1, 1);
+		qLearning = new QLearning(stateDiscretizer, rewardFunction, 0.1, 1);
 	}
 	
 	@Test
@@ -50,8 +45,8 @@ public class CliffWorldQLearningTests {
 	
 	private void assertExpectedActionEqualsLearnedAction(CliffWorldAction expectedAction, CliffWorldState currentState) {
 		int expectedActionId = expectedAction.getId();
-		int currentStateId = stateIdFunction.getId(currentState.getValues());
-		int learnedActionId = learnedPolicy.getActionId(currentStateId);
+		int currentStateId = stateDiscretizer.getId(currentState.getValues());
+		int learnedActionId = qLearning.getActionId(currentStateId);
 		assertEquals(expectedActionId, learnedActionId);
 	}
 
@@ -68,7 +63,7 @@ public class CliffWorldQLearningTests {
 			CliffWorldState toState;
 			
 			do {
-				int fromStateId = stateIdFunction.getId(fromState.getValues());
+				int fromStateId = stateDiscretizer.getId(fromState.getValues());
 				Integer byActionId = policy.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
@@ -82,8 +77,6 @@ public class CliffWorldQLearningTests {
 			
 			//System.out.println("episode " + episode +", reward " + episodeReward);
 		}
-		
-		learnedPolicy = qLearning.getLearnedPolicy();
 	}
 	
 	
