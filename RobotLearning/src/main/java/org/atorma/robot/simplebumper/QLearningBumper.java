@@ -28,7 +28,7 @@ public class QLearningBumper implements DiscreteRobotController {
 	
 	public QLearningBumper(String logFile) {
 		this();
-		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions", "Action"); 
+		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions"); 
 	}
 	
 	public QLearningBumper() {
@@ -53,7 +53,7 @@ public class QLearningBumper implements DiscreteRobotController {
 		}
 		
 		if (logWriter != null) {
-			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions, currentAction);
+			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
 		}
 		
 		previousState = currentState;

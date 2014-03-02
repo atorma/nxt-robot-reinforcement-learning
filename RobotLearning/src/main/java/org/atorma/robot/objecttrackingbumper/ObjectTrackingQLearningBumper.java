@@ -36,7 +36,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	public ObjectTrackingQLearningBumper(String logFile) {
 		this();
-		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions", "Action"); 
+		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions"); 
 	}
 	
 	public ObjectTrackingQLearningBumper() {
@@ -53,8 +53,8 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 			accumulatedCollisions++;
 		}
 		updateObjectTrackingModel(currentPercept);
-		ModeledBumperState currentState = new ModeledBumperState(objectTrackingModel);
-		//System.out.println(currentState);
+		ModeledBumperState currentState = new ModeledBumperState(objectTrackingModel, currentPercept.isCollided());
+		System.out.println(currentState);
 		
 		int currentStateId = stateDiscretizer.getId(currentState.getValues());
 		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
@@ -66,7 +66,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		}
 		
 		if (logWriter != null) {
-			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions, currentAction);
+			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
 		}
 		
 		previousState = currentState;
@@ -78,7 +78,6 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private void updateObjectTrackingModel(BumperPercept currentPercept) {
 		if (previousAction != null) {
-			//System.out.println("Action: " + previousAction);
 			switch(previousAction) {
 			case FORWARD:
 				objectTrackingModel.agentMoves(BumperAction.DRIVE_DISTANCE_CM);
@@ -95,11 +94,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 			}
 		}
 		objectTrackingModel.addObservation(TrackedObject.inPolarDegreeCoordinates(currentPercept.getDistanceToObstacleInFrontCm(), 0));
-		if (currentPercept.isCollided()) {
-			objectTrackingModel.addObservation(TrackedObject.inPolarDegreeCoordinates(0, 0));
-		}
 		//System.out.println(objectTrackingModel);
-		//System.out.println("Number of objects: " + objectTrackingModel.getObjects().size());
 	}
 
 }

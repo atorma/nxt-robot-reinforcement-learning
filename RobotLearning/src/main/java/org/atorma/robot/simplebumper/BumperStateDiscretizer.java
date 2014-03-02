@@ -1,10 +1,6 @@
 package org.atorma.robot.simplebumper;
 
-import org.atorma.robot.discretization.CustomBinsDiscretizer;
-import org.atorma.robot.discretization.VectorDiscretizerImpl;
-import org.atorma.robot.discretization.Discretizer;
-import org.atorma.robot.discretization.EqualWidthDiscretizer;
-import org.atorma.robot.discretization.VectorDiscretizer;
+import org.atorma.robot.discretization.*;
 
 public class BumperStateDiscretizer implements VectorDiscretizer {
 		
@@ -15,8 +11,7 @@ public class BumperStateDiscretizer implements VectorDiscretizer {
 	}
 
 	private Discretizer getUltrasonicDistanceDiscretizer() {
-		double[] bins = new double[] {7, 18, 35, 55};  
-		Discretizer discretizer = new CustomBinsDiscretizer(bins);
+		Discretizer discretizer = new EqualWidthDiscretizer(10, 50, 4);
 		return discretizer;
 	}
 		
