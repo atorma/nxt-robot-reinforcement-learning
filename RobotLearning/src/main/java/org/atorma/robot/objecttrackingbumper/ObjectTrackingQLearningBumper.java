@@ -1,8 +1,11 @@
 package org.atorma.robot.objecttrackingbumper;
 
+import java.io.File;
+
 import org.atorma.robot.*;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.learning.Transition;
+import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.simplebumper.BumperAction;
@@ -10,7 +13,7 @@ import org.atorma.robot.simplebumper.BumperPercept;
 
 public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
-	private BumperStateIdFunction stateIdMap = new BumperStateIdFunction();
+	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	
@@ -26,9 +29,18 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private ObjectTrackingModel objectTrackingModel;
 	
+	private int accumulatedCollisions = 0;
+	
+	private CsvLogWriter logWriter;
+	
+	
+	public ObjectTrackingQLearningBumper(String logFile) {
+		this();
+		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions", "Action"); 
+	}
 	
 	public ObjectTrackingQLearningBumper() {
-		qLearning = new QLearning(stateIdMap, rewardFunction, learningRate, discountFactor);
+		qLearning = new QLearning(stateDiscretizer, rewardFunction, learningRate, discountFactor);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, BumperAction.values(), qLearning);
 		objectTrackingModel = new ObjectTrackingModel();
 	}
@@ -37,17 +49,24 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	@Override
 	public int getActionId(double[] currentPerceptValues) {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
+		if (currentPercept.isCollided()) {
+			accumulatedCollisions++;
+		}
 		updateObjectTrackingModel(currentPercept);
 		ModeledBumperState currentState = new ModeledBumperState(objectTrackingModel);
 		//System.out.println(currentState);
 		
-		int currentStateId = stateIdMap.getId(currentState.getValues());
+		int currentStateId = stateDiscretizer.getId(currentState.getValues());
 		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
 		
 		if (previousState != null) {
 			Transition transition = new Transition(previousState, previousAction, currentState);
 			qLearning.update(transition);
 			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
+		}
+		
+		if (logWriter != null) {
+			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions, currentAction);
 		}
 		
 		previousState = currentState;

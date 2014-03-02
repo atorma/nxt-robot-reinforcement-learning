@@ -1,12 +1,15 @@
 package org.atorma.robot.simplebumper;
 
+import java.io.File;
+
 import org.atorma.robot.*;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.learning.Transition;
+import org.atorma.robot.logging.CsvLogWriter;
 
 public class QLearningBumper implements DiscreteRobotController {
 	
-	private BumperStateIdFunction stateIdFunction = new BumperStateIdFunction();
+	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
@@ -18,10 +21,18 @@ public class QLearningBumper implements DiscreteRobotController {
 	private BumperPercept previousState;
 	private BumperAction previousAction;
 	
+	private int accumulatedCollisions = 0;
+	
+	private CsvLogWriter logWriter;
+	
+	
+	public QLearningBumper(String logFile) {
+		this();
+		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions", "Action"); 
+	}
+	
 	public QLearningBumper() {
-		
-		qLearning = new QLearning(stateIdFunction, rewardFunction, learningRate, discountFactor);
-		
+		qLearning = new QLearning(stateDiscretizer, rewardFunction, learningRate, discountFactor);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, BumperAction.values(), qLearning);
 	}
 	
@@ -30,14 +41,19 @@ public class QLearningBumper implements DiscreteRobotController {
 	@Override
 	public int getActionId(double[] state) {
 		BumperPercept currentState = new BumperPercept(state);
-		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateIdFunction.getId(state)));
-		System.out.println("State: " + currentState);
-		System.out.println("Action: " + currentAction);
+		if (currentState.isCollided()) {
+			accumulatedCollisions++;
+		}
+		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(state)));
 
 		if (previousState != null) {
 			Transition transition = new Transition(previousState, previousAction, currentState);
 			qLearning.update(transition);
-			System.out.println("Total reward: " + qLearning.getAccumulatedReward());
+			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
+		}
+		
+		if (logWriter != null) {
+			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions, currentAction);
 		}
 		
 		previousState = currentState;
