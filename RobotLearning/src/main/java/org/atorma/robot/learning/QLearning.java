@@ -51,7 +51,7 @@ public class QLearning implements DiscretePolicy {
 		double newQ = oldQ + learningRate*( reward + discountFactor*maxQ - oldQ );
 		
 		qTable.put(fromStateActionIds, newQ);
-		updatePolicy(fromStateId);
+		updateBestAction(fromStateId);
 	}
 	
 
@@ -62,25 +62,19 @@ public class QLearning implements DiscretePolicy {
 		return qTable.get(stateActionIds);
 	}
 	
-	private void updatePolicy(int stateId) {
-		ActionValue maxActionValue = getMaxActionValue(stateId);
-		stateIdToBestActionIdMap.put(stateId, maxActionValue.actionId);
-	}
-	
-	private ActionValue getMaxActionValue(int stateId) {
-		ActionValue best = new ActionValue();
-		best.value = Double.NEGATIVE_INFINITY;
-
+	private void updateBestAction(int stateId) {
+		double bestActionValue = Double.NEGATIVE_INFINITY;
+		Integer bestActionId = null;
+		
 		for (int actionId : actionIds) {
-			StateIdActionId sai = new StateIdActionId(stateId, actionId);
-			double q = getQValue(sai);
-			if (q > best.value) {
-				best.value = q;
-				best.actionId = actionId;
+			double q = getQValue(new StateIdActionId(stateId, actionId));
+			if (q > bestActionValue) {
+				bestActionValue = q;
+				bestActionId = actionId;
 			}
 		}
-		
-		return best;
+
+		stateIdToBestActionIdMap.put(stateId, bestActionId);
 	}
 	
 	/**
@@ -106,13 +100,6 @@ public class QLearning implements DiscretePolicy {
 	public double getAccumulatedReward() {
 		return accumulatedReward;
 	}
-
-
-	private static class ActionValue {
-		Integer actionId = null;
-		Double value = null;
-	}
-
 
 	
 }
