@@ -9,19 +9,25 @@ public class EpsilonGreedyPolicy implements DiscretePolicy {
 	private double epsilon = 0.1;
 	private int[] allActionIds;
 	
-	public EpsilonGreedyPolicy(double epsilon, int[] allActionIds) {
+	public EpsilonGreedyPolicy(double epsilon, int[] allActionIds, DiscretePolicy deterministicPolicy) {
 		this.allActionIds = allActionIds;
 		this.epsilon = epsilon;
+		this.deterministicPolicy = deterministicPolicy;
 	}
 		
-	public EpsilonGreedyPolicy(double epsilon, DiscreteAction[] allActions) {
+	public EpsilonGreedyPolicy(double epsilon, DiscreteAction[] allActions, DiscretePolicy deterministicPolicy) {
 		this.allActionIds = new int[allActions.length]; 
 		for (int i=0; i<allActions.length; i++) {
 			this.allActionIds[i] = allActions[i].getId();
 		}
 		this.epsilon = epsilon;
+		this.deterministicPolicy = deterministicPolicy;
 	}
 
+	/**
+	 * Returns the id of an action given a state id according to epsilon greedy policy.
+	 * The action id is never null.
+	 */
 	@Override
 	public Integer getActionId(int stateId) {
 		if (random.nextFloat() < epsilon || deterministicPolicy == null || deterministicPolicy.getActionId(stateId) == null) {

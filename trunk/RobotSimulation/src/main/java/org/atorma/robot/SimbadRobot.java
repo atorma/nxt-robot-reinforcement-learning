@@ -7,13 +7,13 @@ import simbad.sim.Agent;
 
 public abstract class SimbadRobot extends Agent {
 	
-	private final DiscreteActionPolicy policy;
+	private final DiscreteActionController controller;
 	
 	private SimbadAction currentAction;
 
-	public SimbadRobot(DiscreteActionPolicy actionIdProvider, Vector3d startingPosition, String name) {
+	public SimbadRobot(DiscreteActionController actionIdProvider, Vector3d startingPosition, String name) {
 		super(startingPosition, name);
-		this.policy = actionIdProvider;
+		this.controller = actionIdProvider;
 	}
 	
 	public abstract State getCurrentState();
@@ -33,7 +33,7 @@ public abstract class SimbadRobot extends Agent {
 
 		if (currentAction == null || currentAction.isCompleted()) {
 			State currentState = getCurrentState();
-			int actionId = policy.getActionId(currentState.getValues());
+			int actionId = controller.getActionId(currentState.getValues());
 			currentAction = getAction(actionId);
 		}
 

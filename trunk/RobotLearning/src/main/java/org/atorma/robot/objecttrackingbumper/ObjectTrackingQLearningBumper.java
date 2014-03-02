@@ -1,7 +1,6 @@
 package org.atorma.robot.objecttrackingbumper;
 
-import org.atorma.robot.DiscreteActionPolicy;
-import org.atorma.robot.EpsilonGreedyPolicy;
+import org.atorma.robot.*;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.learning.Transition;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
@@ -9,7 +8,7 @@ import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
 
-public class ObjectTrackingQLearningBumper implements DiscreteActionPolicy {
+public class ObjectTrackingQLearningBumper implements DiscreteActionController {
 	
 	private BumperStateIdFunction stateIdMap = new BumperStateIdFunction();
 	
@@ -29,14 +28,8 @@ public class ObjectTrackingQLearningBumper implements DiscreteActionPolicy {
 	
 	
 	public ObjectTrackingQLearningBumper() {
-		
 		qLearning = new QLearning(stateIdMap, rewardFunction, learningRate, discountFactor);
-		
-		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, 
-				new int[] {
-						BumperAction.FORWARD.getId(), BumperAction.BACKWARD.getId(),
-						BumperAction.LEFT.getId(), BumperAction.RIGHT.getId()});
-		
+		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, BumperAction.values(), qLearning);
 		objectTrackingModel = new ObjectTrackingModel();
 	}
 	
@@ -55,7 +48,6 @@ public class ObjectTrackingQLearningBumper implements DiscreteActionPolicy {
 			Transition transition = new Transition(previousState, previousAction, currentState);
 			qLearning.update(transition);
 			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
-			epsilonGreedyPolicy.setDeterministicPolicy(qLearning.getLearnedPolicy());
 		}
 		
 		previousState = currentState;

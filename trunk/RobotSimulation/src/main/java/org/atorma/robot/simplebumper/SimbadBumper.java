@@ -2,10 +2,7 @@ package org.atorma.robot.simplebumper;
 
 import javax.vecmath.Vector3d;
 
-import org.atorma.robot.DiscreteActionPolicy;
-import org.atorma.robot.SimbadAction;
-import org.atorma.robot.SimbadRobot;
-import org.atorma.robot.State;
+import org.atorma.robot.*;
 
 import simbad.sim.RangeSensorBelt;
 
@@ -13,8 +10,8 @@ public class SimbadBumper extends SimbadRobot {
 	
 	private RangeSensorBelt ultrasonicSensor;
 
-	public SimbadBumper(DiscreteActionPolicy actionIdProvider) {
-		super(actionIdProvider, new Vector3d(0, 0, 0), "Toveri");
+	public SimbadBumper(DiscreteActionController controller) {
+		super(controller, new Vector3d(0, 0, 0), "Toveri");
 		
 		this.height = 6f/100; // 6 cm height
 		this.radius = 9f/100; // 9 cm radius

@@ -5,7 +5,7 @@ import static org.atorma.robot.communications.MessageConstants.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-import org.atorma.robot.DiscreteActionPolicy;
+import org.atorma.robot.DiscreteActionController;
 
 import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTCommFactory;
@@ -18,18 +18,18 @@ import lejos.pc.comm.NXTConnector;
  */
 public class PcToNxtCommunication implements Runnable {
 
-	private DiscreteActionPolicy policy;
+	private DiscreteActionController controller;
 	private DataStreamCommunications comms;
 	private NXTConnector nxtConnector;
 	private volatile boolean isOpen;
 
-	public PcToNxtCommunication(String nxtName, DiscreteActionPolicy policy) throws NXTCommException {
+	public PcToNxtCommunication(String nxtName, DiscreteActionController controller) throws NXTCommException {
 		
-		if (policy == null) {
-			throw new IllegalArgumentException("Policy must not be null");
+		if (controller == null) {
+			throw new IllegalArgumentException("Controller must not be null");
 		}
 		
-		this.policy = policy;
+		this.controller = controller;
 		
 		nxtConnector = new NXTConnector();
 		nxtConnector.addLogListener(new NXTCommLogListener() {
@@ -71,7 +71,7 @@ public class PcToNxtCommunication implements Runnable {
 				} else if (request == SEND_PERCEPT_RECEIVE_ACTION) {
 					
 					double[] stateValues = comms.receiveDoubleArray();
-					int actionId = policy.getActionId(stateValues);
+					int actionId = controller.getActionId(stateValues);
 					comms.flushInt(actionId);
 					
 				}
