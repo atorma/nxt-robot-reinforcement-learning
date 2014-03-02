@@ -54,21 +54,17 @@ public class CsvLogWriter {
 	}
 
 	public void writeNextRow() {
-		FileOutputStream fos;
+
 		try {
-			fos = new FileOutputStream(outputFile, true); // append to file
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-		
-		try {
+			
 			Object[] row = rows.take();
 			final String[] rowValues = new String[row.length];
 			for (int i = 0; i < row.length; i++) {
 				rowValues[i] = row[i] != null ? row[i].toString() : null;
 			}
 			
-			csv.writeAndClose(fos, new CSVWriteProc() {
+			// Append to file
+			csv.writeAndClose(new FileOutputStream(outputFile, true), new CSVWriteProc() {
 
 				@Override
 				public void process(CSVWriter out) {
@@ -77,7 +73,11 @@ public class CsvLogWriter {
 				
 			});
 			
-		} catch (InterruptedException e) {}
+		} catch (InterruptedException e) {
+			
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 		
 	}
 	
@@ -86,10 +86,11 @@ public class CsvLogWriter {
 			
 			@Override
 			public void run() {
-				writeNextRow();
+				while (true) {
+					writeNextRow();
+				}
 			}
 		});
-		this.rowWriterThread.setDaemon(true);
 		this.rowWriterThread.start();
 	}
 	

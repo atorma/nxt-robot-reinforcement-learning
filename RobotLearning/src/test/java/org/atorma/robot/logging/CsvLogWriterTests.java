@@ -3,6 +3,8 @@ package org.atorma.robot.logging;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +21,8 @@ public class CsvLogWriterTests {
 	
 	
 	@After
-	public void tearDown() {
-		logWriter.getOutputFile().delete();
+	public void tearDown() throws InterruptedException, IOException {
+		Files.delete(logWriter.getOutputFile().toPath());
 	}
 	
 	@Test
@@ -29,16 +31,17 @@ public class CsvLogWriterTests {
 		
 		Object[] values = new String[] {"value 1", "value 2"};
 		logWriter.addRow(values);
-		Thread.sleep(100);
+		logWriter.addRow(values);
 		
 		CSV csv = logWriter.getCsvConfiguration();
 		
 		TestCSVReadProc readProc = new TestCSVReadProc();
 		csv.read(logWriter.getOutputFile(), readProc);
 		
-		assertEquals(2, readProc.rows.size());
+		assertEquals(3, readProc.rows.size());
 		assertArrayEquals(columnHeaders, readProc.rows.get(0));
 		assertArrayEquals(values, readProc.rows.get(1));
+		assertArrayEquals(values, readProc.rows.get(2));
 	}
 	
 	
