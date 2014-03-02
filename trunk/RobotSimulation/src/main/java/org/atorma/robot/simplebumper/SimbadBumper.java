@@ -10,7 +10,7 @@ public class SimbadBumper extends SimbadRobot {
 	
 	private RangeSensorBelt ultrasonicSensor;
 
-	public SimbadBumper(DiscreteActionController controller) {
+	public SimbadBumper(DiscreteRobotController controller) {
 		super(controller, new Vector3d(0, 0, 0), "Toveri");
 		
 		this.height = 6f/100; // 6 cm height

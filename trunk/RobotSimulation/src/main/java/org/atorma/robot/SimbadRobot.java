@@ -7,11 +7,11 @@ import simbad.sim.Agent;
 
 public abstract class SimbadRobot extends Agent {
 	
-	private final DiscreteActionController controller;
+	private final DiscreteRobotController controller;
 	
 	private SimbadAction currentAction;
 
-	public SimbadRobot(DiscreteActionController actionIdProvider, Vector3d startingPosition, String name) {
+	public SimbadRobot(DiscreteRobotController actionIdProvider, Vector3d startingPosition, String name) {
 		super(startingPosition, name);
 		this.controller = actionIdProvider;
 	}

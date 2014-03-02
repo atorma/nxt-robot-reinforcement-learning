@@ -5,7 +5,7 @@ import static org.atorma.robot.communications.MessageConstants.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-import org.atorma.robot.DiscreteActionController;
+import org.atorma.robot.DiscreteRobotController;
 
 import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTCommFactory;
@@ -18,12 +18,12 @@ import lejos.pc.comm.NXTConnector;
  */
 public class PcToNxtCommunication implements Runnable {
 
-	private DiscreteActionController controller;
+	private DiscreteRobotController controller;
 	private DataStreamCommunications comms;
 	private NXTConnector nxtConnector;
 	private volatile boolean isOpen;
 
-	public PcToNxtCommunication(String nxtName, DiscreteActionController controller) throws NXTCommException {
+	public PcToNxtCommunication(String nxtName, DiscreteRobotController controller) throws NXTCommException {
 		
 		if (controller == null) {
 			throw new IllegalArgumentException("Controller must not be null");

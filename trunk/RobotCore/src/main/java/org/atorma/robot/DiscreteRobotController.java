@@ -1,6 +1,6 @@
 package org.atorma.robot;
 
-public interface DiscreteActionController {
+public interface DiscreteRobotController {
 
 	int getActionId(double[] stateValues);
 }

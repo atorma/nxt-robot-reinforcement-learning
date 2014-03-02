@@ -4,7 +4,7 @@ import org.atorma.robot.*;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.learning.Transition;
 
-public class QLearningBumper implements DiscreteActionController {
+public class QLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateIdFunction stateIdFunction = new BumperStateIdFunction();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();

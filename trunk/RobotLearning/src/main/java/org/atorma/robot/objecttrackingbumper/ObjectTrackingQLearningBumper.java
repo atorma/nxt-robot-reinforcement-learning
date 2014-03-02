@@ -8,7 +8,7 @@ import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
 
-public class ObjectTrackingQLearningBumper implements DiscreteActionController {
+public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateIdFunction stateIdMap = new BumperStateIdFunction();
 	
