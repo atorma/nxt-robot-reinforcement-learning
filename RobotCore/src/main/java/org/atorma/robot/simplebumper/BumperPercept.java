@@ -46,7 +46,7 @@ public class BumperPercept implements State {
 
 	@Override
 	public String toString() {
-		return "BumperState [getDistanceToObstacle()="
+		return "BumperPercept [getDistanceToObstacle()="
 				+ getDistanceToObstacleInFrontCm() + ", isCollided()=" + isCollided()
 				+ ", getLightValue()=" + getLightValue() + "]";
 	}
