@@ -7,7 +7,7 @@ public class BumperPercept implements State {
 	public static final int MAX_ULTRASONIC_DIST = 255;
 	public static final int MIN_ULTRASONIC_DIST = 7;
 	
-	private final double[] values;
+	private double[] values;
 	
 
 	public BumperPercept(int distanceToObstacle) {
@@ -31,7 +31,7 @@ public class BumperPercept implements State {
 	public double[] getValues() {
 		return values;
 	}
-
+	
 	public int getDistanceToObstacleInFrontCm() {
 		return (int) values[0];
 	}
@@ -50,6 +50,8 @@ public class BumperPercept implements State {
 				+ getDistanceToObstacleInFrontCm() + ", isCollided()=" + isCollided()
 				+ ", getLightValue()=" + getLightValue() + "]";
 	}
+
+	
 	
 	
 }

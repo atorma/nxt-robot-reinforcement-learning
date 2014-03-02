@@ -84,7 +84,7 @@ public class QLearning implements DiscretePolicy {
 	}
 	
 	/**
-	 * Returns the best action id for the given state, or some action
+	 * Returns the learned best action id for the given state, or some action
 	 * if all are equally good, or <tt>null</tt> if no actions known yet.
 	 */
 	@Override
@@ -99,7 +99,7 @@ public class QLearning implements DiscretePolicy {
 		}
 	}
 	
-	public StateIdToActionIdMap getLearnedPolicy() {
+	public StateIdToActionIdMap getLearnedPolicyMap() {
 		return stateIdToBestActionIdMap;
 	}
 
