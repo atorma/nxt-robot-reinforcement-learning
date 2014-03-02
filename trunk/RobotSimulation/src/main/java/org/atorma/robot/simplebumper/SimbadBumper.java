@@ -29,37 +29,36 @@ public class SimbadBumper extends SimbadRobot {
 	
 	@Override
 	public SimbadAction getAction(int actionId) {
-		BumperAction bumperAction = BumperAction.getAction(actionId);
-		if (bumperAction == BumperAction.FORWARD) {
-			return new Drive(true);
-		} else if (bumperAction == BumperAction.BACKWARD) {
-			return new Drive(false);
-		} else if (bumperAction == BumperAction.LEFT) {
-			return new TurnLeft();
-		} else if (bumperAction == BumperAction.RIGHT) {
-			return new TurnRight();
+		BumperAction action = BumperAction.getAction(actionId);
+		if (action == BumperAction.FORWARD) {
+			return new Drive(BumperAction.FORWARD);
+		} else if (action == BumperAction.BACKWARD) {
+			return new Drive(BumperAction.BACKWARD);
+		} else if (action == BumperAction.LEFT) {
+			return new Turn(BumperAction.LEFT);
+		} else if (action == BumperAction.RIGHT) {
+			return new Turn(BumperAction.RIGHT);
 		} else {
 			throw new IllegalArgumentException();
 		}
 	}
-
-
+	
 	private class Drive implements SimbadAction {
 		
 		private static final double VELOCITY_CM_PER_SEC = 20.0;
 		
 		private double distanceTraveledCm = -1;
-		private boolean isForward;
+		private BumperAction action;
 		
-		public Drive(boolean isForward) {
-			this.isForward = isForward;
+		public Drive(BumperAction action) {
+			this.action = action;
 		}
 		
 		@Override
 		public void perform() {
 			if (distanceTraveledCm < 0) {
 				SimbadBumper.this.setRotationalVelocity(0);
-				SimbadBumper.this.setTranslationalVelocity(isForward ? VELOCITY_CM_PER_SEC/100 : -VELOCITY_CM_PER_SEC/100);
+				SimbadBumper.this.setTranslationalVelocity(action == BumperAction.FORWARD ? VELOCITY_CM_PER_SEC/100 : -VELOCITY_CM_PER_SEC/100);
 				distanceTraveledCm = 0;
 			} else {
 				distanceTraveledCm += SimbadBumper.this.getOdometer()*100;
@@ -68,45 +67,40 @@ public class SimbadBumper extends SimbadRobot {
 
 		@Override
 		public boolean isCompleted() {
-			return distanceTraveledCm >= BumperAction.DRIVE_DISTANCE_CM;
+			return distanceTraveledCm/BumperAction.DRIVE_DISTANCE_CM >= 0.99  || SimbadBumper.this.collisionDetected();
 		}
 
 	}
 		
-	private class TurnLeft implements SimbadAction {
+	private class Turn implements SimbadAction {
 		
-		private boolean isCompleted = false;
+		private static final double ROTATIONAL_VELOCITY_DEG_PER_SEC = 45;
+		
+		private double lifetimeWhenStarted;
+		private double angleTurnedDeg = -1;
+		private BumperAction action;
+		
+		public Turn(BumperAction action) {
+			this.action = action;
+			lifetimeWhenStarted = SimbadBumper.this.getLifeTime();
+		}
 
 		@Override
 		public void perform() {
-			SimbadBumper.this.setTranslationalVelocity(0);
-			SimbadBumper.this.rotateY(0.262); // rad, 15 deg
-			isCompleted = true;
+			if (angleTurnedDeg < 0) {
+				SimbadBumper.this.setTranslationalVelocity(0);
+				SimbadBumper.this.setRotationalVelocity(action == BumperAction.LEFT ? Math.toRadians(ROTATIONAL_VELOCITY_DEG_PER_SEC) : -Math.toRadians(ROTATIONAL_VELOCITY_DEG_PER_SEC)); 
+				angleTurnedDeg = 0;
+			} else {
+				angleTurnedDeg += (SimbadBumper.this.getLifeTime() - lifetimeWhenStarted) * ROTATIONAL_VELOCITY_DEG_PER_SEC;
+			}
 		}
 
 		@Override
 		public boolean isCompleted() {
-			return isCompleted;
+			return angleTurnedDeg/BumperAction.TURN_DEGREES >= 0.99;
 		}
 
 	}
 	
-	private class TurnRight implements SimbadAction {
-		
-		private boolean isCompleted = false;
-
-		@Override
-		public void perform() {
-			SimbadBumper.this.setTranslationalVelocity(0);
-			SimbadBumper.this.rotateY(-0.262); // rad, 15 deg
-			isCompleted = true;
-		}
-
-		@Override
-		public boolean isCompleted() {
-			return isCompleted;
-		}
-
-	}
-
 }

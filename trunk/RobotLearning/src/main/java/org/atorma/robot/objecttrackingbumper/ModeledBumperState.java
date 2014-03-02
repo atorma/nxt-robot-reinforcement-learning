@@ -17,9 +17,9 @@ public class ModeledBumperState implements State {
 
 	private double[] values;
 	
-	public ModeledBumperState(ObjectTrackingModel currentModel) {
+	public ModeledBumperState(ObjectTrackingModel currentModel, boolean isCollided) {
 		ObjectTrackingModel reducedModel = currentModel.copyAndChangeNumberOfSectors(NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING);
-		values = new double[NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING];
+		values = new double[NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING + 1];
 		
 		for (int i = 0; i < NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING; i++) {
 			values[i] = BumperPercept.MAX_ULTRASONIC_DIST;
@@ -27,6 +27,7 @@ public class ModeledBumperState implements State {
 		for (Entry<Integer, TrackedObject> e : reducedModel.getObjectsBySectors()) {
 			values[e.getKey()] = e.getValue().getDistance();
 		}
+		values[NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING] = isCollided ? 1 : 0;
 	}
 	
 	@Override
@@ -35,7 +36,7 @@ public class ModeledBumperState implements State {
 	}
 	
 	public boolean isCollided() {
-		return values[0] == 0;
+		return values[NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING] == 1;
 	}
 
 	@Override
