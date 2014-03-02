@@ -9,12 +9,12 @@ public class EpsilonGreedyPolicy implements DiscretePolicy {
 	private double epsilon = 0.1;
 	private int[] allActionIds;
 	
-	public EpsilonGreedyPolicy(int[] allActionIds, double epsilon) {
+	public EpsilonGreedyPolicy(double epsilon, int[] allActionIds) {
 		this.allActionIds = allActionIds;
 		this.epsilon = epsilon;
 	}
 		
-	public EpsilonGreedyPolicy(DiscreteAction[] allActions, double epsilon) {
+	public EpsilonGreedyPolicy(double epsilon, DiscreteAction[] allActions) {
 		this.allActionIds = new int[allActions.length]; 
 		for (int i=0; i<allActions.length; i++) {
 			this.allActionIds[i] = allActions[i].getId();

@@ -1,11 +1,10 @@
 package org.atorma.robot.discretization;
 
-public interface IdFunction {
+public interface VectorDiscretizer {
 
 	/**
-	 * Returns a unique id for the given vector value.
+	 * Discretizes the given vector value
 	 */
 	int getId(double[] value);
-	
 	
 }

@@ -1,17 +1,17 @@
 package org.atorma.robot.simplebumper;
 
 import org.atorma.robot.discretization.CustomBinsDiscretizer;
-import org.atorma.robot.discretization.DiscretizationBasedIdFunction;
+import org.atorma.robot.discretization.VectorDiscretizerImpl;
 import org.atorma.robot.discretization.Discretizer;
 import org.atorma.robot.discretization.EqualWidthDiscretizer;
-import org.atorma.robot.discretization.IdFunction;
+import org.atorma.robot.discretization.VectorDiscretizer;
 
-public class BumperStateIdFunction implements IdFunction {
+public class BumperStateIdFunction implements VectorDiscretizer {
 		
-	private DiscretizationBasedIdFunction idFunction;
+	private VectorDiscretizerImpl idFunction;
 
 	public BumperStateIdFunction() {
-		idFunction = new DiscretizationBasedIdFunction(getUltrasonicDistanceDiscretizer(), getCollisionDiscretizer(), getLightValueDiscretizer());
+		idFunction = new VectorDiscretizerImpl(getUltrasonicDistanceDiscretizer(), getCollisionDiscretizer(), getLightValueDiscretizer());
 	}
 
 	private Discretizer getUltrasonicDistanceDiscretizer() {

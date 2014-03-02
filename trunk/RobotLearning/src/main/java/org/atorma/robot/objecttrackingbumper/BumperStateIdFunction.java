@@ -1,14 +1,14 @@
 package org.atorma.robot.objecttrackingbumper;
 
 import org.atorma.robot.discretization.CustomBinsDiscretizer;
-import org.atorma.robot.discretization.DiscretizationBasedIdFunction;
+import org.atorma.robot.discretization.VectorDiscretizerImpl;
 import org.atorma.robot.discretization.Discretizer;
 import org.atorma.robot.discretization.EqualWidthDiscretizer;
-import org.atorma.robot.discretization.IdFunction;
+import org.atorma.robot.discretization.VectorDiscretizer;
 
-public class BumperStateIdFunction implements IdFunction {
+public class BumperStateIdFunction implements VectorDiscretizer {
 		
-	private DiscretizationBasedIdFunction idFunction;
+	private VectorDiscretizerImpl idFunction;
 
 	public BumperStateIdFunction() {
 		Discretizer[] discretizers = new Discretizer[ModeledBumperState.NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING];
@@ -16,7 +16,7 @@ public class BumperStateIdFunction implements IdFunction {
 			discretizers[i] = createObjectDistanceDiscretizer();
 		}
 		
-		idFunction = new DiscretizationBasedIdFunction(discretizers);
+		idFunction = new VectorDiscretizerImpl(discretizers);
 	}
 
 	private Discretizer createObjectDistanceDiscretizer() {
