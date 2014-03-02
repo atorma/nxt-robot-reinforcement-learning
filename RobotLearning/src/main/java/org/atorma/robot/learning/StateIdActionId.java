@@ -1,11 +1,11 @@
 package org.atorma.robot.learning;
 
-public class StateActionIds {
+public class StateIdActionId {
 
 	private final int stateId;
 	private final int actionId;
 	
-	public StateActionIds(int stateId, int actionId) {
+	public StateIdActionId(int stateId, int actionId) {
 		this.stateId = stateId;
 		this.actionId = actionId;
 	}
@@ -35,7 +35,7 @@ public class StateActionIds {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		StateActionIds other = (StateActionIds) obj;
+		StateIdActionId other = (StateIdActionId) obj;
 		if (actionId != other.actionId)
 			return false;
 		if (stateId != other.stateId)
@@ -45,8 +45,7 @@ public class StateActionIds {
 
 	@Override
 	public String toString() {
-		return "StateActionIds [stateId=" + stateId + ", actionId=" + actionId
-				+ "]";
+		return "StateIdActionId [stateId=" + stateId + ", actionId=" + actionId + "]";
 	}
 	
 	

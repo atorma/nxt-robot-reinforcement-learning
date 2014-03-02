@@ -4,13 +4,13 @@ package org.atorma.robot.discretization;
  * Produces a scalar id representing a discretized vector value.
  * Each dimension of the vector is assigned its own discretizer.
  */
-public class DiscretizationBasedIdFunction implements IdFunction {
+public class VectorDiscretizerImpl implements VectorDiscretizer {
 
 	private final Discretizer[] discretizers;
 	private final int numberOfValues;
 
 	
-	public DiscretizationBasedIdFunction(Discretizer... discretizers) {
+	public VectorDiscretizerImpl(Discretizer... discretizers) {
 		if (discretizers == null || discretizers.length == 0) {
 			throw new IllegalArgumentException("Must define at least one discretizer");
 		}

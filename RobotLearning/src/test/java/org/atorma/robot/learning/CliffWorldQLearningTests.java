@@ -9,7 +9,7 @@ import org.atorma.robot.DiscretePolicy;
 import org.atorma.robot.EpsilonGreedyPolicy;
 import org.atorma.robot.RewardFunction;
 import org.atorma.robot.State;
-import org.atorma.robot.discretization.IdFunction;
+import org.atorma.robot.discretization.VectorDiscretizer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,8 +20,6 @@ public class CliffWorldQLearningTests {
 	private ArrayHashCode stateIdFunction = new ArrayHashCode();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
-	private int episode;
-	private double episodeReward;
 	
 	@Before
 	public void setUp() {
@@ -58,26 +56,26 @@ public class CliffWorldQLearningTests {
 	}
 
 	private void learnPolicy() {
-		EpsilonGreedyPolicy agent = new EpsilonGreedyPolicy(new DiscreteAction[] {CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT}, 0.1);
+		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, new DiscreteAction[] {CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT});
+		policy.setDeterministicPolicy(qLearning);
 		
 		int numEpisodes = 500;
 		
-		for (episode=0; episode<numEpisodes; episode++) {
-			episodeReward = 0;
+		for (int episode=0; episode<numEpisodes; episode++) {
+			double episodeReward = 0;
 			
 			CliffWorldState fromState = CliffWorldState.START;
 			CliffWorldState toState;
 			
 			do {
 				int fromStateId = stateIdFunction.getId(fromState.getValues());
-				Integer byActionId = agent.getActionId(fromStateId);
+				Integer byActionId = policy.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
 				Transition transition = new Transition(fromState, byAction, toState);
 				
 				episodeReward += rewardFunction.getReward(transition);
 				qLearning.update(transition);
-				agent.setDeterministicPolicy(qLearning.getLearnedPolicy());
 				fromState = toState;
 
 			} while (!toState.isGoal());
@@ -189,7 +187,7 @@ public class CliffWorldQLearningTests {
 		
 	}
 	
-	public static class ArrayHashCode implements IdFunction {
+	public static class ArrayHashCode implements VectorDiscretizer {
 
 		@Override
 		public int getId(double[] value) {

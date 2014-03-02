@@ -17,7 +17,7 @@ public class EpsilonGreedyPolicyTests {
 	
 	@Before
 	public void setUp() {
-		egp = new EpsilonGreedyPolicy(actionIds, 0.1);
+		egp = new EpsilonGreedyPolicy(0.1, actionIds);
 		
 		actionIdSet = new HashSet<>();
 		for (int actionId : actionIds) {
@@ -31,14 +31,14 @@ public class EpsilonGreedyPolicyTests {
 		int actionId = egp.getActionId(0);
 		assertTrue(actionIdSet.contains(actionId));
 		
-		egp.setDeterministicPolicy(new PolicyIdMap()); // empty tabular policy
+		egp.setDeterministicPolicy(new StateIdToActionIdMap()); // empty tabular policy
 		actionId = egp.getActionId(0);
 		assertTrue(actionIdSet.contains(actionId));
 	}
 	
 	@Test
 	public void when_has_deterministic_policy_and_epsilon_zero_then_returns_deterministic_action() {
-		PolicyIdMap tp = new PolicyIdMap();
+		StateIdToActionIdMap tp = new StateIdToActionIdMap();
 		tp.put(0, 1);
 		
 		egp.setDeterministicPolicy(tp);

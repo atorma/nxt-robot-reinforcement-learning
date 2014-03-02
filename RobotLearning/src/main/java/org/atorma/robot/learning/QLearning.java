@@ -5,19 +5,18 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.atorma.robot.PolicyIdMap;
-import org.atorma.robot.RewardFunction;
-import org.atorma.robot.discretization.IdFunction;
+import org.atorma.robot.*;
+import org.atorma.robot.discretization.VectorDiscretizer;
 
-public class QLearning {
+public class QLearning implements DiscretePolicy {
 
-	private Map<StateActionIds, Double> qTable = new HashMap<>();
-	private PolicyIdMap learnedPolicy = new PolicyIdMap();
+	private Map<StateIdActionId, Double> qTable = new HashMap<>();
+	private StateIdToActionIdMap stateIdToBestActionIdMap = new StateIdToActionIdMap();
 	
 	private Set<Integer> stateIds = new HashSet<>();
 	private Set<Integer> actionIds = new HashSet<>();
+	private VectorDiscretizer stateDiscretizer;
 	
-	private IdFunction stateIdMap;
 	private RewardFunction rewardFunction;
 	private double learningRate;
 	private double discountFactor;
@@ -26,8 +25,8 @@ public class QLearning {
 	
 	private double defaultStateActionValue = 0;
 	
-	public QLearning(IdFunction stateIdMap, RewardFunction rewardFunction, double learningRate, double discountFactor) {
-		this.stateIdMap = stateIdMap;
+	public QLearning(VectorDiscretizer stateDiscretizer, RewardFunction rewardFunction, double learningRate, double discountFactor) {
+		this.stateDiscretizer = stateDiscretizer;
 		this.rewardFunction = rewardFunction;
 		this.learningRate = learningRate;
 		this.discountFactor = discountFactor;
@@ -35,9 +34,9 @@ public class QLearning {
 
 
 	public void update(Transition transition) {
-		int fromStateId = stateIdMap.getId(transition.getFromState().getValues());
+		int fromStateId = stateDiscretizer.getId(transition.getFromState().getValues());
 		int byActionId = transition.getAction().getId();
-		int toStateId = stateIdMap.getId(transition.getToState().getValues());
+		int toStateId = stateDiscretizer.getId(transition.getToState().getValues());
 		double reward = rewardFunction.getReward(transition);
 		accumulatedReward += reward;
 		
@@ -45,21 +44,27 @@ public class QLearning {
 		stateIds.add(toStateId);
 		actionIds.add(byActionId);
 		
-		StateActionIds fromStateActionIds = new StateActionIds(fromStateId, byActionId);
+		StateIdActionId fromStateActionIds = new StateIdActionId(fromStateId, byActionId);
 		double oldQ = getQValue(fromStateActionIds);
-		ActionValue maxActionValue = getMaxActionValue(toStateId);
-		double newQ = oldQ + learningRate*( reward + discountFactor*maxActionValue.value - oldQ );
+		StateIdActionId maxStateActionIds = new StateIdActionId(toStateId, getActionId(toStateId));
+		double maxQ = getQValue(maxStateActionIds);
+		double newQ = oldQ + learningRate*( reward + discountFactor*maxQ - oldQ );
 		
 		qTable.put(fromStateActionIds, newQ);
 		updatePolicy(fromStateId);
 	}
 	
 
-	private double getQValue(StateActionIds stateActionIds) {
+	private double getQValue(StateIdActionId stateActionIds) {
 		if (!qTable.containsKey(stateActionIds)) {
 			qTable.put(stateActionIds, defaultStateActionValue);
 		}
 		return qTable.get(stateActionIds);
+	}
+	
+	private void updatePolicy(int stateId) {
+		ActionValue maxActionValue = getMaxActionValue(stateId);
+		stateIdToBestActionIdMap.put(stateId, maxActionValue.actionId);
 	}
 	
 	private ActionValue getMaxActionValue(int stateId) {
@@ -67,7 +72,7 @@ public class QLearning {
 		best.value = Double.NEGATIVE_INFINITY;
 
 		for (int actionId : actionIds) {
-			StateActionIds sai = new StateActionIds(stateId, actionId);
+			StateIdActionId sai = new StateIdActionId(stateId, actionId);
 			double q = getQValue(sai);
 			if (q > best.value) {
 				best.value = q;
@@ -78,13 +83,24 @@ public class QLearning {
 		return best;
 	}
 	
-	private void updatePolicy(int stateId) {
-		ActionValue maxActionValue = getMaxActionValue(stateId);
-		learnedPolicy.put(stateId, maxActionValue.actionId);
+	/**
+	 * Returns the best action id for the given state, or some action
+	 * if all are equally good, or <tt>null</tt> if no actions known yet.
+	 */
+	@Override
+	public Integer getActionId(int stateId) {
+		Integer bestActionId = stateIdToBestActionIdMap.getActionId(stateId);
+		if (bestActionId != null) {
+			return bestActionId;
+		} else if (!actionIds.isEmpty()) {
+			return actionIds.iterator().next();
+		} else {
+			return null;
+		}
 	}
 	
-	public PolicyIdMap getLearnedPolicy() {
-		return learnedPolicy;
+	public StateIdToActionIdMap getLearnedPolicy() {
+		return stateIdToBestActionIdMap;
 	}
 
 	public double getAccumulatedReward() {
@@ -96,4 +112,7 @@ public class QLearning {
 		Integer actionId = null;
 		Double value = null;
 	}
+
+
+	
 }

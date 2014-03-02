@@ -2,7 +2,7 @@ package org.atorma.robot.discretization;
 
 import static org.junit.Assert.*;
 
-import org.atorma.robot.discretization.DiscretizationBasedIdFunction;
+import org.atorma.robot.discretization.VectorDiscretizerImpl;
 import org.atorma.robot.discretization.Discretizer;
 import org.atorma.robot.discretization.EqualWidthDiscretizer;
 import org.junit.Test;
@@ -17,7 +17,7 @@ public class DiscretizationBasedIdFunctionTests {
 		Discretizer discretizer2 = new EqualWidthDiscretizer(0, 1, 2);
 		Discretizer discretizer3 = new EqualWidthDiscretizer(0, 1, 4);
 		
-		DiscretizationBasedIdFunction idFunction = new DiscretizationBasedIdFunction(discretizer1, discretizer2, discretizer3);
+		VectorDiscretizerImpl idFunction = new VectorDiscretizerImpl(discretizer1, discretizer2, discretizer3);
 		
 		// There are 3*2*4 = 24 distinct values
 		assertEquals(24, idFunction.getNumberOfValues());

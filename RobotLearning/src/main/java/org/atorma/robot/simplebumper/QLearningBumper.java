@@ -23,10 +23,10 @@ public class QLearningBumper implements DiscreteActionPolicy {
 		
 		qLearning = new QLearning(stateIdFunction, rewardFunction, learningRate, discountFactor);
 		
-		epsilonGreedyPolicy = new EpsilonGreedyPolicy(new int[] {
-				BumperAction.FORWARD.getId(), BumperAction.BACKWARD.getId(),
-				BumperAction.LEFT.getId(), BumperAction.RIGHT.getId()}, 
-				epsilon);
+		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, 
+				new int[] {
+						BumperAction.FORWARD.getId(), BumperAction.BACKWARD.getId(),
+						BumperAction.LEFT.getId(), BumperAction.RIGHT.getId()});
 	}
 	
 	
