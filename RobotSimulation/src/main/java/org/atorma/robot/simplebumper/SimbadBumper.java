@@ -47,7 +47,7 @@ public class SimbadBumper extends SimbadRobot {
 		
 		private double velocityCmPerSec;
 		private double lifetimeWhenStarted;
-		private double distanceTraveledCm = -1;
+		private Double distanceTraveledCm = null;
 		
 		public Drive(BumperAction action) {
 			
@@ -64,10 +64,10 @@ public class SimbadBumper extends SimbadRobot {
 		
 		@Override
 		public void perform() {
-			if (distanceTraveledCm < 0) {
+			if (distanceTraveledCm == null) {
 				SimbadBumper.this.setRotationalVelocity(0);
 				SimbadBumper.this.setTranslationalVelocity(velocityCmPerSec/100);
-				distanceTraveledCm = 0;
+				distanceTraveledCm = 0.0;
 			} else {
 				distanceTraveledCm += (SimbadBumper.this.getLifeTime() - lifetimeWhenStarted) * Math.abs(velocityCmPerSec);
 			}
@@ -86,7 +86,7 @@ public class SimbadBumper extends SimbadRobot {
 		
 		private double rotationalVelocityDegPerSec;
 		private double lifetimeWhenStarted;
-		private double angleTurnedDeg = -1;
+		private Double angleTurnedDeg;
 		
 		public Turn(BumperAction action) {
 			// Assuming behavior is called 20 times per second in simulation time,
@@ -102,10 +102,10 @@ public class SimbadBumper extends SimbadRobot {
 
 		@Override
 		public void perform() {
-			if (angleTurnedDeg < 0) {
+			if (angleTurnedDeg == null) {
 				SimbadBumper.this.setTranslationalVelocity(0);
 				SimbadBumper.this.setRotationalVelocity(Math.toRadians(rotationalVelocityDegPerSec)); 
-				angleTurnedDeg = 0;
+				angleTurnedDeg = 0.0;
 			}
 		}
 
