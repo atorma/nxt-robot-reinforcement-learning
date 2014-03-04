@@ -2,6 +2,8 @@ package org.atorma.robot;
 
 import javax.vecmath.Vector3d;
 
+import org.atorma.robot.mdp.State;
+
 import simbad.gui.Simbad;
 import simbad.sim.Agent;
 

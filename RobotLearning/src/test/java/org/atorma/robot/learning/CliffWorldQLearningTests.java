@@ -6,8 +6,7 @@ import java.util.Arrays;
 
 import org.atorma.robot.*;
 import org.atorma.robot.discretization.VectorDiscretizer;
-import org.atorma.robot.mdp.RewardFunction;
-import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.junit.Before;
 import org.junit.Test;

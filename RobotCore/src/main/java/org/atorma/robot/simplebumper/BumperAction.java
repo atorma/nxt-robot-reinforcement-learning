@@ -1,6 +1,6 @@
 package org.atorma.robot.simplebumper;
 
-import org.atorma.robot.DiscreteAction;
+import org.atorma.robot.mdp.DiscreteAction;
 
 public enum BumperAction implements DiscreteAction {
 	FORWARD,

@@ -6,8 +6,8 @@ import lejos.nxt.SensorPort;
 import lejos.nxt.TouchSensor;
 import lejos.nxt.UltrasonicSensor;
 
-import org.atorma.robot.State;
 import org.atorma.robot.communications.NxtToPcCommunications;
+import org.atorma.robot.mdp.State;
 
 public class SensorTests {
 	

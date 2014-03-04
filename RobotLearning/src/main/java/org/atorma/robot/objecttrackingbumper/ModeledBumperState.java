@@ -3,7 +3,7 @@ package org.atorma.robot.objecttrackingbumper;
 import java.util.Arrays;
 import java.util.Map.Entry;
 
-import org.atorma.robot.State;
+import org.atorma.robot.mdp.State;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.simplebumper.BumperPercept;
