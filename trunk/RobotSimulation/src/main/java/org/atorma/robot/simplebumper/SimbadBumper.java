@@ -3,6 +3,7 @@ package org.atorma.robot.simplebumper;
 import javax.vecmath.Vector3d;
 
 import org.atorma.robot.*;
+import org.atorma.robot.mdp.State;
 
 import simbad.sim.RangeSensorBelt;
 import simbad.sim.RobotFactory;

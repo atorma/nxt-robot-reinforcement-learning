@@ -1,6 +1,6 @@
 package org.atorma.robot.simplebumper;
 
-import org.atorma.robot.State;
+import org.atorma.robot.mdp.State;
 
 public class BumperPercept implements State {
 	

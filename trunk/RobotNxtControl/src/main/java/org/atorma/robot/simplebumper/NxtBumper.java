@@ -9,7 +9,7 @@ import lejos.robotics.navigation.DifferentialPilot;
 
 import org.atorma.robot.NxtAction;
 import org.atorma.robot.NxtRobot;
-import org.atorma.robot.State;
+import org.atorma.robot.mdp.State;
 
 public class NxtBumper extends NxtRobot {
 	

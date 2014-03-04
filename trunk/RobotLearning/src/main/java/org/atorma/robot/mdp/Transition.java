@@ -1,7 +1,5 @@
 package org.atorma.robot.mdp;
 
-import org.atorma.robot.DiscreteAction;
-import org.atorma.robot.State;
 
 public class Transition {
 	

@@ -2,7 +2,7 @@ package org.atorma.robot.communications;
 
 import static org.atorma.robot.communications.MessageConstants.*;
 
-import org.atorma.robot.State;
+import org.atorma.robot.mdp.State;
 
 import lejos.nxt.Button;
 import lejos.nxt.comm.BTConnection;

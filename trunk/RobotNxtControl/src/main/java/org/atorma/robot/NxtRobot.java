@@ -1,6 +1,7 @@
 package org.atorma.robot;
 
 import org.atorma.robot.communications.NxtToPcCommunications;
+import org.atorma.robot.mdp.State;
 
 import lejos.nxt.Button;
 

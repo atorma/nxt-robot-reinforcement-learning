@@ -2,9 +2,7 @@ package org.atorma.robot.learning;
 
 import java.util.Set;
 
-import org.atorma.robot.DiscreteAction;
-import org.atorma.robot.State;
-import org.atorma.robot.mdp.TransitionWithReward;
+import org.atorma.robot.mdp.*;
 
 public interface DiscreteModel {
 

@@ -1,7 +1,7 @@
 package org.atorma.robot.learning;
 
-import org.atorma.robot.DiscreteAction;
-import org.atorma.robot.State;
+import org.atorma.robot.mdp.DiscreteAction;
+import org.atorma.robot.mdp.State;
 
 public class StateAction {
 
