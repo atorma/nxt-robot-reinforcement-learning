@@ -1,7 +1,7 @@
 package org.atorma.robot.simplebumper;
 
-import org.atorma.robot.RewardFunction;
-import org.atorma.robot.learning.Transition;
+import org.atorma.robot.mdp.RewardFunction;
+import org.atorma.robot.mdp.Transition;
 
 public class BumperRewardFunction implements RewardFunction {
 

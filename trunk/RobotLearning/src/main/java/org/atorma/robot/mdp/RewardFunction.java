@@ -1,6 +1,5 @@
-package org.atorma.robot;
+package org.atorma.robot.mdp;
 
-import org.atorma.robot.learning.Transition;
 
 public interface RewardFunction {
 

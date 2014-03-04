@@ -4,8 +4,9 @@ import java.io.File;
 
 import org.atorma.robot.*;
 import org.atorma.robot.learning.QLearning;
-import org.atorma.robot.learning.Transition;
 import org.atorma.robot.logging.CsvLogWriter;
+import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.policy.EpsilonGreedyPolicy;
 
 public class QLearningBumper implements DiscreteRobotController {
 	
