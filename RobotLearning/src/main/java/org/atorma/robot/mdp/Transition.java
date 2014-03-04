@@ -1,13 +1,13 @@
 package org.atorma.robot.mdp;
 
 
-public class Transition {
+public class Transition<S extends State, A extends DiscreteAction> {
 	
-	private final State fromState;
-	private final DiscreteAction byAction;
-	private final State toState;
+	private final S fromState;
+	private final A byAction;
+	private final S toState;
 	
-	public Transition(State fromState, DiscreteAction byAction, State toState) {
+	public Transition(S fromState, A byAction, S toState) {
 		if (fromState == null || byAction == null || toState == null) {
 			throw new NullPointerException();
 		}
@@ -16,15 +16,15 @@ public class Transition {
 		this.toState = toState;
 	}
 
-	public State getFromState() {
+	public S getFromState() {
 		return fromState;
 	}
 
-	public DiscreteAction getAction() {
+	public A getAction() {
 		return byAction;
 	}
 
-	public State getToState() {
+	public S getToState() {
 		return toState;
 	}
 

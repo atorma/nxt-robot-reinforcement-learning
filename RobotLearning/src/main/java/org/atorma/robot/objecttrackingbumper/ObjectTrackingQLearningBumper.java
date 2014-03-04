@@ -20,7 +20,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
-	private QLearning qLearning;
+	private QLearning<ModeledBumperState, BumperAction> qLearning;
 	
 	private double epsilon = 0.1;
 	private EpsilonGreedyPolicy epsilonGreedyPolicy;
@@ -41,7 +41,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	}
 	
 	public ObjectTrackingQLearningBumper() {
-		qLearning = new QLearning(stateDiscretizer, rewardFunction, learningRate, discountFactor);
+		qLearning = new QLearning<>(stateDiscretizer, rewardFunction, learningRate, discountFactor);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, BumperAction.values(), qLearning);
 		objectTrackingModel = new ObjectTrackingModel();
 	}
@@ -58,7 +58,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		//System.out.println(currentState);
 
 		if (previousState != null) {
-			Transition transition = new Transition(previousState, previousAction, currentState);
+			Transition<ModeledBumperState, BumperAction> transition = new Transition<>(previousState, previousAction, currentState);
 			qLearning.update(transition);
 			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
 		}

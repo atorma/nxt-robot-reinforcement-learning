@@ -1,17 +1,13 @@
 package org.atorma.robot.learning;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import org.atorma.robot.*;
 import org.atorma.robot.discretization.VectorDiscretizer;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.StateIdToActionIdMap;
 
-public class QLearning implements DiscretePolicy {
+public class QLearning<S extends State, A extends DiscreteAction> implements DiscretePolicy {
 
 	private Map<StateIdActionId, Double> qTable = new HashMap<>();
 	private StateIdToActionIdMap stateIdToBestActionIdMap = new StateIdToActionIdMap();
@@ -20,7 +16,7 @@ public class QLearning implements DiscretePolicy {
 	private Set<Integer> actionIds = new HashSet<>();
 	private VectorDiscretizer stateDiscretizer;
 	
-	private RewardFunction rewardFunction;
+	private RewardFunction<S, A> rewardFunction;
 	private double learningRate;
 	private double discountFactor;
 	
@@ -28,7 +24,7 @@ public class QLearning implements DiscretePolicy {
 	
 	private double defaultStateActionValue = 0;
 	
-	public QLearning(VectorDiscretizer stateDiscretizer, RewardFunction rewardFunction, double learningRate, double discountFactor) {
+	public QLearning(VectorDiscretizer stateDiscretizer, RewardFunction<S, A> rewardFunction, double learningRate, double discountFactor) {
 		this.stateDiscretizer = stateDiscretizer;
 		this.rewardFunction = rewardFunction;
 		this.learningRate = learningRate;
@@ -36,7 +32,7 @@ public class QLearning implements DiscretePolicy {
 	}
 
 
-	public void update(Transition transition) {
+	public void update(Transition<S, A> transition) {
 		int fromStateId = stateDiscretizer.getId(transition.getFromState().getValues());
 		int byActionId = transition.getAction().getId();
 		int toStateId = stateDiscretizer.getId(transition.getToState().getValues());

@@ -1,9 +1,21 @@
 package org.atorma.robot.learning;
 
+import java.util.PriorityQueue;
 
-public class PrioritizedSweeping {
+import org.atorma.robot.mdp.*;
+
+
+public class PrioritizedSweeping<S extends State, A extends DiscreteAction> {
 
 	private DiscreteQFunction qFunction;
-	private DiscreteModel model;
+	private DiscreteStochasticModel<S, A> model;
+	private PriorityQueue<StateAction<S, A>> stateActionQueue;
+	
+	public PrioritizedSweeping(DiscreteQFunction qFunction, DiscreteStochasticModel model) {
+		this.qFunction = qFunction;
+		this.model = model;
+	}
+	
+	
 	
 }
