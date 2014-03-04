@@ -5,16 +5,18 @@ import java.io.File;
 import org.atorma.robot.*;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 
 public class QLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
+	private TransitionDiscretizer<BumperPercept, BumperAction> transitionDiscretizer = new TransitionDiscretizer<>(stateDiscretizer, rewardFunction);
+	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
-	private QLearning<BumperPercept, BumperAction> qLearning;
+	private QLearning qLearning;
 	
 	private double epsilon = 0.1;
 	private EpsilonGreedyPolicy epsilonGreedyPolicy;
@@ -33,7 +35,7 @@ public class QLearningBumper implements DiscreteRobotController {
 	}
 	
 	public QLearningBumper() {
-		qLearning = new QLearning<>(stateDiscretizer, rewardFunction, learningRate, discountFactor);
+		qLearning = new QLearning(learningRate, discountFactor);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qLearning, BumperAction.values());
 	}
 	
@@ -45,11 +47,9 @@ public class QLearningBumper implements DiscreteRobotController {
 		if (currentState.isCollided()) {
 			accumulatedCollisions++;
 		}
-		BumperAction currentAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(state)));
-
+	
 		if (previousState != null) {
-			Transition<BumperPercept, BumperAction> transition = new Transition<>(previousState, previousAction, currentState);
-			qLearning.update(transition);
+			qLearning.update(transitionDiscretizer.discretizeAndComputeReward(previousState, previousAction, currentState));
 			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
 		}
 		
@@ -57,10 +57,12 @@ public class QLearningBumper implements DiscreteRobotController {
 			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
 		}
 		
-		previousState = currentState;
-		previousAction = currentAction;
+		BumperAction nextAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(state)));
 		
-		return currentAction.getId();
+		previousState = currentState;
+		previousAction = nextAction;
+		
+		return nextAction.getId();
 			
 	}
 

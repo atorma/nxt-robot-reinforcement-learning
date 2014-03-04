@@ -11,11 +11,9 @@ public class PrioritizedSweeping<S extends State, A extends DiscreteAction> {
 	private DiscreteStochasticModel<S, A> model;
 	private PriorityQueue<StateAction<S, A>> stateActionQueue;
 	
-	public PrioritizedSweeping(DiscreteQFunction qFunction, DiscreteStochasticModel model) {
+	public PrioritizedSweeping(DiscreteQFunction qFunction, DiscreteStochasticModel<S, A> model) {
 		this.qFunction = qFunction;
 		this.model = model;
 	}
-	
-	
 	
 }
