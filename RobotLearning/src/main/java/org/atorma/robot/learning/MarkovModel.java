@@ -4,13 +4,17 @@ import java.util.Set;
 
 import org.atorma.robot.mdp.*;
 
-public interface MarkovModel<S extends State, A extends DiscreteAction> {
+public interface MarkovModel {
 
-	Set<StochasticTransitionWithReward<S, A>> getTransitions(StateAction<S, A> stateAction);
+	Set<StochasticTransitionWithReward> getTransitions(StateAction stateAction);
 	
-	Set<StateAction<S, A>> getPredecessors(State state);
+	Set<StateAction> getPredecessors(State state);
 	
-	void updateModel(TransitionWithReward<S, A> observation);
+	double getTransitionProbability(Transition transition);
+	
+	void updateModel(TransitionWithReward observation);
+
+	
 	
 	
 	
