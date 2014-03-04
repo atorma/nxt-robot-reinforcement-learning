@@ -7,8 +7,7 @@ import java.util.Set;
 
 import org.atorma.robot.*;
 import org.atorma.robot.discretization.VectorDiscretizer;
-import org.atorma.robot.mdp.RewardFunction;
-import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.StateIdToActionIdMap;
 
