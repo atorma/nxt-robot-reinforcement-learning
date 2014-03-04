@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.atorma.robot.*;
 import org.atorma.robot.discretization.VectorDiscretizer;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
@@ -13,14 +12,14 @@ import org.junit.Test;
 
 public class CliffWorldQLearningTests {
 
-	private QLearning qLearning;
+	private QLearning<CliffWorldState, CliffWorldAction> qLearning;
 	private ArrayHashCode stateDiscretizer = new ArrayHashCode();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
 	
 	@Before
 	public void setUp() {
-		qLearning = new QLearning(stateDiscretizer, rewardFunction, 0.1, 1);
+		qLearning = new QLearning<>(stateDiscretizer, rewardFunction, 0.1, 1);
 	}
 	
 	@Test
@@ -60,7 +59,6 @@ public class CliffWorldQLearningTests {
 		int numEpisodes = 500;
 		
 		for (int episode=0; episode<numEpisodes; episode++) {
-			double episodeReward = 0;
 			
 			CliffWorldState fromState = CliffWorldState.START;
 			CliffWorldState toState;
@@ -70,15 +68,13 @@ public class CliffWorldQLearningTests {
 				Integer byActionId = policy.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
-				Transition transition = new Transition(fromState, byAction, toState);
-				
-				episodeReward += rewardFunction.getReward(transition);
+				Transition<CliffWorldState, CliffWorldAction> transition = new Transition<>(fromState, byAction, toState);
+
 				qLearning.update(transition);
 				fromState = toState;
 
 			} while (!toState.isGoal());
-			
-			//System.out.println("episode " + episode +", reward " + episodeReward);
+
 		}
 	}
 	
@@ -169,11 +165,11 @@ public class CliffWorldQLearningTests {
 		
 	}
 	
-	public static class CliffWorldRewardFunction implements RewardFunction {
+	public static class CliffWorldRewardFunction implements RewardFunction<CliffWorldState, CliffWorldAction> {
 
 		@Override
-		public double getReward(Transition transition) {
-			CliffWorldState toState = (CliffWorldState) transition.getToState();
+		public double getReward(Transition<CliffWorldState, CliffWorldAction> transition) {
+			CliffWorldState toState = transition.getToState();
 			if (toState.isCliff()) {
 				return -100;
 			} else {
