@@ -10,13 +10,13 @@ public class EpsilonGreedyPolicy implements DiscretePolicy {
 	private double epsilon = 0.1;
 	private int[] allActionIds;
 	
-	public EpsilonGreedyPolicy(double epsilon, int[] allActionIds, DiscretePolicy deterministicPolicy) {
+	public EpsilonGreedyPolicy(double epsilon, DiscretePolicy deterministicPolicy, int... allActionIds) {
 		this.allActionIds = allActionIds;
 		this.epsilon = epsilon;
 		this.deterministicPolicy = deterministicPolicy;
 	}
 		
-	public EpsilonGreedyPolicy(double epsilon, DiscreteAction[] allActions, DiscretePolicy deterministicPolicy) {
+	public EpsilonGreedyPolicy(double epsilon, DiscretePolicy deterministicPolicy, DiscreteAction... allActions) {
 		this.allActionIds = new int[allActions.length]; 
 		for (int i=0; i<allActions.length; i++) {
 			this.allActionIds[i] = allActions[i].getId();

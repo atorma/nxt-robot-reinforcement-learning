@@ -17,7 +17,7 @@ public class EpsilonGreedyPolicyTests {
 	
 	@Before
 	public void setUp() {
-		egp = new EpsilonGreedyPolicy(0.1, actionIds, null);
+		egp = new EpsilonGreedyPolicy(0.1, null, actionIds);
 		
 		actionIdSet = new HashSet<>();
 		for (int actionId : actionIds) {

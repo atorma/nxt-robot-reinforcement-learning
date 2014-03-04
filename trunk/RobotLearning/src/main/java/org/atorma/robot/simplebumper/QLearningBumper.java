@@ -34,7 +34,7 @@ public class QLearningBumper implements DiscreteRobotController {
 	
 	public QLearningBumper() {
 		qLearning = new QLearning<>(stateDiscretizer, rewardFunction, learningRate, discountFactor);
-		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, BumperAction.values(), qLearning);
+		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qLearning, BumperAction.values());
 	}
 	
 	

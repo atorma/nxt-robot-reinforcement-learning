@@ -52,9 +52,8 @@ public class CliffWorldQLearningTests {
 	}
 
 	private void learnPolicy() {
-		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, 
-				new DiscreteAction[] {CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT},
-				qLearning);
+		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, qLearning,
+				CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT);
 		
 		int numEpisodes = 500;
 		
