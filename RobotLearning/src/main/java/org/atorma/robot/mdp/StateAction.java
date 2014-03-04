@@ -1,4 +1,4 @@
-package org.atorma.robot.learning;
+package org.atorma.robot.mdp;
 
 import org.atorma.robot.mdp.DiscreteAction;
 import org.atorma.robot.mdp.State;

@@ -1,4 +1,4 @@
-package org.atorma.robot.learning;
+package org.atorma.robot.mdp;
 
 public class StateIdActionId {
 
