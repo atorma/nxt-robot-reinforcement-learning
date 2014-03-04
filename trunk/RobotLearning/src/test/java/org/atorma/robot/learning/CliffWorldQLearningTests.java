@@ -12,14 +12,13 @@ import org.junit.Test;
 
 public class CliffWorldQLearningTests {
 
-	private QLearning<CliffWorldState, CliffWorldAction> qLearning;
+	private QLearning qLearning;
 	private ArrayHashCode stateDiscretizer = new ArrayHashCode();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
-	
 	@Before
 	public void setUp() {
-		qLearning = new QLearning<>(stateDiscretizer, rewardFunction, 0.1, 1);
+		qLearning = new QLearning(0.1, 1);
 	}
 	
 	@Test
@@ -67,9 +66,11 @@ public class CliffWorldQLearningTests {
 				Integer byActionId = policy.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
+				int toStateId = stateDiscretizer.getId(toState.getValues());
 				Transition<CliffWorldState, CliffWorldAction> transition = new Transition<>(fromState, byAction, toState);
-
-				qLearning.update(transition);
+				double reward = rewardFunction.getReward(transition);
+				
+				qLearning.update(new DiscretizedTransitionWithReward(fromStateId, byActionId, toStateId, reward));
 				fromState = toState;
 
 			} while (!toState.isGoal());

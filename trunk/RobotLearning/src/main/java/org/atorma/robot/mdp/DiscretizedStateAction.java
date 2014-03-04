@@ -1,11 +1,11 @@
 package org.atorma.robot.mdp;
 
-public class StateIdActionId {
+public class DiscretizedStateAction {
 
 	private final int stateId;
 	private final int actionId;
 	
-	public StateIdActionId(int stateId, int actionId) {
+	public DiscretizedStateAction(int stateId, int actionId) {
 		this.stateId = stateId;
 		this.actionId = actionId;
 	}
@@ -35,7 +35,7 @@ public class StateIdActionId {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		StateIdActionId other = (StateIdActionId) obj;
+		DiscretizedStateAction other = (DiscretizedStateAction) obj;
 		if (actionId != other.actionId)
 			return false;
 		if (stateId != other.stateId)

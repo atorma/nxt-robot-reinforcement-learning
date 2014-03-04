@@ -2,21 +2,19 @@ package org.atorma.robot.learning;
 
 import java.util.*;
 
-import org.atorma.robot.discretization.VectorDiscretizer;
-import org.atorma.robot.mdp.*;
+import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
+import org.atorma.robot.mdp.DiscretizedStateAction;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.StateIdToActionIdMap;
 
-public class QLearning<S extends State, A extends DiscreteAction> implements DiscretePolicy {
+public class QLearning implements DiscretePolicy {
 
-	private Map<StateIdActionId, Double> qTable = new HashMap<>();
+	private Map<DiscretizedStateAction, Double> qTable = new HashMap<>();
 	private StateIdToActionIdMap stateIdToBestActionIdMap = new StateIdToActionIdMap();
 	
 	private Set<Integer> stateIds = new HashSet<>();
 	private Set<Integer> actionIds = new HashSet<>();
-	private VectorDiscretizer stateDiscretizer;
 	
-	private RewardFunction<S, A> rewardFunction;
 	private double learningRate;
 	private double discountFactor;
 	
@@ -24,37 +22,30 @@ public class QLearning<S extends State, A extends DiscreteAction> implements Dis
 	
 	private double defaultStateActionValue = 0;
 	
-	public QLearning(VectorDiscretizer stateDiscretizer, RewardFunction<S, A> rewardFunction, double learningRate, double discountFactor) {
-		this.stateDiscretizer = stateDiscretizer;
-		this.rewardFunction = rewardFunction;
+	public QLearning(double learningRate, double discountFactor) {
 		this.learningRate = learningRate;
 		this.discountFactor = discountFactor;
 	}
 
-
-	public void update(Transition<S, A> transition) {
-		int fromStateId = stateDiscretizer.getId(transition.getFromState().getValues());
-		int byActionId = transition.getAction().getId();
-		int toStateId = stateDiscretizer.getId(transition.getToState().getValues());
-		double reward = rewardFunction.getReward(transition);
-		accumulatedReward += reward;
+	public void update(DiscretizedTransitionWithReward transition) {
+		accumulatedReward += transition.getReward();
 		
-		stateIds.add(fromStateId);
-		stateIds.add(toStateId);
-		actionIds.add(byActionId);
+		stateIds.add(transition.getFromStateId());
+		stateIds.add(transition.getToStateId());
+		actionIds.add(transition.getByActionId());
 		
-		StateIdActionId fromStateActionIds = new StateIdActionId(fromStateId, byActionId);
+		DiscretizedStateAction fromStateActionIds = transition.getFromStateIdActionId();
 		double oldQ = getQValue(fromStateActionIds);
-		StateIdActionId maxStateActionIds = new StateIdActionId(toStateId, getActionId(toStateId));
+		DiscretizedStateAction maxStateActionIds = new DiscretizedStateAction(transition.getToStateId(), getActionId(transition.getToStateId()));
 		double maxQ = getQValue(maxStateActionIds);
-		double newQ = oldQ + learningRate*( reward + discountFactor*maxQ - oldQ );
+		double newQ = oldQ + learningRate*( transition.getReward() + discountFactor*maxQ - oldQ );
 		
 		qTable.put(fromStateActionIds, newQ);
-		updateBestAction(fromStateId);
+		updateBestAction(transition.getFromStateId());
 	}
 	
 
-	private double getQValue(StateIdActionId stateActionIds) {
+	private double getQValue(DiscretizedStateAction stateActionIds) {
 		if (!qTable.containsKey(stateActionIds)) {
 			qTable.put(stateActionIds, defaultStateActionValue);
 		}
@@ -66,7 +57,7 @@ public class QLearning<S extends State, A extends DiscreteAction> implements Dis
 		Integer bestActionId = null;
 		
 		for (int actionId : actionIds) {
-			double q = getQValue(new StateIdActionId(stateId, actionId));
+			double q = getQValue(new DiscretizedStateAction(stateId, actionId));
 			if (q > bestActionValue) {
 				bestActionValue = q;
 				bestActionId = actionId;

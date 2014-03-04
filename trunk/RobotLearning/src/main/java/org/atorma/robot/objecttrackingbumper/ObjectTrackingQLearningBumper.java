@@ -2,10 +2,10 @@ package org.atorma.robot.objecttrackingbumper;
 
 import java.io.File;
 
-import org.atorma.robot.*;
+import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.TransitionDiscretizer;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
@@ -15,12 +15,12 @@ import org.atorma.robot.simplebumper.BumperPercept;
 public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
-	
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
+	private TransitionDiscretizer<ModeledBumperState, BumperAction> transitionDiscretizer = new TransitionDiscretizer<>(stateDiscretizer, rewardFunction);
 	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
-	private QLearning<ModeledBumperState, BumperAction> qLearning;
+	private QLearning qLearning;
 	
 	private double epsilon = 0.1;
 	private EpsilonGreedyPolicy epsilonGreedyPolicy;
@@ -41,7 +41,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	}
 	
 	public ObjectTrackingQLearningBumper() {
-		qLearning = new QLearning<>(stateDiscretizer, rewardFunction, learningRate, discountFactor);
+		qLearning = new QLearning(learningRate, discountFactor);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qLearning, BumperAction.values());
 		objectTrackingModel = new ObjectTrackingModel();
 	}
@@ -58,8 +58,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		//System.out.println(currentState);
 
 		if (previousState != null) {
-			Transition<ModeledBumperState, BumperAction> transition = new Transition<>(previousState, previousAction, currentState);
-			qLearning.update(transition);
+			qLearning.update(transitionDiscretizer.discretizeAndComputeReward(previousState, previousAction, currentState));
 			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
 		}
 		

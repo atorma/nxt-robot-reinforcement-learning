@@ -1,12 +1,12 @@
 package org.atorma.robot.learning;
 
-import org.atorma.robot.mdp.StateIdActionId;
+import org.atorma.robot.mdp.DiscretizedStateAction;
 
 public interface DiscreteQFunction {
 
-	double getValue(StateIdActionId stateIdActionId);
+	double getValue(DiscretizedStateAction stateIdActionId);
 	
-	void setValue(StateIdActionId stateIdActionId, double qValue);
+	void setValue(DiscretizedStateAction stateIdActionId, double qValue);
 	
 	double getMaxValueForState(int stateId);
 

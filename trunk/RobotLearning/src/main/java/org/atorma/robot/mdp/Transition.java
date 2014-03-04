@@ -28,6 +28,4 @@ public class Transition<S extends State, A extends DiscreteAction> {
 		return toState;
 	}
 
-	
-	
 }
