@@ -1,5 +1,6 @@
-package org.atorma.robot;
+package org.atorma.robot.policy;
 
+import org.atorma.robot.DiscreteAction;
 import org.atorma.robot.util.Ranmar;
 
 public class EpsilonGreedyPolicy implements DiscretePolicy {

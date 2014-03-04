@@ -1,4 +1,4 @@
-package org.atorma.robot;
+package org.atorma.robot.policy;
 
 public interface DiscretePolicy {
 

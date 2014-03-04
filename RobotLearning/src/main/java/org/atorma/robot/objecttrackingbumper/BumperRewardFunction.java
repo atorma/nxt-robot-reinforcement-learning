@@ -1,7 +1,7 @@
 package org.atorma.robot.objecttrackingbumper;
 
-import org.atorma.robot.RewardFunction;
-import org.atorma.robot.learning.Transition;
+import org.atorma.robot.mdp.RewardFunction;
+import org.atorma.robot.mdp.Transition;
 import org.atorma.robot.simplebumper.BumperAction;
 
 public class BumperRewardFunction implements RewardFunction {
