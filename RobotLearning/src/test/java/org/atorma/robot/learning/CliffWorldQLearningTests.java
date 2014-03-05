@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.atorma.robot.learning.cliffworld.*;
-import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
+import org.atorma.robot.mdp.DiscretizedTransitionReward;
 import org.atorma.robot.mdp.Transition;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.junit.Before;
@@ -67,7 +67,7 @@ public class CliffWorldQLearningTests {
 				Transition transition = new Transition(fromState, byAction, toState);
 				double reward = rewardFunction.getReward(transition);
 				
-				qLearning.update(new DiscretizedTransitionWithReward(fromStateId, byActionId, toStateId, reward));
+				qLearning.update(new DiscretizedTransitionReward(fromStateId, byActionId, toStateId, reward));
 				fromState = toState;
 
 			} while (!toState.isGoal());

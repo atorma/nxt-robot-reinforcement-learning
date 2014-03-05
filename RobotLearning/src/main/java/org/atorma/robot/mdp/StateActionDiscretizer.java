@@ -33,22 +33,22 @@ public class StateActionDiscretizer {
 		return new DiscretizedTransition(fromStateId, byActionId, toStateId);
 	}
 	
-	public DiscretizedTransitionWithReward discretize(State fromState, DiscreteAction byAction, State toState, double reward) {
-		return new DiscretizedTransitionWithReward(discretize(fromState, byAction, toState), reward);
+	public DiscretizedTransitionReward discretize(State fromState, DiscreteAction byAction, State toState, double reward) {
+		return new DiscretizedTransitionReward(discretize(fromState, byAction, toState), reward);
 	}
 	
-	public DiscretizedTransitionWithReward discretize(TransitionWithReward transition) {
-		return new DiscretizedTransitionWithReward(discretize((Transition) transition), transition.getReward());
+	public DiscretizedTransitionReward discretize(TransitionReward transition) {
+		return new DiscretizedTransitionReward(discretize((Transition) transition), transition.getReward());
 	}
 	
-	public DiscretizedTransitionWithReward discretizeAndComputeReward(State fromState, DiscreteAction byAction, State toState) {
+	public DiscretizedTransitionReward discretizeAndComputeReward(State fromState, DiscreteAction byAction, State toState) {
 		Transition transition = new Transition(fromState, byAction, toState);
 		return discretizeAndComputeReward(transition);
 	}
 	
-	public DiscretizedTransitionWithReward discretizeAndComputeReward(Transition transition) {
+	public DiscretizedTransitionReward discretizeAndComputeReward(Transition transition) {
 		double reward = rewardFunction.getReward(transition);
 		DiscretizedTransition discretizedTransition = discretize(transition);
-		return new DiscretizedTransitionWithReward(discretizedTransition, reward);
+		return new DiscretizedTransitionReward(discretizedTransition, reward);
 	}
 }
