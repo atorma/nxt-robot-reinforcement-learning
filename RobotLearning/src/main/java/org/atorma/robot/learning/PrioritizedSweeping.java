@@ -13,7 +13,7 @@ public class PrioritizedSweeping {
 	private MarkovModel model;
 	private StateActionQueue stateActionQueue = new StateActionQueue();
 	private VectorDiscretizer stateDiscretizer;
-	private double discountFactor;
+	private double discountFactor = 1.0;
 	private double qValueChangeThreshold = 0.01;
 
 	public void setCurrentStateAction(StateAction<?, ?> stateAction) {

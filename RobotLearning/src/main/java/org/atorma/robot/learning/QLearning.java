@@ -1,26 +1,22 @@
 package org.atorma.robot.learning;
 
-import java.util.*;
-
-import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
 import org.atorma.robot.mdp.DiscretizedStateAction;
+import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.StateIdToActionIdMap;
 
-public class QLearning implements DiscretePolicy {
-
-	private Map<DiscretizedStateAction, Double> qTable = new HashMap<>();
-	private StateIdToActionIdMap stateIdToBestActionIdMap = new StateIdToActionIdMap();
+public class QLearning implements DiscretePolicy, DiscreteQFunction {
 	
-	private Set<Integer> stateIds = new HashSet<>();
-	private Set<Integer> actionIds = new HashSet<>();
+	public static final double DEFAULT_Q_VALUE = 0;
+
+	private HashMapQTable qTable = new HashMapQTable(DEFAULT_Q_VALUE);
+	private StateIdToActionIdMap stateIdToBestActionIdMap = new StateIdToActionIdMap();
 	
 	private double learningRate;
 	private double discountFactor;
 	
 	private double accumulatedReward = 0;
-	
-	private double defaultStateActionValue = 0;
+
 	
 	public QLearning(double learningRate, double discountFactor) {
 		this.learningRate = learningRate;
@@ -30,41 +26,23 @@ public class QLearning implements DiscretePolicy {
 	public void update(DiscretizedTransitionWithReward transition) {
 		accumulatedReward += transition.getReward();
 		
-		stateIds.add(transition.getFromStateId());
-		stateIds.add(transition.getToStateId());
-		actionIds.add(transition.getByActionId());
+		qTable.addStateId(transition.getFromStateId());
+		qTable.addStateId(transition.getToStateId());
+		qTable.addActionId(transition.getByActionId());
 		
 		DiscretizedStateAction fromStateActionIds = transition.getFromStateIdActionId();
-		double oldQ = getQValue(fromStateActionIds);
+		double oldQ = qTable.getValue(fromStateActionIds);
 		DiscretizedStateAction maxStateActionIds = new DiscretizedStateAction(transition.getToStateId(), getActionId(transition.getToStateId()));
-		double maxQ = getQValue(maxStateActionIds);
+		double maxQ = qTable.getValue(maxStateActionIds);
 		double newQ = oldQ + learningRate*( transition.getReward() + discountFactor*maxQ - oldQ );
 		
 		qTable.put(fromStateActionIds, newQ);
 		updateBestAction(transition.getFromStateId());
 	}
 	
-
-	private double getQValue(DiscretizedStateAction stateActionIds) {
-		if (!qTable.containsKey(stateActionIds)) {
-			qTable.put(stateActionIds, defaultStateActionValue);
-		}
-		return qTable.get(stateActionIds);
-	}
-	
 	private void updateBestAction(int stateId) {
-		double bestActionValue = Double.NEGATIVE_INFINITY;
-		Integer bestActionId = null;
-		
-		for (int actionId : actionIds) {
-			double q = getQValue(new DiscretizedStateAction(stateId, actionId));
-			if (q > bestActionValue) {
-				bestActionValue = q;
-				bestActionId = actionId;
-			}
-		}
-
-		stateIdToBestActionIdMap.put(stateId, bestActionId);
+		DiscretizedStateAction best = qTable.getBestActionInState(stateId);
+		stateIdToBestActionIdMap.put(stateId, best.getActionId());
 	}
 	
 	/**
@@ -76,19 +54,36 @@ public class QLearning implements DiscretePolicy {
 		Integer bestActionId = stateIdToBestActionIdMap.getActionId(stateId);
 		if (bestActionId != null) {
 			return bestActionId;
-		} else if (!actionIds.isEmpty()) {
-			return actionIds.iterator().next();
+		} else if (!qTable.getActionIds().isEmpty()) {
+			return qTable.getActionIds().iterator().next();
 		} else {
 			return null;
 		}
 	}
-	
-	public StateIdToActionIdMap getLearnedPolicyMap() {
-		return stateIdToBestActionIdMap;
-	}
 
 	public double getAccumulatedReward() {
 		return accumulatedReward;
+	}
+
+	
+	@Override
+	public double getValue(DiscretizedStateAction stateIdActionId) {
+		return qTable.getValue(stateIdActionId);
+	}
+
+	@Override
+	public void setValue(DiscretizedStateAction stateIdActionId, double qValue) {
+		qTable.setValue(stateIdActionId, qValue);
+	}
+
+	@Override
+	public double getMaxValueForState(int stateId) {
+		if (stateIdToBestActionIdMap.containsKey(stateId)) {
+			DiscretizedStateAction stateAction = new DiscretizedStateAction(stateId, stateIdToBestActionIdMap.getActionId(stateId));
+			return qTable.getValue(stateAction);
+		} else {
+			return qTable.getMaxValueForState(stateId);
+		}
 	}
 
 	
