@@ -1,7 +1,7 @@
 package org.atorma.robot.learning;
 
 import org.atorma.robot.mdp.DiscretizedStateAction;
-import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
+import org.atorma.robot.mdp.DiscretizedTransitionReward;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.StateIdToActionIdMap;
 
@@ -23,7 +23,7 @@ public class QLearning implements DiscretePolicy, DiscreteQFunction {
 		this.discountFactor = discountFactor;
 	}
 
-	public void update(DiscretizedTransitionWithReward transition) {
+	public void update(DiscretizedTransitionReward transition) {
 		accumulatedReward += transition.getReward();
 		
 		qTable.addStateId(transition.getFromStateId());
@@ -55,7 +55,7 @@ public class QLearning implements DiscretePolicy, DiscreteQFunction {
 		if (bestActionId != null) {
 			return bestActionId;
 		} else if (!qTable.getActionIds().isEmpty()) {
-			return qTable.getActionIds().iterator().next();
+			return qTable.getBestActionInState(stateId).getActionId();
 		} else {
 			return null;
 		}

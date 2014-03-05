@@ -6,13 +6,13 @@ import org.atorma.robot.mdp.*;
 
 public interface MarkovModel {
 
-	Set<StochasticTransitionWithReward> getTransitions(StateAction stateAction);
+	Set<StochasticTransitionReward> getTransitions(StateAction stateAction);
 	
 	Set<StateAction> getPredecessors(State state);
 	
 	double getTransitionProbability(Transition transition);
 	
-	void updateModel(TransitionWithReward observation);
+	void updateModel(TransitionReward observation);
 
 	
 	

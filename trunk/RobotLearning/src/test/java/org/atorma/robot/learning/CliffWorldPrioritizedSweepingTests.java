@@ -31,14 +31,14 @@ public class CliffWorldPrioritizedSweepingTests {
 	// we don't know the transitions nor the reward function up front.
 	private static class CliffWorldModel implements MarkovModel {
 		
-		private Map<StateAction, TransitionWithReward> stateActionToReward = new HashMap<>();
+		private Map<StateAction, TransitionReward> stateActionToReward = new HashMap<>();
 		private Map<State, Set<StateAction>> stateToPredecessors = new HashMap<>();
 		
 		@Override
-		public Set<StochasticTransitionWithReward> getTransitions(StateAction stateAction) {
-			Set<StochasticTransitionWithReward> transitions = new HashSet<>();
+		public Set<StochasticTransitionReward> getTransitions(StateAction stateAction) {
+			Set<StochasticTransitionReward> transitions = new HashSet<>();
 			if (stateActionToReward.get(stateAction) != null) {
-				return Sets.newHashSet(new StochasticTransitionWithReward(stateActionToReward.get(stateAction), 1.0));
+				return Sets.newHashSet(new StochasticTransitionReward(stateActionToReward.get(stateAction), 1.0));
 			}
 			return Collections.emptySet();
 		}
@@ -59,7 +59,7 @@ public class CliffWorldPrioritizedSweepingTests {
 		}
 
 		@Override
-		public void updateModel(TransitionWithReward observation) {
+		public void updateModel(TransitionReward observation) {
 			this.stateActionToReward.put(observation.getFromStateAction(), observation);
 			
 			Set<StateAction> predecessors = getPredecessors(observation.getToState());

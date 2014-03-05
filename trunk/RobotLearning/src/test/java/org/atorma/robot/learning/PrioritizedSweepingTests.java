@@ -64,14 +64,14 @@ public class PrioritizedSweepingTests {
 		State endState1 = mockState(2);
 		double reward1 = 5;
 		double prob1 = 0.3;
-		StochasticTransitionWithReward tr1 = new StochasticTransitionWithReward(startStateAction.getState(), startStateAction.getAction(), endState1, reward1, prob1);
+		StochasticTransitionReward tr1 = new StochasticTransitionReward(startStateAction.getState(), startStateAction.getAction(), endState1, reward1, prob1);
 		double endState1Value = 2; // max Q-value in end state 1
 		when(qFunction.getMaxValueForState(2)).thenReturn(endState1Value);
 		
 		State endState2 = mockState(3);
 		double reward2 = -1;
 		double prob2 = 0.7;
-		StochasticTransitionWithReward tr2 = new StochasticTransitionWithReward(startStateAction.getState(), startStateAction.getAction(), endState2, reward2, prob2);
+		StochasticTransitionReward tr2 = new StochasticTransitionReward(startStateAction.getState(), startStateAction.getAction(), endState2, reward2, prob2);
 		double endState2Value = -5;
 		when(qFunction.getMaxValueForState(3)).thenReturn(endState2Value);
 		
