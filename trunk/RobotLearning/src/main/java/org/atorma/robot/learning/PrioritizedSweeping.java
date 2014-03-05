@@ -39,7 +39,7 @@ public class PrioritizedSweeping {
 			double oldQ = qFunction.getValue(stateActionId);
 			double maxQ = qFunction.getMaxValueForState(stateId);
 			
-			double updatedQ = 0;
+			double updatedQ = 0; // TODO this will set q-value to 0 if no transition from stateAction. OK?
 			for (StochasticTransitionWithReward tr : model.getTransitions(stateAction)) {
 				int toStateId = stateDiscretizer.getId(tr.getToState().getValues());
 				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qFunction.getMaxValueForState(toStateId) );
