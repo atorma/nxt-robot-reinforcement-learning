@@ -2,6 +2,9 @@ package org.atorma.robot.learning;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.atorma.robot.learning.cliffworld.*;
 import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
 import org.atorma.robot.mdp.Transition;
@@ -12,42 +15,37 @@ import org.junit.Test;
 public class CliffWorldQLearningTests {
 
 	private QLearning qLearning;
+	private double learningRate = 0.1;
+	private double discountFactor = 1;
+	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
 	@Before
 	public void setUp() {
-		qLearning = new QLearning(0.1, 1);
+		qLearning = new QLearning(learningRate, discountFactor);
 	}
 	
 	@Test
 	public void cliff_world_q_learning_with_epsilon_greedy_policy_finds_optimal_policy() {
 		learnPolicy();
+		List<CliffWorldAction> learnedPath = getLearnedPath();
+		assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
+	}
 
+	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
-		CliffWorldAction action;
-		
-		action = CliffWorldAction.UP;
-		assertExpectedActionEqualsLearnedAction(action, state);
-		
-		for (int i=0; i<11; i++) {
+		List<CliffWorldAction> learnedActions = new ArrayList<>();
+		while (!state.isGoal()) {
+			int stateId = stateDiscretizer.getId(state.getValues());
+			int actionId = qLearning.getActionId(stateId);
+			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
+			learnedActions.add(action);
 			state = state.getNextState(action);
-			action = CliffWorldAction.RIGHT;
-			assertExpectedActionEqualsLearnedAction(action, state);
-		} 
-		
-		state = state.getNextState(action);
-		action = CliffWorldAction.DOWN;
-		assertExpectedActionEqualsLearnedAction(action, state);
-		
+		}
+		return learnedActions;
 	}
 	
-	private void assertExpectedActionEqualsLearnedAction(CliffWorldAction expectedAction, CliffWorldState currentState) {
-		int expectedActionId = expectedAction.getId();
-		int currentStateId = stateDiscretizer.getId(currentState.getValues());
-		int learnedActionId = qLearning.getActionId(currentStateId);
-		assertEquals(expectedActionId, learnedActionId);
-	}
 
 	private void learnPolicy() {
 		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, qLearning,
