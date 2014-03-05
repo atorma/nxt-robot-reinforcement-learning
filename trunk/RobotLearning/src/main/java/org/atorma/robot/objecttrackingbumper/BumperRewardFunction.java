@@ -4,11 +4,11 @@ import org.atorma.robot.mdp.RewardFunction;
 import org.atorma.robot.mdp.Transition;
 import org.atorma.robot.simplebumper.BumperAction;
 
-public class BumperRewardFunction implements RewardFunction<ModeledBumperState, BumperAction> {
+public class BumperRewardFunction implements RewardFunction {
 
 	@Override
-	public double getReward(Transition<ModeledBumperState, BumperAction> transition) {
-		ModeledBumperState toState = transition.getToState();
+	public double getReward(Transition transition) {
+		ModeledBumperState toState = (ModeledBumperState) transition.getToState();
 		BumperAction action = (BumperAction) transition.getAction();
 		
 		if (toState.isCollided()) {

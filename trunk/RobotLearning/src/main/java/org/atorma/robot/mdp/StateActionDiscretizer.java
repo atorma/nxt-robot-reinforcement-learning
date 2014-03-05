@@ -2,51 +2,51 @@ package org.atorma.robot.mdp;
 
 import org.atorma.robot.discretization.VectorDiscretizer;
 
-public class StateActionDiscretizer<S extends State, A extends DiscreteAction> {
+public class StateActionDiscretizer {
 
 	private VectorDiscretizer stateDiscretizer;
-	private RewardFunction<S, A> rewardFunction;
+	private RewardFunction rewardFunction;
 	
-	public StateActionDiscretizer(VectorDiscretizer stateDiscretizer, RewardFunction<S, A> rewardFunction) {
+	public StateActionDiscretizer(VectorDiscretizer stateDiscretizer, RewardFunction rewardFunction) {
 		this.stateDiscretizer = stateDiscretizer;
 		this.rewardFunction = rewardFunction;
 	}
 	
-	public DiscretizedStateAction discretize(S state, A action) {
+	public DiscretizedStateAction discretize(State state, DiscreteAction action) {
 		int stateId = stateDiscretizer.getId(state.getValues());
 		int actionId = action.getId();
 		return new DiscretizedStateAction(stateId, actionId);
 	}
 	
-	public DiscretizedStateAction discretize(StateAction<S, A> stateAction) {
+	public DiscretizedStateAction discretize(StateAction stateAction) {
 		return discretize(stateAction.getState(), stateAction.getAction());
 	}
 	
-	public DiscretizedTransition discretize(Transition<S, A> transition) {
+	public DiscretizedTransition discretize(Transition transition) {
 		return discretize(transition.getFromState(), transition.getAction(), transition.getToState());
 	}
 	
-	public DiscretizedTransition discretize(S fromState, A byAction, S toState) {
+	public DiscretizedTransition discretize(State fromState, DiscreteAction byAction, State toState) {
 		int fromStateId = stateDiscretizer.getId(fromState.getValues());
 		int byActionId = byAction.getId();
 		int toStateId = stateDiscretizer.getId(toState.getValues());
 		return new DiscretizedTransition(fromStateId, byActionId, toStateId);
 	}
 	
-	public DiscretizedTransitionWithReward discretize(S fromState, A byAction, S toState, double reward) {
+	public DiscretizedTransitionWithReward discretize(State fromState, DiscreteAction byAction, State toState, double reward) {
 		return new DiscretizedTransitionWithReward(discretize(fromState, byAction, toState), reward);
 	}
 	
-	public DiscretizedTransitionWithReward discretize(TransitionWithReward<S, A> transition) {
-		return new DiscretizedTransitionWithReward(discretize((Transition<S, A>) transition), transition.getReward());
+	public DiscretizedTransitionWithReward discretize(TransitionWithReward transition) {
+		return new DiscretizedTransitionWithReward(discretize((Transition) transition), transition.getReward());
 	}
 	
-	public DiscretizedTransitionWithReward discretizeAndComputeReward(S fromState, A byAction, S toState) {
-		Transition<S, A> transition = new Transition<S, A>(fromState, byAction, toState);
+	public DiscretizedTransitionWithReward discretizeAndComputeReward(State fromState, DiscreteAction byAction, State toState) {
+		Transition transition = new Transition(fromState, byAction, toState);
 		return discretizeAndComputeReward(transition);
 	}
 	
-	public DiscretizedTransitionWithReward discretizeAndComputeReward(Transition<S, A> transition) {
+	public DiscretizedTransitionWithReward discretizeAndComputeReward(Transition transition) {
 		double reward = rewardFunction.getReward(transition);
 		DiscretizedTransition discretizedTransition = discretize(transition);
 		return new DiscretizedTransitionWithReward(discretizedTransition, reward);

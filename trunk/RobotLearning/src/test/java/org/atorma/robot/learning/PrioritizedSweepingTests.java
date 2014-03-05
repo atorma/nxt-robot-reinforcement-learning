@@ -15,7 +15,6 @@ import org.mockito.MockitoAnnotations;
 
 import com.google.common.collect.Sets;
 
-@SuppressWarnings("rawtypes")
 public class PrioritizedSweepingTests {
 
 	private PrioritizedSweeping sweeping;
@@ -40,7 +39,7 @@ public class PrioritizedSweepingTests {
 	
 	@Test
 	public void set_current_state_action() {
-		StateAction<State, DiscreteAction> stateAction = mockStateAction(1, 1);
+		StateAction stateAction = mockStateAction(1, 1);
 		
 		sweeping.setCurrentStateAction(stateAction);
 		
@@ -56,7 +55,7 @@ public class PrioritizedSweepingTests {
 		State startState = mockState(1);
 		DiscreteAction startAction = mockAction(1);
 		DiscretizedStateAction startStateActionId = new DiscretizedStateAction(1, 1);
-		StateAction startStateAction = new StateAction<>(startState, startAction);
+		StateAction startStateAction = new StateAction(startState, startAction);
 		
 		double startStateValue = -100.0; // max Q-value over actions in start state
 		when(qFunction.getMaxValueForState(1)).thenReturn(startStateValue); // Low q-value means update causes sweep of predecessor state-action pairs
@@ -65,14 +64,14 @@ public class PrioritizedSweepingTests {
 		State endState1 = mockState(2);
 		double reward1 = 5;
 		double prob1 = 0.3;
-		StochasticTransitionWithReward tr1 = new StochasticTransitionWithReward<>(startStateAction.getState(), startStateAction.getAction(), endState1, reward1, prob1);
+		StochasticTransitionWithReward tr1 = new StochasticTransitionWithReward(startStateAction.getState(), startStateAction.getAction(), endState1, reward1, prob1);
 		double endState1Value = 2; // max Q-value in end state 1
 		when(qFunction.getMaxValueForState(2)).thenReturn(endState1Value);
 		
 		State endState2 = mockState(3);
 		double reward2 = -1;
 		double prob2 = 0.7;
-		StochasticTransitionWithReward tr2 = new StochasticTransitionWithReward<>(startStateAction.getState(), startStateAction.getAction(), endState2, reward2, prob2);
+		StochasticTransitionWithReward tr2 = new StochasticTransitionWithReward(startStateAction.getState(), startStateAction.getAction(), endState2, reward2, prob2);
 		double endState2Value = -5;
 		when(qFunction.getMaxValueForState(3)).thenReturn(endState2Value);
 		
@@ -81,11 +80,11 @@ public class PrioritizedSweepingTests {
 		// Predecessor states and actions of the starting state
 		StateAction predecessor1 = mockStateAction(4, 4);
 		double prob4 = 0.4;
-		when(model.getTransitionProbability(new Transition<>(predecessor1.getState(), predecessor1.getAction(), startState))).thenReturn(prob4);
+		when(model.getTransitionProbability(new Transition(predecessor1.getState(), predecessor1.getAction(), startState))).thenReturn(prob4);
 		
 		StateAction predecessor2 = mockStateAction(5, 5);
 		double prob5 = 0.6; // P(s=1 | s=5, a=5) has the higher probability so should get higher priority after the sweep
-		when(model.getTransitionProbability(new Transition<>(predecessor2.getState(), predecessor2.getAction(), startState))).thenReturn(prob5);
+		when(model.getTransitionProbability(new Transition(predecessor2.getState(), predecessor2.getAction(), startState))).thenReturn(prob5);
 		
 		when(model.getPredecessors(startStateAction.getState())).thenReturn(Sets.newHashSet(predecessor1, predecessor2));
 
@@ -118,7 +117,7 @@ public class PrioritizedSweepingTests {
 	private StateAction mockStateAction(int stateId, int actionId) {
 		State state = mockState(stateId);
 		DiscreteAction action = mockAction(actionId);
-		return new StateAction<State, DiscreteAction>(state, action);
+		return new StateAction(state, action);
 	}
 	
 	private State mockState(int stateId) {
