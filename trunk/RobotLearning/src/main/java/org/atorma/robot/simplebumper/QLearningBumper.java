@@ -12,7 +12,7 @@ public class QLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
-	private TransitionDiscretizer<BumperPercept, BumperAction> transitionDiscretizer = new TransitionDiscretizer<>(stateDiscretizer, rewardFunction);
+	private StateActionDiscretizer<BumperPercept, BumperAction> transitionDiscretizer = new StateActionDiscretizer<>(stateDiscretizer, rewardFunction);
 	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;

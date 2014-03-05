@@ -2,14 +2,24 @@ package org.atorma.robot.mdp;
 
 import org.atorma.robot.discretization.VectorDiscretizer;
 
-public class TransitionDiscretizer<S extends State, A extends DiscreteAction> {
+public class StateActionDiscretizer<S extends State, A extends DiscreteAction> {
 
 	private VectorDiscretizer stateDiscretizer;
 	private RewardFunction<S, A> rewardFunction;
 	
-	public TransitionDiscretizer(VectorDiscretizer stateDiscretizer, RewardFunction<S, A> rewardFunction) {
+	public StateActionDiscretizer(VectorDiscretizer stateDiscretizer, RewardFunction<S, A> rewardFunction) {
 		this.stateDiscretizer = stateDiscretizer;
 		this.rewardFunction = rewardFunction;
+	}
+	
+	public DiscretizedStateAction discretize(S state, A action) {
+		int stateId = stateDiscretizer.getId(state.getValues());
+		int actionId = action.getId();
+		return new DiscretizedStateAction(stateId, actionId);
+	}
+	
+	public DiscretizedStateAction discretize(StateAction<S, A> stateAction) {
+		return discretize(stateAction.getState(), stateAction.getAction());
 	}
 	
 	public DiscretizedTransition discretize(Transition<S, A> transition) {
