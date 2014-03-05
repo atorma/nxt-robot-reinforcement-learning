@@ -2,10 +2,9 @@ package org.atorma.robot.learning;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-
-import org.atorma.robot.discretization.VectorDiscretizer;
-import org.atorma.robot.mdp.*;
+import org.atorma.robot.learning.cliffworld.*;
+import org.atorma.robot.mdp.DiscretizedTransitionWithReward;
+import org.atorma.robot.mdp.Transition;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +12,7 @@ import org.junit.Test;
 public class CliffWorldQLearningTests {
 
 	private QLearning qLearning;
-	private ArrayHashCode stateDiscretizer = new ArrayHashCode();
+	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
 	@Before
@@ -77,115 +76,5 @@ public class CliffWorldQLearningTests {
 
 		}
 	}
-	
-	
-	public static class CliffWorldState implements State {
 
-		public static final int X_MIN = 0;
-		public static final int X_MAX = 11;
-		public static final int Y_MIN = 0;
-		public static final int Y_MAX = 3;
-
-		public static final CliffWorldState START = new CliffWorldState(X_MIN, Y_MIN);
-		
-		private final int x;
-		private final int y;
-		
-		public CliffWorldState(int x, int y) {
-			this.x = x;
-			this.y = y;
-		}
-		
-		@Override
-		public double[] getValues() {
-			return new double[] {x, y};
-		}
-		
-		// Cliff world environment
-		
-		public boolean isOutOfBounds() {
-			return x < X_MIN || x > X_MAX || y < Y_MIN || y > X_MAX;
-		}
-		
-		public boolean isCliff() {
-			return x > X_MIN && x < X_MAX && y == Y_MIN; 
-		}
-		
-		public boolean isGoal() {
-			return x == X_MAX && y == Y_MIN;
-		}
-		
-		public CliffWorldState getNextState(CliffWorldAction action) {
-			CliffWorldState nextState = new CliffWorldState(x + action.dx, y + action.dy);
-			if (nextState.isOutOfBounds() || isGoal()) {
-				return this;
-			} else if (nextState.isCliff()) {
-				return START;
-			} else {
-				return nextState;
-			}
-		}
-	}
-	
-	public static class CliffWorldAction implements DiscreteAction {
-		
-		public static final CliffWorldAction UP = new CliffWorldAction(0, 1, 0);
-		public static final CliffWorldAction DOWN = new CliffWorldAction(0, -1, 1);
-		public static final CliffWorldAction LEFT = new CliffWorldAction(-1, 0, 2);
-		public static final CliffWorldAction RIGHT = new CliffWorldAction(1, 0, 3);
-		
-		public final int dx;
-		public final int dy;
-		public final int id; 
-		
-		public CliffWorldAction(int dx, int dy, int id) {
-			this.dx = dx;
-			this.dy = dy;
-			this.id = id;
-		}
-
-		@Override
-		public int getId() {
-			return id;
-		}
-		
-		public static CliffWorldAction getActionById(int id) {
-			if (id == UP.id) {
-				return UP;
-			} else if (id == DOWN.id) {
-				return DOWN;
-			} else if (id == LEFT.id) {
-				return LEFT;
-			} else if (id == RIGHT.id) {
-				return RIGHT;
-			} else {
-				throw new IllegalArgumentException();
-			}
-		}
-		
-	}
-	
-	public static class CliffWorldRewardFunction implements RewardFunction<CliffWorldState, CliffWorldAction> {
-
-		@Override
-		public double getReward(Transition<CliffWorldState, CliffWorldAction> transition) {
-			CliffWorldState toState = transition.getToState();
-			if (toState.isCliff()) {
-				return -100;
-			} else {
-				return -1;
-			}
-		}
-		
-	}
-	
-	public static class ArrayHashCode implements VectorDiscretizer {
-
-		@Override
-		public int getId(double[] value) {
-			return Arrays.hashCode(value);
-		}
-		
-	}
-		
 }
