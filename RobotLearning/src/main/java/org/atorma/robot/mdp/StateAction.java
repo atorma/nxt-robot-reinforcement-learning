@@ -3,21 +3,21 @@ package org.atorma.robot.mdp;
 import org.atorma.robot.mdp.DiscreteAction;
 import org.atorma.robot.mdp.State;
 
-public class StateAction<S extends State, A extends DiscreteAction> {
+public class StateAction {
 
-	private final S state;
-	private final A action;
+	private final State state;
+	private final DiscreteAction action;
 	
-	public StateAction(S state, A action) {
+	public StateAction(State state, DiscreteAction action) {
 		this.state = state;
 		this.action = action;
 	}
 
-	public S getState() {
+	public State getState() {
 		return state;
 	}
 
-	public A getAction() {
+	public DiscreteAction getAction() {
 		return action;
 	}
 
@@ -38,7 +38,7 @@ public class StateAction<S extends State, A extends DiscreteAction> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		StateAction<?, ?> other = (StateAction<?, ?>) obj;
+		StateAction other = (StateAction) obj;
 		if (action == null) {
 			if (other.action != null)
 				return false;

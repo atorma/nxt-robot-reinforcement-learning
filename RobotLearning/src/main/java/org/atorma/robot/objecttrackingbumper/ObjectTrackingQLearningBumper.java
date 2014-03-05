@@ -16,7 +16,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
-	private StateActionDiscretizer<ModeledBumperState, BumperAction> transitionDiscretizer = new StateActionDiscretizer<>(stateDiscretizer, rewardFunction);
+	private StateActionDiscretizer transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;

@@ -1,13 +1,13 @@
 package org.atorma.robot.mdp;
 
 
-public class Transition<S extends State, A extends DiscreteAction> {
+public class Transition {
 	
-	private final S fromState;
-	private final A byAction;
-	private final S toState;
+	private final State fromState;
+	private final DiscreteAction byAction;
+	private final State toState;
 	
-	public Transition(S fromState, A byAction, S toState) {
+	public Transition(State fromState, DiscreteAction byAction, State toState) {
 		if (fromState == null || byAction == null || toState == null) {
 			throw new NullPointerException();
 		}
@@ -16,24 +16,24 @@ public class Transition<S extends State, A extends DiscreteAction> {
 		this.toState = toState;
 	}
 	
-	public Transition(StateAction<S, A> fromStateAction, S toState) {
+	public Transition(StateAction fromStateAction, State toState) {
 		this(fromStateAction.getState(), fromStateAction.getAction(), toState);
 	}
 
-	public S getFromState() {
+	public State getFromState() {
 		return fromState;
 	}
 
-	public A getAction() {
+	public DiscreteAction getAction() {
 		return byAction;
 	}
 
-	public S getToState() {
+	public State getToState() {
 		return toState;
 	}
 	
-	public StateAction<S, A> getFromStateAction() {
-		return new StateAction<>(fromState, byAction);
+	public StateAction getFromStateAction() {
+		return new StateAction(fromState, byAction);
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class Transition<S extends State, A extends DiscreteAction> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Transition<?, ?> other = (Transition<?, ?>) obj;
+		Transition other = (Transition) obj;
 		if (byAction == null) {
 			if (other.byAction != null)
 				return false;

@@ -1,11 +1,11 @@
 package org.atorma.robot.mdp;
 
 
-public class TransitionWithReward<S extends State, A extends DiscreteAction> extends Transition<S, A> {
+public class TransitionWithReward extends Transition {
 	
 	private final double reward;
 
-	public TransitionWithReward(S fromState, A byAction, S toState, double reward) {
+	public TransitionWithReward(State fromState, DiscreteAction byAction, State toState, double reward) {
 		super(fromState, byAction, toState);
 		this.reward = reward;
 	}

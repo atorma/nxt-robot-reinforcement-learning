@@ -1,7 +1,7 @@
 package org.atorma.robot.mdp;
 
 
-public interface RewardFunction<S extends State, A extends DiscreteAction> {
+public interface RewardFunction {
 
-	double getReward(Transition<S, A> transition);
+	double getReward(Transition transition);
 }

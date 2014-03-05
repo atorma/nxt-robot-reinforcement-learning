@@ -16,7 +16,7 @@ public class PrioritizedSweeping {
 	private double discountFactor = 1.0;
 	private double qValueChangeThreshold = 0.01;
 
-	public void setCurrentStateAction(StateAction<?, ?> stateAction) {
+	public void setCurrentStateAction(StateAction stateAction) {
 		PrioritzedStateAction prioritized = new PrioritzedStateAction(stateAction, Double.MIN_VALUE);
 		stateActionQueue.add(prioritized);
 	}
@@ -49,7 +49,7 @@ public class PrioritizedSweeping {
 			double qValueChange = Math.abs(updatedQ - oldQ);
 			if (updatedQ >= maxQ && qValueChange > qValueChangeThreshold) {
 				for (StateAction predecessor : model.getPredecessors(stateAction.getState())) {
-					double priority = qValueChange * model.getTransitionProbability(new Transition<State, DiscreteAction>(predecessor, stateAction.getState()));
+					double priority = qValueChange * model.getTransitionProbability(new Transition(predecessor, stateAction.getState()));
 					if (priority > qValueChangeThreshold) {
 						stateActionQueue.removeStateAction(predecessor);
 						stateActionQueue.add(new PrioritzedStateAction(predecessor, -priority));
@@ -113,10 +113,10 @@ public class PrioritizedSweeping {
 
 	protected class PrioritzedStateAction implements Comparable<PrioritzedStateAction> {
 		private DiscretizedStateAction stateIdActionId;
-		private StateAction<?, ?> stateAction;
+		private StateAction stateAction;
 		private double priority;
 		
-		private PrioritzedStateAction(StateAction<?, ?> stateAction, double priority) {
+		private PrioritzedStateAction(StateAction stateAction, double priority) {
 			this.stateIdActionId = new DiscretizedStateAction(
 					PrioritizedSweeping.this.stateDiscretizer.getId(stateAction.getState().getValues()), 
 					stateAction.getAction().getId()); 
@@ -124,7 +124,7 @@ public class PrioritizedSweeping {
 			this.priority = priority;
 		}
 
-		public StateAction<?, ?> getStateAction() {
+		public StateAction getStateAction() {
 			return stateAction;
 		}
 		

@@ -64,7 +64,7 @@ public class CliffWorldQLearningTests {
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
 				int toStateId = stateDiscretizer.getId(toState.getValues());
-				Transition<CliffWorldState, CliffWorldAction> transition = new Transition<>(fromState, byAction, toState);
+				Transition transition = new Transition(fromState, byAction, toState);
 				double reward = rewardFunction.getReward(transition);
 				
 				qLearning.update(new DiscretizedTransitionWithReward(fromStateId, byActionId, toStateId, reward));

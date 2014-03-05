@@ -3,10 +3,10 @@ package org.atorma.robot.simplebumper;
 import org.atorma.robot.mdp.RewardFunction;
 import org.atorma.robot.mdp.Transition;
 
-public class BumperRewardFunction implements RewardFunction<BumperPercept, BumperAction> {
+public class BumperRewardFunction implements RewardFunction {
 
 	@Override
-	public double getReward(Transition<BumperPercept, BumperAction> transition) {
+	public double getReward(Transition transition) {
 		BumperPercept toState = (BumperPercept) transition.getToState();
 		BumperAction action = (BumperAction) transition.getAction();
 		
