@@ -31,6 +31,10 @@ public class Transition<S extends State, A extends DiscreteAction> {
 	public S getToState() {
 		return toState;
 	}
+	
+	public StateAction<S, A> getFromStateAction() {
+		return new StateAction<>(fromState, byAction);
+	}
 
 	@Override
 	public int hashCode() {
