@@ -15,6 +15,10 @@ public class Transition<S extends State, A extends DiscreteAction> {
 		this.byAction = byAction;
 		this.toState = toState;
 	}
+	
+	public Transition(StateAction<S, A> fromStateAction, S toState) {
+		this(fromStateAction.getState(), fromStateAction.getAction(), toState);
+	}
 
 	public S getFromState() {
 		return fromState;

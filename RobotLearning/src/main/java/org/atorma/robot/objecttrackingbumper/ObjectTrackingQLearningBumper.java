@@ -5,7 +5,7 @@ import java.io.File;
 import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.TransitionDiscretizer;
+import org.atorma.robot.mdp.StateActionDiscretizer;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
@@ -16,7 +16,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
-	private TransitionDiscretizer<ModeledBumperState, BumperAction> transitionDiscretizer = new TransitionDiscretizer<>(stateDiscretizer, rewardFunction);
+	private StateActionDiscretizer<ModeledBumperState, BumperAction> transitionDiscretizer = new StateActionDiscretizer<>(stateDiscretizer, rewardFunction);
 	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
