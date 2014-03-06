@@ -41,7 +41,7 @@ public class PrioritizedSweeping {
 			
 			
 			Set<StochasticTransitionReward> transitions = model.getOutgoingTransitions(stateAction);
-			if (!transitions.isEmpty()) { 
+			if (transitions.isEmpty()) { 
 				break;
 			}
 			
