@@ -5,6 +5,8 @@ import java.util.Set;
 import org.atorma.robot.mdp.*;
 
 public interface PrioritizedSweepingModel {
+	
+	Set<? extends DiscreteAction> getAllActions();
 
 	Set<StochasticTransitionReward> getOutgoingTransitions(StateAction stateAction);
 	

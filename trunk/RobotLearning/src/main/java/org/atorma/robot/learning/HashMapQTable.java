@@ -60,6 +60,7 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 		this.put(stateIdActionId, qValue);
 	}
 	
+	@Override
 	public DiscretizedStateAction getBestActionInState(int stateId) {
 		if (this.actionIds.isEmpty()) {
 			throw new IllegalStateException("No actions known");
@@ -80,9 +81,8 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 	}
 	
 	@Override
-	public double getMaxValueForState(int stateId) {
-		DiscretizedStateAction bestStateAction = getBestActionInState(stateId);
-		return getValue(bestStateAction);
+	public double getMaxValueInState(int stateId) {
+		return getValue(getBestActionInState(stateId));
 	}
 
 	@Override

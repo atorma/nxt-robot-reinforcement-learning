@@ -65,7 +65,15 @@ public class QLearning implements DiscretePolicy, QTable {
 		return accumulatedReward;
 	}
 
-	
+	@Override
+	public DiscretizedStateAction getBestActionInState(int stateId) {
+		if (stateIdToBestActionIdMap.containsKey(stateId)) {
+			return new DiscretizedStateAction(stateId, stateIdToBestActionIdMap.getActionId(stateId));
+		} else {
+			return qTable.getBestActionInState(stateId);
+		}
+	}
+
 	@Override
 	public double getValue(DiscretizedStateAction stateIdActionId) {
 		return qTable.getValue(stateIdActionId);
@@ -77,13 +85,8 @@ public class QLearning implements DiscretePolicy, QTable {
 	}
 
 	@Override
-	public double getMaxValueForState(int stateId) {
-		if (stateIdToBestActionIdMap.containsKey(stateId)) {
-			DiscretizedStateAction stateAction = new DiscretizedStateAction(stateId, stateIdToBestActionIdMap.getActionId(stateId));
-			return qTable.getValue(stateAction);
-		} else {
-			return qTable.getMaxValueForState(stateId);
-		}
+	public double getMaxValueInState(int stateId) {
+		return qTable.getValue(getBestActionInState(stateId));
 	}
 
 	
