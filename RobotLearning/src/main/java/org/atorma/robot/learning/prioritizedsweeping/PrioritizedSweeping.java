@@ -5,9 +5,10 @@ import java.util.*;
 import org.atorma.robot.discretization.VectorDiscretizer;
 import org.atorma.robot.learning.QTable;
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.policy.DiscretePolicy;
 
 
-public class PrioritizedSweeping {
+public class PrioritizedSweeping implements DiscretePolicy {
 
 	private QTable qTable;
 	private PrioritizedSweepingModel model;
@@ -50,12 +51,12 @@ public class PrioritizedSweeping {
 			double updatedQ = 0;
 			for (StochasticTransitionReward tr : transitions) {
 				int toStateId = stateDiscretizer.getId(tr.getToState().getValues());
-				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qTable.getMaxValueForState(toStateId) );
+				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qTable.getMaxValueInState(toStateId) );
 			}
 			qTable.setValue(stateActionId, updatedQ);
 				
 			double qValueChange = Math.abs(updatedQ - oldQ);
-			double maxQ = qTable.getMaxValueForState(stateId);
+			double maxQ = qTable.getMaxValueInState(stateId);
 			
 			if (updatedQ == maxQ && qValueChange > qValueChangeThreshold) {
 				for (StochasticTransitionReward predecessor : model.getIncomingTransitions(stateAction.getState())) {
@@ -72,7 +73,13 @@ public class PrioritizedSweeping {
 		model.updateModel(transitionReward);
 	}
 	
+	
+	@Override
+	public Integer getActionId(int stateId) {
+		return qTable.getActionId(stateId);
+	}
 
+	
 	public double getDiscountFactor() {
 		return discountFactor;
 	}

@@ -20,10 +20,12 @@ public class CliffWorldQLearningTests {
 	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
+	private EpsilonGreedyPolicy policy;
 	
 	@Before
 	public void setUp() {
 		qLearning = new QLearning(learningRate, discountFactor);
+		policy = new EpsilonGreedyPolicy(0.1, qLearning, CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT);
 	}
 	
 	@Test
@@ -36,7 +38,7 @@ public class CliffWorldQLearningTests {
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isGoal()) {
+		while (!state.isGoal() && learnedActions.size() <= CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state.getValues());
 			int actionId = qLearning.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
@@ -48,9 +50,6 @@ public class CliffWorldQLearningTests {
 	
 
 	private void learnPolicy() {
-		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, qLearning,
-				CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT);
-		
 		int numEpisodes = 500;
 		
 		for (int episode=0; episode<numEpisodes; episode++) {

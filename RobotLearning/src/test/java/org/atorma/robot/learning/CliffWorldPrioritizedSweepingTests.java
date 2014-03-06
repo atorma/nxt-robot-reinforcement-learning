@@ -8,6 +8,7 @@ import org.atorma.robot.learning.cliffworld.*;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,7 +20,6 @@ public class CliffWorldPrioritizedSweepingTests {
 	private double discountFactor = 1;
 	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
-	private CliffWorldRewardFunction rewardFunction = new ModifiedCliffWorldRewardFunction();
 	
 	private HashMapQTable qTable;
 	private CliffWorldModel model;
@@ -42,6 +42,8 @@ public class CliffWorldPrioritizedSweepingTests {
 	@Test
 	public void with_optimal_path_and_big_reward_in_the_goal_default_q_values_prioritized_sweeping_learns_model_in_one_episode() {
 		
+		CliffWorldRewardFunction rewardFunction = new ModifiedCliffWorldRewardFunction();
+		
 		int numIter = CliffWorldEnvironment.OPTIMAL_PATH.size();
 
 		CliffWorldState state = CliffWorldState.START;
@@ -63,10 +65,43 @@ public class CliffWorldPrioritizedSweepingTests {
 		assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
 	}
 	
+	@Test
+	public void learns_optimal_path_in_few_episodes() {
+		
+		CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
+		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, sweeping, CliffWorldAction.values());
+		
+		for (int episode = 0; episode < 10; episode++) { // Q-learning takes about 500 episodes to learn the optimal path with high probability 
+			
+			CliffWorldState fromState = CliffWorldState.START;
+			CliffWorldState toState;
+			
+			do {
+				int fromStateId = stateDiscretizer.getId(fromState.getValues());
+				Integer byActionId = policy.getActionId(fromStateId);
+				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
+				toState = fromState.getNextState(byAction);
+				Transition transition = new Transition(fromState, byAction, toState);
+				double reward = rewardFunction.getReward(transition);
+				
+				sweeping.updateModel(new TransitionReward(transition, reward));
+				sweeping.setSweepStartStateAction(transition.getFromStateAction());
+				sweeping.performIterations(50);
+				
+				fromState = toState;
+
+			} while (!toState.isGoal());
+
+		}
+		
+		List<CliffWorldAction> learnedPath = getLearnedPath();
+		assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
+	}
+	
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isGoal()) {
+		while (!state.isGoal() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state.getValues());
 			int actionId = qTable.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
@@ -104,6 +139,11 @@ public class CliffWorldPrioritizedSweepingTests {
 		private Map<State, Set<StochasticTransitionReward>> incomingTransitions = new HashMap<>();
 		
 		@Override
+		public Set<CliffWorldAction> getAllActions() {
+			return Sets.newHashSet(CliffWorldAction.values());
+		}
+		
+		@Override
 		public Set<StochasticTransitionReward> getOutgoingTransitions(StateAction stateAction) {
 			if (outgoingTransitions.get(stateAction) != null) {
 				// There's only one possible transition since the world is deterministic
@@ -130,7 +170,6 @@ public class CliffWorldPrioritizedSweepingTests {
 			incoming.add(new StochasticTransitionReward(observation, TRANSITION_PROBABILITY));
 		}
 
-		
 		
 	}
 }

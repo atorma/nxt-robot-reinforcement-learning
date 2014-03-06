@@ -9,6 +9,7 @@ public interface QTable extends DiscretePolicy {
 	
 	void setValue(DiscretizedStateAction stateIdActionId, double qValue);
 	
-	double getMaxValueForState(int stateId);
-
+	double getMaxValueInState(int stateId);
+	
+	DiscretizedStateAction getBestActionInState(int stateId);
 }
