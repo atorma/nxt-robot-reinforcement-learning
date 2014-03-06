@@ -21,7 +21,7 @@ public class PrioritizedSweepingTests {
 	private double discountFactor = 0.9;
 	private double qValueChangeThreshold = 0.05;
 	
-	@Mock private DiscreteQFunction qFunction;
+	@Mock private QTable qFunction;
 	@Mock private MarkovModel model;
 	@Mock private VectorDiscretizer stateDiscretizer;
 	
@@ -31,7 +31,7 @@ public class PrioritizedSweepingTests {
 		
 		sweeping = new PrioritizedSweeping();
 		sweeping.setDiscountFactor(discountFactor);
-		sweeping.setQFunction(qFunction);
+		sweeping.setQTable(qFunction);
 		sweeping.setModel(model);
 		sweeping.setStateDiscretizer(stateDiscretizer);
 		sweeping.setQValueChangeThreshold(qValueChangeThreshold);
@@ -75,7 +75,7 @@ public class PrioritizedSweepingTests {
 		double endState2Value = -5;
 		when(qFunction.getMaxValueForState(3)).thenReturn(endState2Value);
 		
-		when(model.getTransitions(startStateAction)).thenReturn(Sets.newHashSet(tr1, tr2));
+		when(model.getOutgoingTransitions(startStateAction)).thenReturn(Sets.newHashSet(tr1, tr2));
 		
 		// Predecessor states and actions of the starting state
 		StateAction predecessor1 = mockStateAction(4, 4);

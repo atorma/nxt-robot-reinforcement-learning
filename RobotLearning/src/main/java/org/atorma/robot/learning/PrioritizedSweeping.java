@@ -1,7 +1,6 @@
 package org.atorma.robot.learning;
 
-import java.util.Iterator;
-import java.util.PriorityQueue;
+import java.util.*;
 
 import org.atorma.robot.discretization.VectorDiscretizer;
 import org.atorma.robot.mdp.*;
@@ -9,13 +8,14 @@ import org.atorma.robot.mdp.*;
 
 public class PrioritizedSweeping {
 
-	private DiscreteQFunction qFunction;
+	private QTable qTable;
 	private MarkovModel model;
 	private StateActionQueue stateActionQueue = new StateActionQueue();
 	private VectorDiscretizer stateDiscretizer;
 	private double discountFactor = 1.0;
 	private double qValueChangeThreshold = 0.01;
 
+	
 	public void setCurrentStateAction(StateAction stateAction) {
 		PrioritzedStateAction prioritized = new PrioritzedStateAction(stateAction, Double.MIN_VALUE);
 		stateActionQueue.add(prioritized);
@@ -36,27 +36,37 @@ public class PrioritizedSweeping {
 			int stateId = stateDiscretizer.getId(stateAction.getState().getValues());
 			int actionId = stateAction.getAction().getId();
 			DiscretizedStateAction stateActionId = new DiscretizedStateAction(stateId, actionId);
-			double oldQ = qFunction.getValue(stateActionId);
-			double maxQ = qFunction.getMaxValueForState(stateId);
+			double oldQ = qTable.getValue(stateActionId);
+			double maxQ = qTable.getMaxValueForState(stateId);
 			
-			double updatedQ = 0; // TODO this will set q-value to 0 if no transition from stateAction. OK?
-			for (StochasticTransitionReward tr : model.getTransitions(stateAction)) {
-				int toStateId = stateDiscretizer.getId(tr.getToState().getValues());
-				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qFunction.getMaxValueForState(toStateId) );
+			
+			Set<StochasticTransitionReward> transitions = model.getOutgoingTransitions(stateAction);
+			if (!transitions.isEmpty()) { 
+				break;
 			}
-			qFunction.setValue(stateActionId, updatedQ);
+			
+			double updatedQ = 0;
+			for (StochasticTransitionReward tr : transitions) {
+				int toStateId = stateDiscretizer.getId(tr.getToState().getValues());
+				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qTable.getMaxValueForState(toStateId) );
+			}
+			qTable.setValue(stateActionId, updatedQ);
 			
 			double qValueChange = Math.abs(updatedQ - oldQ);
 			if (updatedQ >= maxQ && qValueChange > qValueChangeThreshold) {
-				for (StateAction predecessor : model.getPredecessors(stateAction.getState())) {
-					double priority = qValueChange * model.getTransitionProbability(new Transition(predecessor, stateAction.getState()));
+				for (StochasticTransitionReward predecessor : model.getIncomingTransitions(stateAction.getState())) {
+					double priority = qValueChange * predecessor.getProbability();
 					if (priority > qValueChangeThreshold) {
-						stateActionQueue.removeStateAction(predecessor);
-						stateActionQueue.add(new PrioritzedStateAction(predecessor, -priority));
+						stateActionQueue.removeStateAction(predecessor.getFromStateAction());
+						stateActionQueue.add(new PrioritzedStateAction(predecessor.getFromStateAction(), -priority));
 					}
 				}
 			}
 		}
+	}
+	
+	public void updateModel(TransitionReward transitionReward) {
+		model.updateModel(transitionReward);
 	}
 	
 
@@ -68,12 +78,24 @@ public class PrioritizedSweeping {
 		this.discountFactor = discountFactor;
 	}
 
-	public void setQFunction(DiscreteQFunction qFunction) {
-		this.qFunction = qFunction;
+	public QTable getQTable() {
+		return qTable;
+	}
+
+	public void setQTable(QTable qFunction) {
+		this.qTable = qFunction;
+	}
+
+	public MarkovModel getModel() {
+		return model;
 	}
 
 	public void setModel(MarkovModel model) {
 		this.model = model;
+	}
+
+	public VectorDiscretizer getStateDiscretizer() {
+		return stateDiscretizer;
 	}
 
 	public void setStateDiscretizer(VectorDiscretizer stateDiscretizer) {
@@ -144,6 +166,8 @@ public class PrioritizedSweeping {
 		
 		
 	}
+
+	
 
 
 

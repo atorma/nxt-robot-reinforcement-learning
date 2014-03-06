@@ -9,6 +9,15 @@ public class TransitionReward extends Transition {
 		super(fromState, byAction, toState);
 		this.reward = reward;
 	}
+	
+	public TransitionReward(StateAction startStateAction, State endState, double reward) {
+		super(startStateAction, endState);
+		this.reward = reward;
+	}
+	
+	public TransitionReward(Transition transition, double reward) {
+		this(transition.getFromState(), transition.getAction(), transition.getToState(), reward);
+	}
 
 	public double getReward() {
 		return reward;

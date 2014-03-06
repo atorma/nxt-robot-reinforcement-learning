@@ -24,8 +24,15 @@ public class CliffWorldState implements State {
 		return new double[] {x, y};
 	}
 	
-	// Cliff world environment
 	
+	@Override
+	public String toString() {
+		return "CliffWorldState [x=" + x + ", y=" + y + "]";
+	}
+	
+	
+	// Cliff world environment
+
 	public boolean isOutOfBounds() {
 		return x < X_MIN || x > X_MAX || y < Y_MIN || y > X_MAX;
 	}
