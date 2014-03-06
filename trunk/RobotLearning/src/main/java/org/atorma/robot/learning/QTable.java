@@ -1,8 +1,9 @@
 package org.atorma.robot.learning;
 
 import org.atorma.robot.mdp.DiscretizedStateAction;
+import org.atorma.robot.policy.DiscretePolicy;
 
-public interface DiscreteQFunction {
+public interface QTable extends DiscretePolicy {
 
 	double getValue(DiscretizedStateAction stateIdActionId);
 	

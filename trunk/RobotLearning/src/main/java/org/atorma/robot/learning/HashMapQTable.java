@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.atorma.robot.mdp.DiscretizedStateAction;
 
-public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> implements DiscreteQFunction {
+public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> implements QTable {
 	private static final long serialVersionUID = -1394200057253869720L;
 	
 	public static final double DEFAULT_Q_VALUE = 0;
@@ -83,6 +83,11 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 	public double getMaxValueForState(int stateId) {
 		DiscretizedStateAction bestStateAction = getBestActionInState(stateId);
 		return getValue(bestStateAction);
+	}
+
+	@Override
+	public Integer getActionId(int stateId) {
+		return getBestActionInState(stateId).getActionId();
 	}
 
 	

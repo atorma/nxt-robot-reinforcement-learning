@@ -5,7 +5,7 @@ import org.atorma.robot.mdp.DiscretizedTransitionReward;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.StateIdToActionIdMap;
 
-public class QLearning implements DiscretePolicy, DiscreteQFunction {
+public class QLearning implements DiscretePolicy, QTable {
 	
 	public static final double DEFAULT_Q_VALUE = 0;
 

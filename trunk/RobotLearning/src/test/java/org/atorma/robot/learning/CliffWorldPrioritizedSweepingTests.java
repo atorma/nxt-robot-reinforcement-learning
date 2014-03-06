@@ -1,12 +1,13 @@
 package org.atorma.robot.learning;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.*;
 
-import org.atorma.robot.discretization.VectorDiscretizer;
-import org.atorma.robot.learning.cliffworld.CliffWorldRewardFunction;
-import org.atorma.robot.learning.cliffworld.CliffWorldStateDiscretizer;
+import org.atorma.robot.learning.cliffworld.*;
 import org.atorma.robot.mdp.*;
 import org.junit.Before;
+import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
@@ -18,53 +19,115 @@ public class CliffWorldPrioritizedSweepingTests {
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
-	private DiscreteQFunction qFunction = new HashMapQTable();
+	private HashMapQTable qTable;
+	private CliffWorldModel model;
 
 	@Before
 	public void setUp() {
+		qTable = new HashMapQTable();
+		for (CliffWorldAction action : CliffWorldAction.values()) {
+			qTable.addActionId(action.getId());
+		}
+		model = new CliffWorldModel();
+		
 		sweeping = new PrioritizedSweeping();
 		sweeping.setDiscountFactor(discountFactor);
 		sweeping.setStateDiscretizer(stateDiscretizer);
+		sweeping.setQTable(qTable);
+		sweeping.setModel(model);
 	}
+	
+	@Test
+	public void with_optimal_path_prioritized_sweeping_learns_model() {
+		
+		CliffWorldState state = CliffWorldState.START;
+		for (int i = 0; i < CliffWorldEnvironment.OPTIMAL_PATH.size(); i++) {
+			CliffWorldAction action = CliffWorldEnvironment.OPTIMAL_PATH.get(i);
+			
+			// Simulate that agent is performing its action now, and there's time
+			// to do sweeps
+			sweeping.setCurrentStateAction(new StateAction(state, action));
+			sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size());
+			
+			CliffWorldState nextState = state.getNextState(action);
+			Transition transition = new Transition(state, action, nextState);
+			TransitionReward transitionReward = new TransitionReward(transition, rewardFunction.getReward(transition));
+			sweeping.updateModel(transitionReward);
+			
+			state = nextState;
+		}
+		
+		sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size());
+		
+		//List<CliffWorldAction> learnedPath = getLearnedPath();
+		//assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
+	}
+	
+	private List<CliffWorldAction> getLearnedPath() {
+		CliffWorldState state = CliffWorldState.START;
+		List<CliffWorldAction> learnedActions = new ArrayList<>();
+		while (!state.isGoal()) {
+			int stateId = stateDiscretizer.getId(state.getValues());
+			int actionId = qTable.getActionId(stateId);
+			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
+			learnedActions.add(action);
+			state = state.getNextState(action);
+		}
+		return learnedActions;
+	}
+	
 	
 	// Cliff world model where we know the world is deterministic but 
 	// we don't know the transitions nor the reward function up front.
 	private static class CliffWorldModel implements MarkovModel {
 		
-		private Map<StateAction, TransitionReward> stateActionToReward = new HashMap<>();
-		private Map<State, Set<StateAction>> stateToPredecessors = new HashMap<>();
+		private static final double TRANSITION_PROBABILITY = 1.0;
+		
+		private Map<StateAction, StochasticTransitionReward> outgoingTransitions = new HashMap<>();
+		private Map<State, Set<StochasticTransitionReward>> incomingTransitions = new HashMap<>();
 		
 		@Override
-		public Set<StochasticTransitionReward> getTransitions(StateAction stateAction) {
-			Set<StochasticTransitionReward> transitions = new HashSet<>();
-			if (stateActionToReward.get(stateAction) != null) {
-				return Sets.newHashSet(new StochasticTransitionReward(stateActionToReward.get(stateAction), 1.0));
+		public Set<StochasticTransitionReward> getOutgoingTransitions(StateAction stateAction) {
+			if (outgoingTransitions.get(stateAction) != null) {
+				// There's only one possible transition since the world is deterministic
+				return Sets.newHashSet(new StochasticTransitionReward(outgoingTransitions.get(stateAction), 1.0));
 			}
 			return Collections.emptySet();
+		}
+		
+		@Override
+		public Set<StochasticTransitionReward> getIncomingTransitions(State state) {
+			Set<StochasticTransitionReward> incoming = this.incomingTransitions.get(state);
+			if (incoming == null) {
+				incoming = new HashSet<>();
+				this.incomingTransitions.put(state, incoming);
+			}
+			return incoming;
 		}
 
 		@Override
 		public Set<StateAction> getPredecessors(State state) {
-			Set<StateAction> predecessors = this.stateToPredecessors.get(state);
-			if (predecessors == null) {
-				predecessors = new HashSet<StateAction>();
-				this.stateToPredecessors.put(state, predecessors);
+			Set<StateAction> predecessors = new HashSet<>();
+			for (StochasticTransitionReward tr : this.incomingTransitions.get(state)) {
+				predecessors.add(tr.getFromStateAction());
 			}
-			return stateToPredecessors.get(state);
+			return predecessors;
 		}
 
 		@Override
 		public double getTransitionProbability(Transition transition) {
-			return 1;
+			return TRANSITION_PROBABILITY; // Deterministic world
 		}
 
 		@Override
 		public void updateModel(TransitionReward observation) {
-			this.stateActionToReward.put(observation.getFromStateAction(), observation);
+			this.outgoingTransitions.put(observation.getFromStateAction(), new StochasticTransitionReward(observation, TRANSITION_PROBABILITY));
 			
-			Set<StateAction> predecessors = getPredecessors(observation.getToState());
-			predecessors.add(observation.getFromStateAction());
+			Set<StochasticTransitionReward> incoming = getIncomingTransitions(observation.getToState());
+			incoming.add(new StochasticTransitionReward(observation, TRANSITION_PROBABILITY));
 		}
+
+		
 		
 	}
 }
