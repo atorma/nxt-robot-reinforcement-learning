@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.*;
 
 import org.atorma.robot.learning.cliffworld.*;
+import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
+import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,15 +19,14 @@ public class CliffWorldPrioritizedSweepingTests {
 	private double discountFactor = 1;
 	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
-	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
+	private CliffWorldRewardFunction rewardFunction = new ModifiedCliffWorldRewardFunction();
 	
 	private HashMapQTable qTable;
-	private double defaultQValue = -5;
 	private CliffWorldModel model;
 
 	@Before
 	public void setUp() {
-		qTable = new HashMapQTable(defaultQValue); // alternative to discouraging default q-values would be big reward at goal
+		qTable = new HashMapQTable();
 		for (CliffWorldAction action : CliffWorldAction.values()) {
 			qTable.addActionId(action.getId());
 		}
@@ -39,7 +40,9 @@ public class CliffWorldPrioritizedSweepingTests {
 	}
 	
 	@Test
-	public void with_optimal_path_and_discouraging_default_q_values_prioritized_sweeping_learns_model() {
+	public void with_optimal_path_and_big_reward_in_the_goal_default_q_values_prioritized_sweeping_learns_model_in_one_episode() {
+		
+		int numIter = CliffWorldEnvironment.OPTIMAL_PATH.size();
 
 		CliffWorldState state = CliffWorldState.START;
 		for (int i = 0; i < CliffWorldEnvironment.OPTIMAL_PATH.size(); i++) {
@@ -50,8 +53,8 @@ public class CliffWorldPrioritizedSweepingTests {
 			TransitionReward transitionReward = new TransitionReward(transition, rewardFunction.getReward(transition));
 			sweeping.updateModel(transitionReward);
 			
-			sweeping.setCurrentStateAction(new StateAction(state, action));
-			sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size());
+			sweeping.setSweepStartStateAction(new StateAction(state, action));
+			sweeping.performIterations(numIter);
 
 			state = nextState;
 		}
@@ -74,9 +77,26 @@ public class CliffWorldPrioritizedSweepingTests {
 	}
 	
 	
+	// Modified reward function to give reward upon reaching the goal. 
+	// Makes it easier to test this case of prioritized sweeping where the model
+	// does not know the transitions nor the reward function.
+	private static class ModifiedCliffWorldRewardFunction extends CliffWorldRewardFunction {
+
+		@Override
+		public double getReward(Transition transition) {
+			CliffWorldState toState = (CliffWorldState) transition.getToState();
+			if (toState.isGoal()) {
+				return 100.0;
+			} else {
+				return super.getReward(transition);
+			}
+		}
+		
+	}
+	
 	// Cliff world model where we know the world is deterministic but 
 	// we don't know the transitions nor the reward function up front.
-	private static class CliffWorldModel implements MarkovModel {
+	private static class CliffWorldModel implements PrioritizedSweepingModel {
 		
 		private static final double TRANSITION_PROBABILITY = 1.0;
 		
@@ -100,20 +120,6 @@ public class CliffWorldPrioritizedSweepingTests {
 				this.incomingTransitions.put(state, incoming);
 			}
 			return incoming;
-		}
-
-		@Override
-		public Set<StateAction> getPredecessors(State state) {
-			Set<StateAction> predecessors = new HashSet<>();
-			for (StochasticTransitionReward tr : this.incomingTransitions.get(state)) {
-				predecessors.add(tr.getFromStateAction());
-			}
-			return predecessors;
-		}
-
-		@Override
-		public double getTransitionProbability(Transition transition) {
-			return TRANSITION_PROBABILITY; // Deterministic world
 		}
 
 		@Override
