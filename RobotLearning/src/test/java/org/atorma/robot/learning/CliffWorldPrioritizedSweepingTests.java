@@ -20,11 +20,12 @@ public class CliffWorldPrioritizedSweepingTests {
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	
 	private HashMapQTable qTable;
+	private double defaultQValue = -5;
 	private CliffWorldModel model;
 
 	@Before
 	public void setUp() {
-		qTable = new HashMapQTable();
+		qTable = new HashMapQTable(defaultQValue); // alternative to discouraging default q-values would be big reward at goal
 		for (CliffWorldAction action : CliffWorldAction.values()) {
 			qTable.addActionId(action.getId());
 		}
@@ -38,29 +39,25 @@ public class CliffWorldPrioritizedSweepingTests {
 	}
 	
 	@Test
-	public void with_optimal_path_prioritized_sweeping_learns_model() {
-		
+	public void with_optimal_path_and_discouraging_default_q_values_prioritized_sweeping_learns_model() {
+
 		CliffWorldState state = CliffWorldState.START;
 		for (int i = 0; i < CliffWorldEnvironment.OPTIMAL_PATH.size(); i++) {
+			
 			CliffWorldAction action = CliffWorldEnvironment.OPTIMAL_PATH.get(i);
-			
-			// Simulate that agent is performing its action now, and there's time
-			// to do sweeps
-			sweeping.setCurrentStateAction(new StateAction(state, action));
-			sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size());
-			
 			CliffWorldState nextState = state.getNextState(action);
 			Transition transition = new Transition(state, action, nextState);
 			TransitionReward transitionReward = new TransitionReward(transition, rewardFunction.getReward(transition));
 			sweeping.updateModel(transitionReward);
 			
+			sweeping.setCurrentStateAction(new StateAction(state, action));
+			sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size());
+
 			state = nextState;
 		}
 		
-		sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size());
-		
-		//List<CliffWorldAction> learnedPath = getLearnedPath();
-		//assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
+		List<CliffWorldAction> learnedPath = getLearnedPath();
+		assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
 	}
 	
 	private List<CliffWorldAction> getLearnedPath() {
@@ -90,7 +87,7 @@ public class CliffWorldPrioritizedSweepingTests {
 		public Set<StochasticTransitionReward> getOutgoingTransitions(StateAction stateAction) {
 			if (outgoingTransitions.get(stateAction) != null) {
 				// There's only one possible transition since the world is deterministic
-				return Sets.newHashSet(new StochasticTransitionReward(outgoingTransitions.get(stateAction), 1.0));
+				return Sets.newHashSet(outgoingTransitions.get(stateAction));
 			}
 			return Collections.emptySet();
 		}
