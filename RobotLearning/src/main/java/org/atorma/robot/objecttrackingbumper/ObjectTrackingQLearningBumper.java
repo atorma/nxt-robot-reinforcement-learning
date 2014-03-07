@@ -82,16 +82,16 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 			//System.out.println(previousAction);
 			switch(previousAction) {
 			case FORWARD:
-				objectTrackingModel.agentMoves(BumperAction.DRIVE_DISTANCE_CM);
+				objectTrackingModel = objectTrackingModel.afterAgentMoves(BumperAction.DRIVE_DISTANCE_CM);
 				break;
 			case BACKWARD:
-				objectTrackingModel.agentMoves(-BumperAction.DRIVE_DISTANCE_CM);
+				objectTrackingModel = objectTrackingModel.afterAgentMoves(-BumperAction.DRIVE_DISTANCE_CM);
 				break;
 			case LEFT:
-				objectTrackingModel.agentRotatesDeg(-BumperAction.TURN_DEGREES);
+				objectTrackingModel = objectTrackingModel.afterAgentRotatesDeg(-BumperAction.TURN_DEGREES);
 				break;
 			case RIGHT:
-				objectTrackingModel.agentRotatesDeg(BumperAction.TURN_DEGREES);
+				objectTrackingModel = objectTrackingModel.afterAgentRotatesDeg(BumperAction.TURN_DEGREES);
 				break;
 			}
 		}
