@@ -10,7 +10,7 @@ public class NxtQLearningProgram {
 		
 		try {
 			QLearningBumper bumper = new QLearningBumper();
-			PcToNxtCommunication comms = new PcToNxtCommunication("Toveri", bumper);
+			new PcToNxtCommunication("Toveri", bumper);
 			
 		} catch (NXTCommException e) {
 			// TODO Auto-generated catch block

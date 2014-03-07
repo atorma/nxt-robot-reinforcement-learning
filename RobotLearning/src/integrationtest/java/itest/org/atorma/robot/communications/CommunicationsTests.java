@@ -24,7 +24,7 @@ public class CommunicationsTests {
 			}
 		};
 		
-		PcToNxtCommunication comm = new PcToNxtCommunication("Toveri", policy);
+		new PcToNxtCommunication("Toveri", policy);
 
 	}
 	
