@@ -5,7 +5,7 @@ import org.atorma.robot.mdp.State;
 
 public class BumperStateDiscretizer implements StateDiscretizer {
 		
-	private VectorDiscretizerImpl idFunction;
+	private VectorDiscretizer idFunction;
 
 	public BumperStateDiscretizer() {
 		Discretizer[] discretizers = new Discretizer[ModeledBumperState.NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING + 1];
