@@ -10,7 +10,7 @@ import org.atorma.robot.policy.EpsilonGreedyPolicy;
 
 public class QLearningBumper implements DiscreteRobotController {
 	
-	private BumperPerceptpDiscretizer stateDiscretizer = new BumperPerceptpDiscretizer();
+	private BumperPerceptDiscretizer stateDiscretizer = new BumperPerceptDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private StateActionDiscretizer transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 	

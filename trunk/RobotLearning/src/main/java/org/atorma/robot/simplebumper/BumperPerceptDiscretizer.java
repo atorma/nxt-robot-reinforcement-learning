@@ -3,11 +3,11 @@ package org.atorma.robot.simplebumper;
 import org.atorma.robot.discretization.*;
 import org.atorma.robot.mdp.State;
 
-public class BumperPerceptpDiscretizer implements StateDiscretizer {
+public class BumperPerceptDiscretizer implements StateDiscretizer {
 		
 	private VectorDiscretizer idFunction;
 
-	public BumperPerceptpDiscretizer() {
+	public BumperPerceptDiscretizer() {
 		idFunction = new VectorDiscretizerImpl(getUltrasonicDistanceDiscretizer(), getCollisionDiscretizer(), getLightValueDiscretizer());
 	}
 
