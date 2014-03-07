@@ -2,36 +2,49 @@ package org.atorma.robot.objecttracking;
 
 import java.util.*;
 
+import org.atorma.robot.mdp.State;
+
 /**
- * Tracks objects by dividing the circle around the agent into a number of sectors
- * and maintaining an estimate of object distance for each sector. A newer observation
- * or estimate replaces an older one within a sector. Max one estimate is maintained 
- * per sector. This way old estimates in sectors that have not been observed for a long
- * time (e.g. behind the robot) persist even when new observations come in other sectors. 
+ * A model of objects' locations relative to an agent. Can also be
+ * seen as an agent state.
+ * <p>
+ * Divides the circle around the agent to a number of sectors,
+ * each of which holds max one object distance estimate or observation.
+ * The effect of agent's moves can be simulated to get new, estimated
+ * models.
+ * 
+ * @see TrackedObject
+ * @see #afterAgentMoves(double)
+ * @see #afterAgentRotatesDeg(double)
  */
-public class ObjectTrackingModel {
+public class ObjectTrackingModel implements State {
 	
-	private static final int DEFAULT_NUMBER_OF_SECTORS = 36;
+	public static final int DEFAULT_NUMBER_OF_SECTORS = 36;
 	
 	private Map<Integer, TrackedObject> objectsBySector;
-	private int internalNumberOfSectors;
+	private int numberOfSectors;
 	private CircleSectorDiscretizer circleSectorDiscretizer;
 	
 	public ObjectTrackingModel() {
 		this(DEFAULT_NUMBER_OF_SECTORS);
 	}
 
-	public ObjectTrackingModel(int internalNumberOfSectors) {
-		if (internalNumberOfSectors <= 0) {
+	public ObjectTrackingModel(int numberOfSectors) {
+		if (numberOfSectors <= 0) {
 			throw new IllegalArgumentException();
 		}
-		this.internalNumberOfSectors = internalNumberOfSectors;
-		objectsBySector = new HashMap<>(internalNumberOfSectors);
+		this.numberOfSectors = numberOfSectors;
+		objectsBySector = new HashMap<>(numberOfSectors);
 		
-		this.circleSectorDiscretizer = new CircleSectorDiscretizer(internalNumberOfSectors);		
+		this.circleSectorDiscretizer = new CircleSectorDiscretizer(numberOfSectors);		
 	}
 	
-	
+	/**
+	 * Adds an observation into this model. The observation replaces the earlier estimate (if any)
+	 * of an object in the same circle sector.
+	 * <p>
+	 * Note that adding an observation changes the state of the model.
+	 */
 	public void addObservation(TrackedObject obj) {
 		int sectorIndex = circleSectorDiscretizer.discretize(obj.getAngleDeg());
 		objectsBySector.put(sectorIndex, obj);
@@ -41,20 +54,39 @@ public class ObjectTrackingModel {
 		return Collections.unmodifiableCollection(objectsBySector.values());
 	}
 
-	public void agentMoves(double agentMove) {
-		Map<Integer, TrackedObject> oldObjects = objectsBySector;
-		this.objectsBySector = new HashMap<>(internalNumberOfSectors);
-		for (TrackedObject o : oldObjects.values()) {
-			addEstimate(o.afterObserverMoves(agentMove));
+
+	/**
+	 * Returns an estimated model after the agent has moved along a straight line.
+	 * Within a circle sector, the estimate closest to the agent remains.
+	 * 
+	 * @param agentMove 
+	 * 	agent's move distance, positive means forward, negative means backward
+	 * @return
+	 * 	estimated model of objects' locations relative to the agent
+	 */
+	public ObjectTrackingModel afterAgentMoves(double agentMove) {
+		ObjectTrackingModel updatedModel = new ObjectTrackingModel(this.numberOfSectors);
+		for (TrackedObject o : this.objectsBySector.values()) {
+			updatedModel.addEstimate(o.afterObserverMoves(agentMove));
 		}
+		return updatedModel;
 	}
 
-	public void agentRotatesDeg(double agentTurnDeg) {
-		Map<Integer, TrackedObject> oldObjects = objectsBySector;
-		this.objectsBySector = new HashMap<>(internalNumberOfSectors);
-		for (TrackedObject o : oldObjects.values()) {
-			addEstimate(o.afterObserverRotatesDeg(agentTurnDeg));
+
+	/**
+	 * Returns an estimated model after the agent has rotated without moving.
+	 * 
+	 * @param agentTurnDeg 
+	 * 	agent's rotation in degrees, positive means clockwise, negative means anti-clockwise
+	 * @return
+	 * 	estimated model of objects' locations relative to the agent
+	 */
+	public ObjectTrackingModel afterAgentRotatesDeg(double agentTurnDeg) {
+		ObjectTrackingModel updatedModel = new ObjectTrackingModel(this.numberOfSectors);
+		for (TrackedObject o : this.objectsBySector.values()) {
+			updatedModel.addEstimate(o.afterObserverRotatesDeg(agentTurnDeg));
 		}
+		return updatedModel;
 	}
 	
 	private void addEstimate(TrackedObject obj) {
@@ -75,8 +107,9 @@ public class ObjectTrackingModel {
 		return Collections.unmodifiableSet(objectsBySector.entrySet());
 	}
 
+
 	public ObjectTrackingModel copy() {
-		return copyAndChangeNumberOfSectors(this.internalNumberOfSectors);
+		return copyAndChangeNumberOfSectors(this.numberOfSectors);
 	}
 
 	public ObjectTrackingModel copyAndChangeNumberOfSectors(int numberOfSectors) {
@@ -86,8 +119,21 @@ public class ObjectTrackingModel {
 		}
 		return copy;
 	}
-
 	
+	/**
+	 * State vector representation of tracked object distances per sector.
+	 * If there's no object in a sector, it's distance estimate is <tt>Double.MAX_VALUE</tt>.
+	 */
+	@Override
+	public double[] getValues() {
+		double[] distances = new double[this.numberOfSectors];
+		for (int i = 0; i < this.numberOfSectors; i++) {
+			TrackedObject obj = this.objectsBySector.get(i);
+			distances[i] = obj != null ? obj.getDistance() : Double.MAX_VALUE;
+		}
+		return distances;
+	}
+
 	@Override
 	public String toString() {
 		ArrayList<TrackedObject> objects = new ArrayList<>(getObjects());
