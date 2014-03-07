@@ -47,10 +47,10 @@ public abstract class SimbadRobot extends Agent {
 		// request antialising
         System.setProperty("j3d.implicitAntialiasing", "true");
         // create Simbad instance with given environment
-        Simbad frame = new Simbad(new RobotTestEnvironment(this), false);
+        new Simbad(new RobotTestEnvironment(this), false);
 	}
 	
 	public void startSimulationInBackground() {
-		 Simbad frame = new Simbad(new RobotTestEnvironment(this), true);
+		 new Simbad(new RobotTestEnvironment(this), true);
 	}
 }
