@@ -8,7 +8,7 @@ import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.objecttracking.TrackedObject;
-import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
+import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.objecttrackingbumper.BumperStateDiscretizer;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
@@ -40,7 +40,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	}
 	
 	public ObjectTrackingPrioritizedSweepingBumper() {
-		BumperModel model = new BumperModel();
+		BumperModel model = new BumperModel(rewardFunction, new ObstacleDistanceDiscretizer());
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -65,6 +65,9 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 			accumulatedReward += reward;
 			TransitionReward transitionReward = new TransitionReward(transition, rewardFunction.getReward(transition));
 			prioritizedSweeping.updateModel(transitionReward);
+			
+			prioritizedSweeping.setSweepStartStateAction(transition.getFromStateAction());
+			prioritizedSweeping.performIterations(50);
 		}
 		
 		if (logWriter != null) {

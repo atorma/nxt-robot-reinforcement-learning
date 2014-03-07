@@ -1,6 +1,7 @@
 package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
+import org.atorma.robot.objecttracking.TrackedObject;
 
 public class ModeledBumperState extends ObjectTrackingModel {
 
@@ -23,6 +24,15 @@ public class ModeledBumperState extends ObjectTrackingModel {
 
 	public void setCollided(boolean isCollided) {
 		this.isCollided = isCollided;
+	}
+
+	@Override
+	public ObjectTrackingModel copyAndChangeNumberOfSectors(int numberOfSectors) {
+		ModeledBumperState copy = new ModeledBumperState();
+		for (TrackedObject o : this.getObjects()) {
+			copy.addEstimate(o);
+		}
+		return copy;
 	}
 
 	
