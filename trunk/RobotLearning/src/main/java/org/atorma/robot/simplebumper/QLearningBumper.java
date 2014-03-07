@@ -57,7 +57,7 @@ public class QLearningBumper implements DiscreteRobotController {
 			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
 		}
 		
-		BumperAction nextAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(state)));
+		BumperAction nextAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(currentState)));
 		
 		previousState = currentState;
 		previousAction = nextAction;

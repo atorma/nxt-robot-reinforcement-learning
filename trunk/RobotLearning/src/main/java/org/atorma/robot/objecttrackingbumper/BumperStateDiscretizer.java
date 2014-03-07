@@ -1,12 +1,9 @@
 package org.atorma.robot.objecttrackingbumper;
 
-import org.atorma.robot.discretization.CustomBinsDiscretizer;
-import org.atorma.robot.discretization.VectorDiscretizerImpl;
-import org.atorma.robot.discretization.Discretizer;
-import org.atorma.robot.discretization.EqualWidthDiscretizer;
-import org.atorma.robot.discretization.VectorDiscretizer;
+import org.atorma.robot.discretization.*;
+import org.atorma.robot.mdp.State;
 
-public class BumperStateDiscretizer implements VectorDiscretizer {
+public class BumperStateDiscretizer implements StateDiscretizer {
 		
 	private VectorDiscretizerImpl idFunction;
 
@@ -45,10 +42,13 @@ public class BumperStateDiscretizer implements VectorDiscretizer {
 	private Discretizer getLightValueDiscretizer() {
 		return new EqualWidthDiscretizer(0, 800, 5); // TODO sensible discretization
 	}
-	
+
 	@Override
-	public int getId(double[] values) {
-		return idFunction.getId(values);
+	public int getId(State state) {
+		ModeledBumperState modeledState = (ModeledBumperState) state;
+		return idFunction.getId(modeledState.getValues());
 	}
+	
+	
 
 }
