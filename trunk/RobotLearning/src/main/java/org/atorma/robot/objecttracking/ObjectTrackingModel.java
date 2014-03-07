@@ -89,7 +89,7 @@ public class ObjectTrackingModel implements State {
 		return updatedModel;
 	}
 	
-	private void addEstimate(TrackedObject obj) {
+	protected void addEstimate(TrackedObject obj) {
 		int sectorIndex = circleSectorDiscretizer.discretize(obj.getAngleDeg());
 		TrackedObject existing = objectsBySector.get(sectorIndex);
 		if (existing == null || existing.getDistance() > obj.getDistance()) {
