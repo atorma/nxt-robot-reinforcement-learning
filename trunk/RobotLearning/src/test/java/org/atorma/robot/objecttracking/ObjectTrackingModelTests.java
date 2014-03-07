@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.atorma.robot.mdp.State;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,8 +33,8 @@ public class ObjectTrackingModelTests {
 		double agentMove = 10;
 		double agentTurnDeg = 35;
 		
-		model.agentMoves(agentMove);
-		model.agentRotatesDeg(agentTurnDeg);
+		model = model.afterAgentMoves(agentMove);
+		model = model.afterAgentRotatesDeg(agentTurnDeg);
 		
 		List<TrackedObject> objects = new ArrayList<>(model.getObjects());
 		Collections.sort(objects); // natural order is first by angle [0, 360), then by distance
@@ -83,11 +84,29 @@ public class ObjectTrackingModelTests {
 		assertEquals(2, objects.size());
 	}
 	
+	@Test
+	public void state_vector_representation() {
+		TrackedObject obj1 = TrackedObject.inPolarDegreeCoordinates(10, 0); 
+		TrackedObject obj2 = TrackedObject.inPolarDegreeCoordinates(20, -35);
+		model.addObservation(obj1);
+		model.addObservation(obj2);
+		
+		State state = (State) model;
+		double[] distances = state.getValues();
+		assertEquals(numberOfSectors, distances.length);
+		assertEquals(10, distances[0], 0);
+		assertEquals(Double.MAX_VALUE, distances[1], 0);
+		assertEquals(Double.MAX_VALUE, distances[2], 0);
+		assertEquals(Double.MAX_VALUE, distances[3], 0);
+		assertEquals(Double.MAX_VALUE, distances[4], 0);
+		assertEquals(20, distances[5], 0);
+	}
+	
 
 	@Test
 	public void new_observation_replaces_object_in_same_sector() {
 		model.addObservation(TrackedObject.inPolarDegreeCoordinates(10, 20));
-		model.agentRotatesDeg(20); // the tracked object now directly in front
+		model = model.afterAgentRotatesDeg(20); // the tracked object now directly in front
 		
 		model.addObservation(TrackedObject.inPolarDegreeCoordinates(50, 0));
 		
@@ -102,7 +121,7 @@ public class ObjectTrackingModelTests {
 		model = new ObjectTrackingModel(10);
 		model.addObservation(TrackedObject.inCartesianCoordinates(1, 1));
 		model.addObservation(TrackedObject.inPolarDegreeCoordinates(1000, 90));
-		model.agentMoves(1); // the first observation should be close on the right, "obscuring" the further one
+		model = model.afterAgentMoves(1); // the first observation should be close on the right, "obscuring" the further one
 
 		assertEquals(1, model.getObjects().size());
 		TrackedObject obj = model.getObjects().iterator().next();
@@ -133,7 +152,7 @@ public class ObjectTrackingModelTests {
 	}
 	
 	@Test
-	public void copy_model_with_samller_number_of_sectors_leaves_closest_object_per_sector() {
+	public void copy_model_with_smaller_number_of_sectors_leaves_closest_object_per_sector() {
 		// These are all within the 90 degree forward facing sector
 		TrackedObject obj1 = TrackedObject.inPolarDegreeCoordinates(61, 0);
 		TrackedObject obj2 = TrackedObject.inPolarDegreeCoordinates(25, 35);
