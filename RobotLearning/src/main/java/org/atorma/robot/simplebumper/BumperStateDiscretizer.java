@@ -1,8 +1,9 @@
 package org.atorma.robot.simplebumper;
 
 import org.atorma.robot.discretization.*;
+import org.atorma.robot.mdp.State;
 
-public class BumperStateDiscretizer implements VectorDiscretizer {
+public class BumperStateDiscretizer implements StateDiscretizer {
 		
 	private VectorDiscretizerImpl idFunction;
 
@@ -35,8 +36,9 @@ public class BumperStateDiscretizer implements VectorDiscretizer {
 	}
 	
 	@Override
-	public int getId(double[] values) {
-		return idFunction.getId(values);
+	public int getId(State state) {
+		BumperPercept bumperState = (BumperPercept) state;
+		return idFunction.getId(bumperState.getValues());
 	}
 
 }

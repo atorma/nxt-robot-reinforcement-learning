@@ -1,8 +1,9 @@
 package org.atorma.robot.learning.prioritizedsweeping;
 
-import java.util.*;
+import java.util.Set;
 
-import org.atorma.robot.discretization.VectorDiscretizer;
+import org.atorma.robot.discretization.StateDiscretizer;
+import org.atorma.robot.learning.HashMapQTable;
 import org.atorma.robot.learning.QTable;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.DiscretePolicy;
@@ -13,7 +14,7 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	private QTable qTable;
 	private PrioritizedSweepingModel model;
 	private StateActionPriorityQueue stateActionQueue = new StateActionPriorityQueue();
-	private VectorDiscretizer stateDiscretizer;
+	private StateDiscretizer stateDiscretizer;
 	private double discountFactor = 1.0;
 	private double qValueChangeThreshold = 0.01;
 
@@ -43,14 +44,14 @@ public class PrioritizedSweeping implements DiscretePolicy {
 				break;
 			}
 			
-			int stateId = stateDiscretizer.getId(stateAction.getState().getValues());
+			int stateId = stateDiscretizer.getId(stateAction.getState());
 			int actionId = stateAction.getAction().getId();
 			DiscretizedStateAction stateActionId = new DiscretizedStateAction(stateId, actionId);
 			double oldQ = qTable.getValue(stateActionId);
 			
 			double updatedQ = 0;
 			for (StochasticTransitionReward tr : transitions) {
-				int toStateId = stateDiscretizer.getId(tr.getToState().getValues());
+				int toStateId = stateDiscretizer.getId(tr.getToState());
 				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qTable.getMaxValueInState(toStateId) );
 			}
 			qTable.setValue(stateActionId, updatedQ);
@@ -88,27 +89,24 @@ public class PrioritizedSweeping implements DiscretePolicy {
 		this.discountFactor = discountFactor;
 	}
 
-	public QTable getQTable() {
-		return qTable;
-	}
-
-	public void setQTable(QTable qFunction) {
-		this.qTable = qFunction;
-	}
-
 	public PrioritizedSweepingModel getModel() {
 		return model;
 	}
 
 	public void setModel(PrioritizedSweepingModel model) {
 		this.model = model;
+		HashMapQTable qTable = new HashMapQTable();
+		for (DiscreteAction action : model.getAllActions()) {
+			qTable.addActionId(action.getId());
+		}
+		this.qTable = qTable;
 	}
 
-	public VectorDiscretizer getStateDiscretizer() {
+	public StateDiscretizer getStateDiscretizer() {
 		return stateDiscretizer;
 	}
 
-	public void setStateDiscretizer(VectorDiscretizer stateDiscretizer) {
+	public void setStateDiscretizer(StateDiscretizer stateDiscretizer) {
 		this.stateDiscretizer = stateDiscretizer;
 	}
 

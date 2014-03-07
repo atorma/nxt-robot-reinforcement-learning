@@ -21,21 +21,15 @@ public class CliffWorldPrioritizedSweepingTests {
 	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	
-	private HashMapQTable qTable;
 	private CliffWorldModel model;
 
 	@Before
 	public void setUp() {
-		qTable = new HashMapQTable();
-		for (CliffWorldAction action : CliffWorldAction.values()) {
-			qTable.addActionId(action.getId());
-		}
 		model = new CliffWorldModel();
 		
 		sweeping = new PrioritizedSweeping();
 		sweeping.setDiscountFactor(discountFactor);
 		sweeping.setStateDiscretizer(stateDiscretizer);
-		sweeping.setQTable(qTable);
 		sweeping.setModel(model);
 	}
 	
@@ -77,7 +71,7 @@ public class CliffWorldPrioritizedSweepingTests {
 			CliffWorldState toState;
 			
 			do {
-				int fromStateId = stateDiscretizer.getId(fromState.getValues());
+				int fromStateId = stateDiscretizer.getId(fromState);
 				Integer byActionId = policy.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
@@ -102,8 +96,8 @@ public class CliffWorldPrioritizedSweepingTests {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
 		while (!state.isGoal() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
-			int stateId = stateDiscretizer.getId(state.getValues());
-			int actionId = qTable.getActionId(stateId);
+			int stateId = stateDiscretizer.getId(state);
+			int actionId = sweeping.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
 			learnedActions.add(action);
 			state = state.getNextState(action);

@@ -66,7 +66,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
 		}
 		
-		int currentStateId = stateDiscretizer.getId(currentState.getValues());
+		int currentStateId = stateDiscretizer.getId(currentState);
 		BumperAction action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
 		
 		previousState = currentState;

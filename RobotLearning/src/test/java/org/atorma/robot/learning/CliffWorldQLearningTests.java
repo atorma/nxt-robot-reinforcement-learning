@@ -39,7 +39,7 @@ public class CliffWorldQLearningTests {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
 		while (!state.isGoal() && learnedActions.size() <= CliffWorldEnvironment.OPTIMAL_PATH.size()) {
-			int stateId = stateDiscretizer.getId(state.getValues());
+			int stateId = stateDiscretizer.getId(state);
 			int actionId = qLearning.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
 			learnedActions.add(action);
@@ -58,11 +58,11 @@ public class CliffWorldQLearningTests {
 			CliffWorldState toState;
 			
 			do {
-				int fromStateId = stateDiscretizer.getId(fromState.getValues());
+				int fromStateId = stateDiscretizer.getId(fromState);
 				Integer byActionId = policy.getActionId(fromStateId);
 				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
 				toState = fromState.getNextState(byAction);
-				int toStateId = stateDiscretizer.getId(toState.getValues());
+				int toStateId = stateDiscretizer.getId(toState);
 				Transition transition = new Transition(fromState, byAction, toState);
 				double reward = rewardFunction.getReward(transition);
 				
