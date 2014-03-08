@@ -6,6 +6,7 @@ import org.apache.commons.math.stat.Frequency;
 import org.atorma.robot.discretization.Discretizer;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
 import org.atorma.robot.simplebumper.BumperAction;
 
 import com.google.common.collect.Sets;
