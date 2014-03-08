@@ -44,10 +44,12 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		prioritizedSweeping.setDiscountFactor(discountFactor);
 		prioritizedSweeping.setStateDiscretizer(stateDiscretizer);
 		prioritizedSweeping.setModel(model);
+		prioritizedSweeping.setQValueChangeThreshold(1E-5);
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, prioritizedSweeping, BumperAction.values());
 	}
 	
+	// TODO separate sweeping into its own thread 
 	
 	@Override
 	public int getActionId(double[] currentPerceptValues) {

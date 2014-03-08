@@ -6,6 +6,7 @@ import org.apache.commons.math.stat.Frequency;
 import org.atorma.robot.discretization.Discretizer;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
 import org.atorma.robot.simplebumper.BumperAction;
 
@@ -27,6 +28,9 @@ public class BumperModel implements PrioritizedSweepingModel {
 		this.obstacleDistanceDiscretizer = obstacleDistanceDiscretizer;
 		
 		// Set up the prior collision probability parameters
+		// TODO should we include collided status in previous state in the model? 
+		// Probability of remaining collided if driving forward is bigger than when the agent is not 
+		// yet collided.
 		int distanceId = 0;
 		priorParams.put(new CollisionObservation(distanceId, BumperAction.FORWARD, true), 9.0);
 		priorParams.put(new CollisionObservation(distanceId, BumperAction.FORWARD, false), 3.0);
@@ -44,7 +48,6 @@ public class BumperModel implements PrioritizedSweepingModel {
 
 	}
 	
-
 	@Override
 	public Set<? extends DiscreteAction> getAllActions() {
 		return Sets.newHashSet(BumperAction.values());
@@ -120,19 +123,25 @@ public class BumperModel implements PrioritizedSweepingModel {
 		ModeledBumperState fromState = (ModeledBumperState) transition.getFromState();
 		BumperAction action = (BumperAction) transition.getAction();
 		ModeledBumperState toState = (ModeledBumperState) transition.getToState();
-		int discretizedDistance = obstacleDistanceDiscretizer.discretize(fromState.getObjectInSectorDegree(0).getDistance());
+		TrackedObject obstacleInFront = fromState.getObjectInSectorDegree(0);
+		double obstacleDistanceFront = obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE;
+		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleDistanceFront);
 		CollisionObservation collisionObservation = new CollisionObservation(discretizedDistance, action, toState.isCollided());
 		collFreq.addValue(collisionObservation);
 	}
 
 	
 	public double getCollisionProbability(ModeledBumperState state, BumperAction action) {
-		int discretizedDistance = obstacleDistanceDiscretizer.discretize(state.getObjectInSectorDegree(0).getDistance()); 
+		TrackedObject obstacleInFront = state.getObjectInSectorDegree(0);
+		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE); 
 		CollisionObservation collided = new CollisionObservation(discretizedDistance, action, true);
 		CollisionObservation notCollided = new CollisionObservation(discretizedDistance, action, false);
 		
-		return  (collFreq.getCount(collided) + priorParams.get(collided) - 1) / 
-				(collFreq.getCount(collided) + priorParams.get(collided) + collFreq.getCount(notCollided) + priorParams.get(notCollided) - 2);
+		double probability = (collFreq.getCount(collided) + priorParams.get(collided) - 1) / 
+				             (collFreq.getCount(collided) + priorParams.get(collided) + collFreq.getCount(notCollided) + priorParams.get(notCollided) - 2);
+		
+		//System.out.println("P(coll = 1 | d = " + discretizedDistance + ", a = " + action + ") = " + probability);
+		return probability;
 	}
 	
 	
