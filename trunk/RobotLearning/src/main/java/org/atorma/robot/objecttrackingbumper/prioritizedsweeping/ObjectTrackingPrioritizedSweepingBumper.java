@@ -5,11 +5,10 @@ import java.io.File;
 import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttracking.ObjectTrackingModel;
-import org.atorma.robot.objecttracking.TrackedObject;
-import org.atorma.robot.objecttrackingbumper.*;
+import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.TransitionReward;
 import org.atorma.robot.objecttrackingbumper.BumperStateDiscretizer;
+import org.atorma.robot.objecttrackingbumper.ObstacleDistanceDiscretizer;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
@@ -53,17 +52,25 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	
 	@Override
 	public int getActionId(double[] currentPerceptValues) {
+		
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
 		}
-		ModeledBumperState currentState = estimateObstacleLocations(currentPercept);
-
-		if (previousState != null) {
+		
+		ModeledBumperState currentState;
+		if (previousAction != null) {
+			currentState = previousState.afterAction(previousAction);
+		} else {
+			currentState = new ModeledBumperState();
+		}
+		currentState.addObservation(currentPercept);
+		
+		if (previousAction != null) {
 			Transition transition = new Transition(previousState, previousAction, currentState);
 			double reward = rewardFunction.getReward(transition);
 			accumulatedReward += reward;
-			TransitionReward transitionReward = new TransitionReward(transition, rewardFunction.getReward(transition));
+			TransitionReward transitionReward = new TransitionReward(transition, reward);
 			prioritizedSweeping.updateModel(transitionReward);
 			
 			prioritizedSweeping.setSweepStartStateAction(transition.getFromStateAction());
@@ -82,28 +89,6 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		
 		return action.getId();
 			
-	}
-	
-	private ModeledBumperState estimateObstacleLocations(BumperPercept currentPercept) {
-		ObjectTrackingModel model = new ModeledBumperState();
-		if (previousAction != null && previousState != null) {
-			switch(previousAction) {
-			case FORWARD:
-				model = previousState.afterAgentMoves(BumperAction.DRIVE_DISTANCE_CM);
-				break;
-			case BACKWARD:
-				model = previousState.afterAgentMoves(-BumperAction.DRIVE_DISTANCE_CM);
-				break;
-			case LEFT:
-				model = previousState.afterAgentRotatesDeg(-BumperAction.TURN_DEGREES);
-				break;
-			case RIGHT:
-				model = previousState.afterAgentRotatesDeg(BumperAction.TURN_DEGREES);
-				break;
-			}
-		}
-		model.addObservation(TrackedObject.inPolarDegreeCoordinates(currentPercept.getDistanceToObstacleInFrontCm(), 0));
-		return (ModeledBumperState) model;
 	}
 
 }
