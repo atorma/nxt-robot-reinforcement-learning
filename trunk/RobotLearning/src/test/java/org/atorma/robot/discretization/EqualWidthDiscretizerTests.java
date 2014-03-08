@@ -16,16 +16,15 @@ public class EqualWidthDiscretizerTests {
 		
 		Discretizer discretizer = new EqualWidthDiscretizer(min, max, nBins);
 		
-		int expectedBin = 0;
-		for (double x = -5; x <= 5; x = x + 1) {
-			assertEquals(expectedBin, discretizer.discretize(x));
-			expectedBin++;
-		}
-		
 		assertEquals(0, discretizer.discretize(min - 10));
-		assertEquals(nBins - 1, discretizer.discretize(max + 10));
+		assertEquals(0, discretizer.discretize(min));
 		assertEquals(0, discretizer.discretize(-4.9));
+		assertEquals(1, discretizer.discretize(-4.0));
 		assertEquals(1, discretizer.discretize(-3.1));
+		assertEquals(2, discretizer.discretize(-3.0));
+		assertEquals(nBins - 1, discretizer.discretize(max + 10));
+		assertEquals(nBins - 1, discretizer.discretize(max));
+		
 	}
 	
 	@Test
