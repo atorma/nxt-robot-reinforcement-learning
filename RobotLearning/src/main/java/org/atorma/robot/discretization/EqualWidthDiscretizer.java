@@ -1,5 +1,10 @@
 package org.atorma.robot.discretization;
 
+/**
+ * Discretization where bin widths are equal and their ordinals are
+ * 0 = [min, min+binWidth), 1 = [min+binWidth, min+2*binWidth), ..., nBins-1: [min+(nBins-1)*binWidth, min+nBins*binWidth).
+ * Values smaller than the minimum are discretized to 0, larger than maximum to nBins-1.
+ */
 public class EqualWidthDiscretizer implements Discretizer {
 
 	private final double min;
@@ -26,9 +31,9 @@ public class EqualWidthDiscretizer implements Discretizer {
 	
 	@Override
 	public int discretize(double value) {
-		if (value < min) {
+		if (value <= min) {
 			return 0;
-		} else if (value > max) {
+		} else if (value >= max) {
 			return nBins - 1;
 		}
 		
