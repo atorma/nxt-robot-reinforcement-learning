@@ -3,20 +3,20 @@ package org.atorma.robot.discretization;
 import java.util.Arrays;
 
 /**
- * A discretizer with bin widths defined by user given divider points:
- * [-Inf,bins[0]), [bins[0],bins[1]), ... , [bins[n-1],Inf) 
+ * A discretizer with bins defined by custom divider points:
+ * [-Inf,dividers[0]), [dividers[0],dividers[1]), ... , [dividers[n-1],Inf) 
  * where values in the first interval are discretized to 0.
  */
 public class CustomBinsDiscretizer implements Discretizer {
 	
 	private final double[] bins;
 
-	public CustomBinsDiscretizer(double[] bins) {
-		if (bins == null) {
+	public CustomBinsDiscretizer(double[] dividers) {
+		if (dividers == null) {
 			throw new NullPointerException();
 		}
-		Arrays.sort(bins);
-		this.bins = bins;
+		Arrays.sort(dividers);
+		this.bins = dividers;
 	}
 	
 
