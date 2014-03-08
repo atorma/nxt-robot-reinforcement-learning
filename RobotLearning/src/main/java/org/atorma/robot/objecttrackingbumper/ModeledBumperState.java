@@ -62,4 +62,13 @@ public class ModeledBumperState extends ObjectTrackingModel {
 			throw new IllegalArgumentException();
 		}
 	}
+
+	@Override
+	public ObjectTrackingModel copyAndChangeNumberOfSectors(int numberOfSectors) {
+		ModeledBumperState state = (ModeledBumperState) super.copyAndChangeNumberOfSectors(numberOfSectors);
+		state.setCollided(this.isCollided());
+		return state;
+	}
+	
+	
 }
