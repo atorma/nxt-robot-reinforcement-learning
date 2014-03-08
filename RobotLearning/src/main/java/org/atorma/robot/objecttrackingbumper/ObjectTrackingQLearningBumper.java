@@ -6,7 +6,6 @@ import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.StateActionDiscretizer;
-import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;

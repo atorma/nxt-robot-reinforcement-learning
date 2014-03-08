@@ -10,13 +10,16 @@ import org.atorma.robot.policy.DiscretePolicy;
 
 
 public class PrioritizedSweeping implements DiscretePolicy {
+	
+	public static final double DEFAULT_Q_VALUE_CHANGE_THRESHOLD = 1E-5;
+	public static final double DEFAULT_DISCOUNT_FACTOR = 1.0;
 
 	private QTable qTable;
 	private PrioritizedSweepingModel model;
 	private StateActionPriorityQueue stateActionQueue = new StateActionPriorityQueue();
 	private StateDiscretizer stateDiscretizer;
-	private double discountFactor = 1.0;
-	private double qValueChangeThreshold = 0.01;
+	private double discountFactor = DEFAULT_DISCOUNT_FACTOR;
+	private double qValueChangeThreshold = DEFAULT_Q_VALUE_CHANGE_THRESHOLD;
 
 	private StateAction sweepStartStateAction;
 	
@@ -86,6 +89,9 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	}
 
 	public void setDiscountFactor(double discountFactor) {
+		if (discountFactor < 0 || discountFactor > 1) {
+			throw new IllegalArgumentException("Illegal discount factor " + discountFactor);
+		}
 		this.discountFactor = discountFactor;
 	}
 

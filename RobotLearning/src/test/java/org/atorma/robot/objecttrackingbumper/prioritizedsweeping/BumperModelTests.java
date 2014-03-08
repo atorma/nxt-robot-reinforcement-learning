@@ -48,8 +48,13 @@ public class BumperModelTests {
 			}
 		}
 		
+		// When no obstacle in front
+		ModeledBumperState state = new ModeledBumperState();
+		for (BumperAction action : BumperAction.values()) {	
+			assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(state, action), 0.0001);
+		}
 	}
-	
+
 	@Test
 	public void collision_probability_is_updated_after_observations() {
 		// Agent bumps 10 times after turning right when obstacle is close in front
@@ -62,6 +67,19 @@ public class BumperModelTests {
 			model.updateModel(transition);
 		}
 		// here we assume prior parameters alpha = 2 (collision), beta = 10 (no collision) 
+		assertEquals(0.55, model.getCollisionProbability(fromState, action), 0.0001); 
+		
+		// Agent bumps 10 times after turning left when no obstacle in front.
+		// This should update the probability given the farthest obstacle distance.
+		fromState = new ModeledBumperState();
+		action = BumperAction.LEFT;
+		toState = fromState.afterAction(action);
+		toState.setCollided(true);
+		for (int i = 0; i < 10; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100);
+			model.updateModel(transition);
+		}
+		// again we assume prior parameters alpha = 2 (collision), beta = 10 (no collision) 
 		assertEquals(0.55, model.getCollisionProbability(fromState, action), 0.0001); 
 	}
 	
