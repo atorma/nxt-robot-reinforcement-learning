@@ -53,6 +53,14 @@ public class ObjectTrackingModel implements State {
 	public Collection<TrackedObject> getObjects() {
 		return Collections.unmodifiableCollection(objectsBySector.values());
 	}
+	
+	/** 
+	 * Initializes a new model instance for operations that return new, 
+	 * updated model instances. Subclasses should override this method.
+	 */
+	protected ObjectTrackingModel initializeNew(int numberOfSectors) {
+		return new ObjectTrackingModel(numberOfSectors);
+	}
 
 
 	/**
@@ -65,13 +73,12 @@ public class ObjectTrackingModel implements State {
 	 * 	estimated model of objects' locations relative to the agent
 	 */
 	public ObjectTrackingModel afterAgentMoves(double agentMove) {
-		ObjectTrackingModel updatedModel = new ObjectTrackingModel(this.numberOfSectors);
+		ObjectTrackingModel updatedModel = initializeNew(this.numberOfSectors);
 		for (TrackedObject o : this.objectsBySector.values()) {
 			updatedModel.addEstimate(o.afterObserverMoves(agentMove));
 		}
 		return updatedModel;
 	}
-
 
 	/**
 	 * Returns an estimated model after the agent has rotated without moving.
@@ -82,7 +89,7 @@ public class ObjectTrackingModel implements State {
 	 * 	estimated model of objects' locations relative to the agent
 	 */
 	public ObjectTrackingModel afterAgentRotatesDeg(double agentTurnDeg) {
-		ObjectTrackingModel updatedModel = new ObjectTrackingModel(this.numberOfSectors);
+		ObjectTrackingModel updatedModel = initializeNew(this.numberOfSectors);
 		for (TrackedObject o : this.objectsBySector.values()) {
 			updatedModel.addEstimate(o.afterObserverRotatesDeg(agentTurnDeg));
 		}
@@ -113,7 +120,7 @@ public class ObjectTrackingModel implements State {
 	}
 
 	public ObjectTrackingModel copyAndChangeNumberOfSectors(int numberOfSectors) {
-		ObjectTrackingModel copy = new ObjectTrackingModel(numberOfSectors);
+		ObjectTrackingModel copy = initializeNew(numberOfSectors);
 		for (TrackedObject o : this.getObjects()) {
 			copy.addEstimate(o);
 		}

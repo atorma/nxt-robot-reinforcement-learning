@@ -8,10 +8,10 @@ public interface PrioritizedSweepingModel {
 	
 	Set<? extends DiscreteAction> getAllActions();
 
-	Set<StochasticTransitionReward> getOutgoingTransitions(StateAction stateAction);
+	Set<StochasticTransitionReward> getOutgoingTransitions(StateAction fromStateAction);
 	
-	Set<StochasticTransitionReward> getIncomingTransitions(State state);
+	Set<StochasticTransitionReward> getIncomingTransitions(State toState);
 	
-	void updateModel(TransitionReward observation);
+	void updateModel(TransitionReward observedTransition);
 	
 }
