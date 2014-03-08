@@ -2,29 +2,38 @@ package org.atorma.robot.objecttrackingbumper;
 
 import org.atorma.robot.discretization.*;
 import org.atorma.robot.mdp.State;
+import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.simplebumper.CollisionDiscretizer;
 
 public class BumperStateDiscretizer implements StateDiscretizer {
-		
+	
+	public static final int NUMBER_OF_SECTORS = 6;
 	private VectorDiscretizer idFunction;
 
 	public BumperStateDiscretizer() {
-		Discretizer[] discretizers = new Discretizer[ModeledBumperState.NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING + 1];
-		for (int i = 0; i < ModeledBumperState.NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING; i++) {
+		Discretizer[] discretizers = new Discretizer[NUMBER_OF_SECTORS + 1];
+		for (int i = 0; i < NUMBER_OF_SECTORS; i++) {
 			discretizers[i] = new ObstacleDistanceDiscretizer();
 		}
-		discretizers[ModeledBumperState.NUMBER_OF_SECTORS_FOR_OBJECT_TRACKING] = new CollisionDiscretizer();
+		discretizers[NUMBER_OF_SECTORS] = new CollisionDiscretizer();
 		
 		idFunction = new VectorDiscretizerImpl(discretizers);
 	}
-
+	
 
 	@Override
 	public int getId(State state) {
 		ModeledBumperState modeledState = (ModeledBumperState) state;
-		return idFunction.getId(modeledState.getValues());
+		boolean isCollided = modeledState.isCollided();
+		ObjectTrackingModel reducedState = modeledState.copyAndChangeNumberOfSectors(NUMBER_OF_SECTORS);
+		double[] stateValues = new double[NUMBER_OF_SECTORS + 1];
+		double[] obstacleDistances = reducedState.getValues();
+		for (int i = 0; i < NUMBER_OF_SECTORS; i++) {
+			stateValues[i] = obstacleDistances[i];
+		}
+		stateValues[NUMBER_OF_SECTORS] = isCollided ? 1 : 0;
+		
+		return idFunction.getId(stateValues);
 	}
 	
-	
-
 }

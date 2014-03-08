@@ -128,7 +128,8 @@ public class ObjectTrackingModel implements State {
 	}
 	
 	/**
-	 * State vector representation of tracked object distances per sector.
+	 * State vector representation of tracked object distances per sector. In the vector,
+	 * element 0 is the front sector, element 1 is the next sector clockwise, etc.
 	 * If there's no object in a sector, it's distance estimate is <tt>Double.MAX_VALUE</tt>.
 	 */
 	@Override

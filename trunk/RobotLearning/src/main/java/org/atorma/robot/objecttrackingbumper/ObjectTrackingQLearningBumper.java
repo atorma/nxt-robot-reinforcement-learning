@@ -7,7 +7,6 @@ import org.atorma.robot.learning.QLearning;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.StateActionDiscretizer;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
-import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
@@ -27,9 +26,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
-	
-	private ObjectTrackingModel objectTrackingModel;
-	
+
 	private int accumulatedCollisions = 0;
 	
 	private CsvLogWriter logWriter;
@@ -43,7 +40,6 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	public ObjectTrackingQLearningBumper() {
 		qLearning = new QLearning(learningRate, discountFactor);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qLearning, BumperAction.values());
-		objectTrackingModel = new ObjectTrackingModel();
 	}
 	
 	
@@ -53,11 +49,17 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
 		}
-		updateObjectTrackingModel(currentPercept);
-		ModeledBumperState currentState = new ModeledBumperState(objectTrackingModel, currentPercept.isCollided());
+		
+		ModeledBumperState currentState;
+		if (previousAction != null) {
+			currentState = previousState.afterAction(previousAction);
+		} else {
+			currentState = new ModeledBumperState();
+		}
+		currentState.addObservation(currentPercept);
 		//System.out.println(currentState);
 
-		if (previousState != null) {
+		if (previousAction != null) {
 			qLearning.update(transitionDiscretizer.discretizeAndComputeReward(previousState, previousAction, currentState));
 			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
 		}
@@ -74,29 +76,6 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		
 		return action.getId();
 			
-	}
-	
-	private void updateObjectTrackingModel(BumperPercept currentPercept) {
-		//System.out.println(currentPercept);
-		if (previousAction != null) {
-			//System.out.println(previousAction);
-			switch(previousAction) {
-			case FORWARD:
-				objectTrackingModel = objectTrackingModel.afterAgentMoves(BumperAction.DRIVE_DISTANCE_CM);
-				break;
-			case BACKWARD:
-				objectTrackingModel = objectTrackingModel.afterAgentMoves(-BumperAction.DRIVE_DISTANCE_CM);
-				break;
-			case LEFT:
-				objectTrackingModel = objectTrackingModel.afterAgentRotatesDeg(-BumperAction.TURN_DEGREES);
-				break;
-			case RIGHT:
-				objectTrackingModel = objectTrackingModel.afterAgentRotatesDeg(BumperAction.TURN_DEGREES);
-				break;
-			}
-		}
-		objectTrackingModel.addObservation(TrackedObject.inPolarDegreeCoordinates(currentPercept.getDistanceToObstacleInFrontCm(), 0));
-		//System.out.println(objectTrackingModel);
 	}
 
 }
