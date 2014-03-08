@@ -35,7 +35,9 @@ public class CircleSectorDiscretizer implements Discretizer {
 		// The rest we can handle by equal width discretization
 		frontSectorLeft = 360.0 - 360.0/numberOfSectors/2;
 		frontSectorRight = 360.0/numberOfSectors/2;
-		equalWidthDiscretizer = new EqualWidthDiscretizer(frontSectorRight, frontSectorLeft, numberOfSectors - 1);
+		if (numberOfSectors > 1) {
+			equalWidthDiscretizer = new EqualWidthDiscretizer(frontSectorRight, frontSectorLeft, numberOfSectors - 1);
+		}
 	}
 
 	@Override
