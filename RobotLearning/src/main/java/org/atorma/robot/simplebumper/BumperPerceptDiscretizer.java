@@ -8,12 +8,7 @@ public class BumperPerceptDiscretizer implements StateDiscretizer {
 	private VectorDiscretizer idFunction;
 
 	public BumperPerceptDiscretizer() {
-		idFunction = new VectorDiscretizerImpl(getUltrasonicDistanceDiscretizer(), new CollisionDiscretizer(), getLightValueDiscretizer());
-	}
-
-	private Discretizer getUltrasonicDistanceDiscretizer() {
-		Discretizer discretizer = new EqualWidthDiscretizer(10, 50, 4);
-		return discretizer;
+		idFunction = new VectorDiscretizerImpl(new ObstacleDistanceDiscretizer(), new CollisionDiscretizer(), getLightValueDiscretizer());
 	}
 			
 	private Discretizer getLightValueDiscretizer() {
