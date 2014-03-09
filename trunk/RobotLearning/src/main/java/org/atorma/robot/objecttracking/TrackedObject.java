@@ -78,7 +78,7 @@ public class TrackedObject implements Comparable<TrackedObject> {
 
 	@Override
 	public String toString() {
-		return "[distance=" + round(getDistance()*100)/100 + ", angleDeg=" + round(getAngleDeg()*100)/100 + "]";
+		return "[distance=" + getDistance() + ", angleDeg=" + getAngleDeg() + "]";
 	}
 	
 	@Override
