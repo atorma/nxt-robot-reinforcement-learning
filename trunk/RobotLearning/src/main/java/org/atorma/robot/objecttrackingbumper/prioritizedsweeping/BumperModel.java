@@ -154,7 +154,7 @@ public class BumperModel implements PrioritizedSweepingModel {
 		double probability = (collFreq.getCount(collided) + priorParams.get(collided) - 1) / 
 				             (collFreq.getCount(collided) + priorParams.get(collided) + collFreq.getCount(notCollided) + priorParams.get(notCollided) - 2);
 		
-		System.out.println("P(c' = true | d = " + discretizedDistance + ", a = " + action + ", c = " + state.isCollided() + ") = " + probability);
+		//System.out.println("P(c' = true | d = " + discretizedDistance + ", a = " + action + ", c = " + state.isCollided() + ") = " + probability);
 		return probability;
 	}
 	
