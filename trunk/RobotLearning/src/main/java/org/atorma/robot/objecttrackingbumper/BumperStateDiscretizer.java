@@ -4,6 +4,7 @@ import org.atorma.robot.discretization.*;
 import org.atorma.robot.mdp.State;
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.simplebumper.CollisionDiscretizer;
+import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 
 public class BumperStateDiscretizer implements StateDiscretizer {
 	

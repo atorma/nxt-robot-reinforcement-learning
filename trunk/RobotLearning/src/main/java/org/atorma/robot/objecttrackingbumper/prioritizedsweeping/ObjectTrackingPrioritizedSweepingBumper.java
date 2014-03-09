@@ -8,9 +8,9 @@ import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.Transition;
 import org.atorma.robot.mdp.TransitionReward;
 import org.atorma.robot.objecttrackingbumper.*;
+import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
-import org.atorma.robot.simplebumper.BumperAction;
-import org.atorma.robot.simplebumper.BumperPercept;
+import org.atorma.robot.simplebumper.*;
 
 public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotController {
 	

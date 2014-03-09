@@ -1,4 +1,4 @@
-package org.atorma.robot.objecttrackingbumper;
+package org.atorma.robot.simplebumper;
 
 import org.atorma.robot.discretization.EqualWidthDiscretizer;
 

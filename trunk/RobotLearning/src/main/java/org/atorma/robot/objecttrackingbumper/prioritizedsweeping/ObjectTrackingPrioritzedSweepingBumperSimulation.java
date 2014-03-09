@@ -1,11 +1,16 @@
 package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.atorma.robot.simplebumper.SimbadBumper;
 
 public class ObjectTrackingPrioritzedSweepingBumperSimulation {
 
 	public static void main(String[] args) {
-		ObjectTrackingPrioritizedSweepingBumper learningControl = new ObjectTrackingPrioritizedSweepingBumper("object tracking sweeping bumper.csv");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH.mm");
+		String fileName = "object tracking sweeping bumper " + sdf.format(new Date()) + ".csv";
+		ObjectTrackingPrioritizedSweepingBumper learningControl = new ObjectTrackingPrioritizedSweepingBumper(fileName);
 		SimbadBumper robot = new SimbadBumper(learningControl);
 		robot.startSimulationGUI();
 	}
