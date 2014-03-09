@@ -2,7 +2,6 @@ package org.atorma.robot.objecttrackingbumper;
 
 import org.atorma.robot.discretization.*;
 import org.atorma.robot.mdp.State;
-import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.simplebumper.CollisionDiscretizer;
 import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 
@@ -25,16 +24,8 @@ public class BumperStateDiscretizer implements StateDiscretizer {
 	@Override
 	public int getId(State state) {
 		ModeledBumperState modeledState = (ModeledBumperState) state;
-		boolean isCollided = modeledState.isCollided();
-		ObjectTrackingModel reducedState = modeledState.copyAndChangeNumberOfSectors(NUMBER_OF_SECTORS);
-		double[] stateValues = new double[NUMBER_OF_SECTORS + 1];
-		double[] obstacleDistances = reducedState.getValues();
-		for (int i = 0; i < NUMBER_OF_SECTORS; i++) {
-			stateValues[i] = obstacleDistances[i];
-		}
-		stateValues[NUMBER_OF_SECTORS] = isCollided ? 1 : 0;
-		
-		return idFunction.getId(stateValues);
+		ModeledBumperState reducedState = (ModeledBumperState) modeledState.copyAndChangeNumberOfSectors(NUMBER_OF_SECTORS);		
+		return idFunction.getId(reducedState.getValues());
 	}
 	
 }
