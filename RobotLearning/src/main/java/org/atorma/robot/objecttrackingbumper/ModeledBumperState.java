@@ -71,4 +71,28 @@ public class ModeledBumperState extends ObjectTrackingModel {
 	}
 	
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (isCollided ? 1231 : 1237);
+		result = prime * result + getObjects().hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ModeledBumperState other = (ModeledBumperState) obj;
+		if (isCollided != other.isCollided)
+			return false;
+		if (!getObjects().equals(other.getObjects()))
+			return false;
+		return true;
+	}
 }

@@ -9,7 +9,7 @@ import static java.lang.Math.*;
  * The observer is always facing degree zero in polar coordinates
  * and along the positive y-axis in Cartesian coordinates.
  */
-public class TrackedObject implements Comparable<TrackedObject> {
+public class TrackedObject {
 		
 	// Polar coordinate representation
 	private final double distance;
@@ -82,13 +82,33 @@ public class TrackedObject implements Comparable<TrackedObject> {
 	}
 	
 	@Override
-	public int compareTo(TrackedObject o) {
-		int angleComparison = (int) signum(this.angleRad - o.angleRad);
-		if (angleComparison != 0) {
-			return angleComparison;
-		} else {
-			return (int) signum(this.distance - o.distance);
-		}
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		long temp;
+		temp = Double.doubleToLongBits(angleRad);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(distance);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TrackedObject other = (TrackedObject) obj;
+		if (Double.doubleToLongBits(angleRad) != Double
+				.doubleToLongBits(other.angleRad))
+			return false;
+		if (Double.doubleToLongBits(distance) != Double
+				.doubleToLongBits(other.distance))
+			return false;
+		return true;
 	}
 
 	

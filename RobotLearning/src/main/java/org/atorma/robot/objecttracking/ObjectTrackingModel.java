@@ -145,7 +145,7 @@ public class ObjectTrackingModel implements State {
 	@Override
 	public String toString() {
 		ArrayList<TrackedObject> objects = new ArrayList<>(getObjects());
-		Collections.sort(objects);
+		Collections.sort(objects, new TrackedObjectAngleComparator());
 		return "ObjectTrackingModel [objects=" + objects + "]";
 	}
 
