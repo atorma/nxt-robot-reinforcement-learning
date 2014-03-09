@@ -37,7 +37,7 @@ public class ObjectTrackingModelTests {
 		model = model.afterAgentRotatesDeg(agentTurnDeg);
 		
 		List<TrackedObject> objects = new ArrayList<>(model.getObjects());
-		Collections.sort(objects); // natural order is first by angle [0, 360), then by distance
+		Collections.sort(objects, new TrackedObjectAngleComparator()); 
 				
 		TrackedObject expected1 = obj1.afterObserverMoves(agentMove).afterObserverRotatesDeg(agentTurnDeg);
 		assertEquals(expected1.getAngleDeg(), objects.get(0).getAngleDeg(), 0);
@@ -141,7 +141,7 @@ public class ObjectTrackingModelTests {
 		ObjectTrackingModel copy = model.copy();
 		
 		List<TrackedObject> objectsInCopy = new ArrayList<>(copy.getObjects());
-		Collections.sort(objectsInCopy);
+		Collections.sort(objectsInCopy, new TrackedObjectAngleComparator());
 		
 		assertEquals(61, objectsInCopy.get(0).getDistance(), 0);
 		assertEquals(0, objectsInCopy.get(0).getAngleDeg(), 0);
@@ -168,5 +168,8 @@ public class ObjectTrackingModelTests {
 		assertEquals(25, objectsInCopy.get(0).getDistance(), 0);
 		assertEquals(35, objectsInCopy.get(0).getAngleDeg(), 0);
 	}
+	
+	
+	
 	
 }
