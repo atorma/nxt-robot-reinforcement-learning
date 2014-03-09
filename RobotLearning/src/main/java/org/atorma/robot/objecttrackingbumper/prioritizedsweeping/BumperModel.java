@@ -27,22 +27,26 @@ public class BumperModel implements PrioritizedSweepingModel {
 		this.rewardFunction = rewardFunction;
 		this.obstacleDistanceDiscretizer = obstacleDistanceDiscretizer;
 		
-		// Set up the prior collision probability parameters
-		// TODO should we include collided status in previous state in the model? 
-		// Probability of remaining collided if driving forward is bigger than when the agent is not 
-		// yet collided.
+		// Set up the prior so that when obstacle is close in front, driving forward results in collision
+		// with high probability. For other obstacle states, when the robot is collided, 
+		// another collision is more likely than when not. 
 		int distanceId = 0;
-		priorParams.put(new CollisionObservation(distanceId, BumperAction.FORWARD, true), 9.0);
-		priorParams.put(new CollisionObservation(distanceId, BumperAction.FORWARD, false), 3.0);
+		priorParams.put(new CollisionObservation(distanceId, true, BumperAction.FORWARD, true), 9.0);
+		priorParams.put(new CollisionObservation(distanceId, true, BumperAction.FORWARD, false), 3.0);
+		priorParams.put(new CollisionObservation(distanceId, false, BumperAction.FORWARD, true), 9.0);
+		priorParams.put(new CollisionObservation(distanceId, false, BumperAction.FORWARD, false), 3.0);
 		for (BumperAction action : Arrays.asList(BumperAction.BACKWARD, BumperAction.LEFT, BumperAction.RIGHT)) {
-			priorParams.put(new CollisionObservation(distanceId, action, true), 2.0);
-			priorParams.put(new CollisionObservation(distanceId, action, false), 10.0);
+			priorParams.put(new CollisionObservation(distanceId, true, action, true), 2.0);
+			priorParams.put(new CollisionObservation(distanceId, true, action, false), 20.0);
+			priorParams.put(new CollisionObservation(distanceId, false, action, true), 2.0);
+			priorParams.put(new CollisionObservation(distanceId, false, action, false), 20.0);
 		}
-		
 		for (distanceId = 1; distanceId < obstacleDistanceDiscretizer.getNumberOfBins(); distanceId++) {
 			for (BumperAction action : BumperAction.values()) {
-				priorParams.put(new CollisionObservation(distanceId, action, true), 2.0);
-				priorParams.put(new CollisionObservation(distanceId, action, false), 10.0);
+				priorParams.put(new CollisionObservation(distanceId, true, action, true), 2.0);
+				priorParams.put(new CollisionObservation(distanceId, true, action, false), 20.0);
+				priorParams.put(new CollisionObservation(distanceId, false, action, true), 2.0);
+				priorParams.put(new CollisionObservation(distanceId, false, action, false), 20.0);
 			}
 		}
 
@@ -84,24 +88,34 @@ public class BumperModel implements PrioritizedSweepingModel {
 		ModeledBumperState toBumperState = (ModeledBumperState) toState;
 		
 		if (toBumperState.isCollided()) {
+			
 			// In case of collision, toState is the same as fromState for all actions
 			for (BumperAction action : BumperAction.values()) {
-				ModeledBumperState fromState = toBumperState;
-				Transition tr = new Transition(fromState, action, toState);
-				double reward = rewardFunction.getReward(tr);
-				double collisionProbability = getCollisionProbability((ModeledBumperState) toState, action);
-				transitions.add(new StochasticTransitionReward(tr, reward, collisionProbability));
+				for (Boolean wasCollided : Arrays.asList(true, false)) {
+					ModeledBumperState fromState = (ModeledBumperState) toBumperState.copy();
+					fromState.setCollided(wasCollided);
+					Transition tr = new Transition(fromState, action, toState);
+					double reward = rewardFunction.getReward(tr);
+					double collisionProbability = getCollisionProbability(fromState, action);
+					transitions.add(new StochasticTransitionReward(tr, reward, collisionProbability));
+				}
 			}
+			
 		} else {
+			
 			// Otherwise toState may be a result of any action. For each action, there's a reverse action, so
 			// for example for transition "fromState, FORWARD -> toState" we get fromState by taking action
-			// BACKWARD from toState.
+			// BACKWARD from toState. For each action, there's two possible fromStates, one where the agent
+			// wasn't collided and one where it was.
 			for (BumperAction action : BumperAction.values()) {
-				ModeledBumperState fromState = toBumperState.afterAction(action);
-				Transition tr = new Transition(fromState, getReverse(action), toState);
-				double reward = rewardFunction.getReward(tr);
-				double collisionProbability = getCollisionProbability((ModeledBumperState) toState, action);
-				transitions.add(new StochasticTransitionReward(tr, reward, collisionProbability));
+				for (Boolean wasCollided : Arrays.asList(true, false)) {
+					ModeledBumperState fromState = toBumperState.afterAction(getReverse(action));
+					fromState.setCollided(wasCollided);
+					Transition tr = new Transition(fromState, action, toState);
+					double reward = rewardFunction.getReward(tr);
+					double noCollisionProbability = 1 - getCollisionProbability(fromState, action);
+					transitions.add(new StochasticTransitionReward(tr, reward, noCollisionProbability));
+				}
 			}
 		}
 		
@@ -126,7 +140,7 @@ public class BumperModel implements PrioritizedSweepingModel {
 		TrackedObject obstacleInFront = fromState.getObjectInSectorDegree(0);
 		double obstacleDistanceFront = obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE;
 		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleDistanceFront);
-		CollisionObservation collisionObservation = new CollisionObservation(discretizedDistance, action, toState.isCollided());
+		CollisionObservation collisionObservation = new CollisionObservation(discretizedDistance, fromState.isCollided(), action, toState.isCollided());
 		collFreq.addValue(collisionObservation);
 	}
 
@@ -134,8 +148,8 @@ public class BumperModel implements PrioritizedSweepingModel {
 	public double getCollisionProbability(ModeledBumperState state, BumperAction action) {
 		TrackedObject obstacleInFront = state.getObjectInSectorDegree(0);
 		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE); 
-		CollisionObservation collided = new CollisionObservation(discretizedDistance, action, true);
-		CollisionObservation notCollided = new CollisionObservation(discretizedDistance, action, false);
+		CollisionObservation collided = new CollisionObservation(discretizedDistance, state.isCollided(), action, true);
+		CollisionObservation notCollided = new CollisionObservation(discretizedDistance, state.isCollided(), action, false);
 		
 		double probability = (collFreq.getCount(collided) + priorParams.get(collided) - 1) / 
 				             (collFreq.getCount(collided) + priorParams.get(collided) + collFreq.getCount(notCollided) + priorParams.get(notCollided) - 2);
@@ -148,11 +162,13 @@ public class BumperModel implements PrioritizedSweepingModel {
 	private static class CollisionObservation implements Comparable<CollisionObservation> {
 		
 		private final Integer discretizedDistance;
+		private final Boolean wasCollided;
 		private final BumperAction action;
 		private final Boolean isCollided;
 
-		public CollisionObservation(int discretizedDistance, BumperAction action, boolean isCollided) {
+		public CollisionObservation(int discretizedDistance, boolean wasCollided, BumperAction action, boolean isCollided) {
 			this.discretizedDistance = discretizedDistance;
+			this.wasCollided = wasCollided;
 			this.action = action;
 			this.isCollided = isCollided;
 		}
@@ -161,6 +177,9 @@ public class BumperModel implements PrioritizedSweepingModel {
 		public int compareTo(CollisionObservation o) {
 			if (this.discretizedDistance != o.discretizedDistance) {
 				return this.discretizedDistance.compareTo(o.discretizedDistance);
+			}
+			if (this.wasCollided != o.wasCollided) {
+				return this.wasCollided.compareTo(o.wasCollided);
 			}
 			if (this.action != o.action) {
 				return this.action.compareTo(o.action);
@@ -174,8 +193,14 @@ public class BumperModel implements PrioritizedSweepingModel {
 			int result = 1;
 			result = prime * result
 					+ ((action == null) ? 0 : action.hashCode());
-			result = prime * result + discretizedDistance;
-			result = prime * result + (isCollided ? 1231 : 1237);
+			result = prime
+					* result
+					+ ((discretizedDistance == null) ? 0 : discretizedDistance
+							.hashCode());
+			result = prime * result
+					+ ((isCollided == null) ? 0 : isCollided.hashCode());
+			result = prime * result
+					+ ((wasCollided == null) ? 0 : wasCollided.hashCode());
 			return result;
 		}
 
@@ -190,12 +215,25 @@ public class BumperModel implements PrioritizedSweepingModel {
 			CollisionObservation other = (CollisionObservation) obj;
 			if (action != other.action)
 				return false;
-			if (discretizedDistance != other.discretizedDistance)
+			if (discretizedDistance == null) {
+				if (other.discretizedDistance != null)
+					return false;
+			} else if (!discretizedDistance.equals(other.discretizedDistance))
 				return false;
-			if (isCollided != other.isCollided)
+			if (isCollided == null) {
+				if (other.isCollided != null)
+					return false;
+			} else if (!isCollided.equals(other.isCollided))
+				return false;
+			if (wasCollided == null) {
+				if (other.wasCollided != null)
+					return false;
+			} else if (!wasCollided.equals(other.wasCollided))
 				return false;
 			return true;
 		}
+
+		
 		
 		
 	}
