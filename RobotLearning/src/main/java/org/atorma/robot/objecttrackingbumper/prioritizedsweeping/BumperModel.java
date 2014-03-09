@@ -148,14 +148,28 @@ public class BumperModel implements PrioritizedSweepingModel {
 	public double getCollisionProbability(ModeledBumperState state, BumperAction action) {
 		TrackedObject obstacleInFront = state.getObjectInSectorDegree(0);
 		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE); 
-		CollisionObservation collided = new CollisionObservation(discretizedDistance, state.isCollided(), action, true);
-		CollisionObservation notCollided = new CollisionObservation(discretizedDistance, state.isCollided(), action, false);
-		
+		return getCollisionProbability(discretizedDistance, state.isCollided(), action);
+	}
+	
+	private double getCollisionProbability(int discretizedDistance, boolean isAlreadyCollided, BumperAction action) {
+		CollisionObservation collided = new CollisionObservation(discretizedDistance, isAlreadyCollided, action, true);
+		CollisionObservation notCollided = new CollisionObservation(discretizedDistance, isAlreadyCollided, action, false);
+	
 		double probability = (collFreq.getCount(collided) + priorParams.get(collided) - 1) / 
 				             (collFreq.getCount(collided) + priorParams.get(collided) + collFreq.getCount(notCollided) + priorParams.get(notCollided) - 2);
-		
-		//System.out.println("P(c' = true | d = " + discretizedDistance + ", a = " + action + ", c = " + state.isCollided() + ") = " + probability);
 		return probability;
+	}
+	
+	public void printCollisionProbabilities() {
+		for (int distance = 0; distance < obstacleDistanceDiscretizer.getNumberOfBins(); distance++) {
+			for (BumperAction action : BumperAction.values()) {
+				for (boolean wasCollided : Arrays.asList(true, false)) {
+					double probability = getCollisionProbability(distance, wasCollided, action);
+					System.out.println("P(c' = true | d = " + distance + ", a = " + action + ", c = " + wasCollided + ") = " + probability);
+				}
+			}
+		}
+		
 	}
 	
 	

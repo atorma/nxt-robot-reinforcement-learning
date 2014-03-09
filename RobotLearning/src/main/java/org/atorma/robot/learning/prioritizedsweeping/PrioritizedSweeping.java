@@ -69,9 +69,9 @@ public class PrioritizedSweeping implements DiscretePolicy {
 			
 			if (updatedQ == maxQ && qValueChange > qValueChangeThreshold) {
 				for (StochasticTransitionReward predecessor : model.getIncomingTransitions(stateAction.getState())) {
-					// Our priority queue stores minimum priority first and priority must be integer
-					int priority = (int) Math.round(-qValueChange * predecessor.getProbability() * 1000);
-					if (Math.abs(priority) > qValueChangeThreshold) {
+					if (qValueChange * predecessor.getProbability() > qValueChangeThreshold) {
+						// Our priority queue stores minimum priority first and priority must be integer
+						int priority = (int) Math.round(-qValueChange * predecessor.getProbability() / qValueChangeThreshold);
 						stateActionQueue.addOrDecreasePriority(predecessor.getFromStateAction(), priority);
 					}
 				}
