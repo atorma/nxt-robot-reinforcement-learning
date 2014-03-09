@@ -16,10 +16,11 @@ public class PrioritizedSweeping implements DiscretePolicy {
 
 	private QTable qTable;
 	private PrioritizedSweepingModel model;
-	private StateActionPriorityQueue stateActionQueue = new StateActionPriorityQueue();
 	private StateDiscretizer stateDiscretizer;
+	private DiscretizingStateActionPriorityQueue stateActionQueue;
 	private double discountFactor = DEFAULT_DISCOUNT_FACTOR;
 	private double qValueChangeThreshold = DEFAULT_Q_VALUE_CHANGE_THRESHOLD;
+	boolean isInitialized = false;
 
 	private StateAction sweepStartStateAction;
 	
@@ -28,6 +29,10 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	}
 
 	public void performIterations(int num) {
+		if (!isInitialized) {
+			initialize();
+		}
+		
 		for (int i = 0; i < num; i++) {
 			
 			if (stateActionQueue.isEmpty() && sweepStartStateAction == null) {
@@ -39,7 +44,7 @@ public class PrioritizedSweeping implements DiscretePolicy {
 				stateAction = sweepStartStateAction;
 				sweepStartStateAction = null;
 			} else {
-				stateAction = stateActionQueue.poll();
+				stateAction = stateActionQueue.pollMin();
 			}
 			
 			Set<StochasticTransitionReward> transitions = model.getOutgoingTransitions(stateAction);
@@ -64,15 +69,21 @@ public class PrioritizedSweeping implements DiscretePolicy {
 			
 			if (updatedQ == maxQ && qValueChange > qValueChangeThreshold) {
 				for (StochasticTransitionReward predecessor : model.getIncomingTransitions(stateAction.getState())) {
-					double priority = qValueChange * predecessor.getProbability();
-					if (priority > qValueChangeThreshold) {
-						stateActionQueue.addOrUpdate(predecessor.getFromStateAction(), -priority);
+					// Our priority queue stores minimum priority first and priority must be integer
+					int priority = (int) Math.round(-qValueChange * predecessor.getProbability() * 1000);
+					if (Math.abs(priority) > qValueChangeThreshold) {
+						stateActionQueue.addOrDecreasePriority(predecessor.getFromStateAction(), priority);
 					}
 				}
 			}
 		}
 	}
 	
+	private void initialize() {
+		this.stateActionQueue = new DiscretizingStateActionPriorityQueue(stateDiscretizer);
+		isInitialized = true;
+	}
+
 	public void updateModel(TransitionReward transitionReward) {
 		model.updateModel(transitionReward);
 	}
