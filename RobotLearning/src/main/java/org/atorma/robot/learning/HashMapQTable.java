@@ -4,6 +4,10 @@ import java.util.*;
 
 import org.atorma.robot.mdp.DiscretizedStateAction;
 
+/**
+ * A Q-table that does not need to know state and actions ids beforehand
+ * and they are not restricted to positive integers.
+ */
 public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> implements QTable {
 	private static final long serialVersionUID = -1394200057253869720L;
 	
