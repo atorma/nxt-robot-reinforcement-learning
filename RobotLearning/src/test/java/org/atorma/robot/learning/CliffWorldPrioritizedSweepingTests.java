@@ -31,6 +31,7 @@ public class CliffWorldPrioritizedSweepingTests {
 		sweeping.setDiscountFactor(discountFactor);
 		sweeping.setStateDiscretizer(stateDiscretizer);
 		sweeping.setModel(model);
+		sweeping.setQTable(new HashMapQTable());
 	}
 	
 	@Test
