@@ -3,16 +3,21 @@ package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.atorma.robot.DiscreteRobotController;
+import org.atorma.robot.learning.ArrayQTable;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttrackingbumper.*;
+import org.atorma.robot.mdp.StateAction;
+import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.TransitionReward;
 import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
+import org.atorma.robot.objecttrackingbumper.BumperStateDiscretizer;
+import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
-import org.atorma.robot.simplebumper.*;
+import org.atorma.robot.simplebumper.BumperAction;
+import org.atorma.robot.simplebumper.BumperPercept;
+import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 
 public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotController {
 	
@@ -49,7 +54,8 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		prioritizedSweeping.setDiscountFactor(discountFactor);
 		prioritizedSweeping.setStateDiscretizer(stateDiscretizer);
 		prioritizedSweeping.setModel(model);
-		prioritizedSweeping.setQValueChangeThreshold(1E-3);
+		prioritizedSweeping.setQValueChangeThreshold(1E-4);
+		prioritizedSweeping.setQTable(new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length));
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, prioritizedSweeping, BumperAction.values());
 		
@@ -113,8 +119,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 						sweepsBetweenObservations = 0;
 						prioritizedSweeping.updateModel(transitionReward);
 					}
-					prioritizedSweeping.performIterations(1);
-					sweepsBetweenObservations++;
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(1);
 				}
 			}
 			

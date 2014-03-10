@@ -28,15 +28,16 @@ public class PrioritizedSweeping implements DiscretePolicy {
 		this.sweepStartStateAction = stateAction;
 	}
 
-	public void performIterations(int num) {
+	public int performIterations(int num) {
 		if (!isInitialized) {
 			initialize();
 		}
 		
-		for (int i = 0; i < num; i++) {
+		int i;
+		for (i = 0; i < num; i++) {
 			
 			if (stateActionQueue.isEmpty() && sweepStartStateAction == null) {
-				return;
+				return 0;
 			}
 			
 			StateAction stateAction;
@@ -77,10 +78,17 @@ public class PrioritizedSweeping implements DiscretePolicy {
 				}
 			}
 		}
+		return i;
 	}
 	
 	private void initialize() {
 		this.stateActionQueue = new DiscretizingStateActionPriorityQueue(stateDiscretizer);
+		
+		if (qTable instanceof HashMapQTable) { // a bit ugly...
+			for (DiscreteAction action : model.getAllActions()) {
+				((HashMapQTable) qTable).addActionId(action.getId());
+			}
+		}
 		isInitialized = true;
 	}
 
@@ -91,6 +99,9 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	
 	@Override
 	public Integer getActionId(int stateId) {
+		if (!isInitialized) {
+			initialize();
+		}
 		return qTable.getActionId(stateId);
 	}
 
@@ -112,10 +123,13 @@ public class PrioritizedSweeping implements DiscretePolicy {
 
 	public void setModel(PrioritizedSweepingModel model) {
 		this.model = model;
-		HashMapQTable qTable = new HashMapQTable();
-		for (DiscreteAction action : model.getAllActions()) {
-			qTable.addActionId(action.getId());
-		}
+	}
+	
+	public QTable getQTable() {
+		return qTable;
+	}
+
+	public void setQTable(QTable qTable) {
 		this.qTable = qTable;
 	}
 
