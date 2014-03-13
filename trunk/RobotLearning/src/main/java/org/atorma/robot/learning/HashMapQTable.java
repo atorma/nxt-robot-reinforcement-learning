@@ -25,6 +25,13 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 		this.defaultQValue = defaultQValue;
 	}
 	
+	public HashMapQTable(double defaultQValue, int... actionIds) {
+		this.defaultQValue = defaultQValue;
+		for (int actionId : actionIds) {
+			addActionId(actionId);
+		}
+	}
+	
 	
 	public Set<Integer> getStateIds() {
 		return Collections.unmodifiableSet(stateIds);

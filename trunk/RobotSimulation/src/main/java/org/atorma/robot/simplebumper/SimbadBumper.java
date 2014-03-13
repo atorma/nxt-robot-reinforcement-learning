@@ -47,7 +47,6 @@ public class SimbadBumper extends SimbadRobot {
 	private class Drive implements SimbadAction {
 		
 		private double velocityCmPerSec;
-		private double lifetimeWhenStarted;
 		private Double distanceTraveledCm = null;
 		
 		public Drive(BumperAction action) {
@@ -55,12 +54,10 @@ public class SimbadBumper extends SimbadRobot {
 			// Assuming behavior is called 20 times per second in simulation time,
 			// this velocity turns the agent the desired degrees in one call
 			// after the speed is set.
-			velocityCmPerSec = BumperAction.DRIVE_DISTANCE_CM/0.05;
+			velocityCmPerSec = BumperAction.DRIVE_DISTANCE_CM * ACTION_CALL_FREQUENCY_HZ;
 			if (action == BumperAction.BACKWARD) {
 				velocityCmPerSec = -velocityCmPerSec;
 			}
-			
-			lifetimeWhenStarted = SimbadBumper.this.getLifeTime();
 		}
 		
 		@Override
@@ -69,16 +66,13 @@ public class SimbadBumper extends SimbadRobot {
 				SimbadBumper.this.setRotationalVelocity(0);
 				SimbadBumper.this.setTranslationalVelocity(velocityCmPerSec/100);
 				distanceTraveledCm = 0.0;
-			} else {
-				distanceTraveledCm += (SimbadBumper.this.getLifeTime() - lifetimeWhenStarted) * Math.abs(velocityCmPerSec);
 			}
+			distanceTraveledCm += velocityCmPerSec / ACTION_CALL_FREQUENCY_HZ;
 		}
 
 		@Override
 		public boolean isCompleted() {
-			distanceTraveledCm += (SimbadBumper.this.getLifeTime() - lifetimeWhenStarted) * Math.abs(velocityCmPerSec);
-			//System.out.println("Distance traveled in action "+ distanceTraveledCm);
-			return distanceTraveledCm/BumperAction.DRIVE_DISTANCE_CM >= 0.99  || SimbadBumper.this.collisionDetected();
+			return Math.abs(distanceTraveledCm)/BumperAction.DRIVE_DISTANCE_CM >= 0.99  || SimbadBumper.this.collisionDetected();
 		}
 
 	}
@@ -86,19 +80,16 @@ public class SimbadBumper extends SimbadRobot {
 	private class Turn implements SimbadAction {
 		
 		private double rotationalVelocityDegPerSec;
-		private double lifetimeWhenStarted;
 		private Double angleTurnedDeg;
 		
 		public Turn(BumperAction action) {
 			// Assuming behavior is called 20 times per second in simulation time,
 			// this velocity turns the agent the desired degrees in one call
 			// after the speed is set.
-			rotationalVelocityDegPerSec = BumperAction.TURN_DEGREES/0.05;
+			rotationalVelocityDegPerSec = BumperAction.TURN_DEGREES * ACTION_CALL_FREQUENCY_HZ;
 			if (action == BumperAction.RIGHT) {
 				rotationalVelocityDegPerSec = -rotationalVelocityDegPerSec;
 			}
-			
-			lifetimeWhenStarted = SimbadBumper.this.getLifeTime();
 		}
 
 		@Override
@@ -107,14 +98,13 @@ public class SimbadBumper extends SimbadRobot {
 				SimbadBumper.this.setTranslationalVelocity(0);
 				SimbadBumper.this.setRotationalVelocity(Math.toRadians(rotationalVelocityDegPerSec)); 
 				angleTurnedDeg = 0.0;
-			}
+			} 
+			angleTurnedDeg += rotationalVelocityDegPerSec / ACTION_CALL_FREQUENCY_HZ;
 		}
 
 		@Override
 		public boolean isCompleted() {
-			angleTurnedDeg += (SimbadBumper.this.getLifeTime() - lifetimeWhenStarted) * Math.abs(rotationalVelocityDegPerSec);
-			//System.out.println("Degrees turned in action "+ angleTurnedDeg);
-			return angleTurnedDeg/BumperAction.TURN_DEGREES >= 0.99;
+			return Math.abs(angleTurnedDeg)/BumperAction.TURN_DEGREES >= 0.99;
 		}
 
 	}

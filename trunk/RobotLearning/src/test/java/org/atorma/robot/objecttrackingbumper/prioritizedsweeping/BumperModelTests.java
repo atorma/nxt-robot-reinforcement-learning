@@ -93,17 +93,14 @@ public class BumperModelTests {
 	}
 	
 	@Test
-	public void get_transitions_from_state_and_action() {
-		// Obstacle is close in front, agent is not collided yet and risks forward movement (no previous observations)...
+	public void get_transitions_from_state_and_action_when_agent_is_collided() {
+		// Obstacle is close in front, agent is already collided yet and risks forward movement (no previous observations)...
 		double obstacleDistanceBefore = obstacleDistanceDiscretizer.getMin() + 0.5*obstacleDistanceDiscretizer.getBinWidth();
 		ModeledBumperState fromState = getState(obstacleDistanceBefore);
-		fromState.setCollided(false);
+		fromState.setCollided(true);
 		BumperAction action = BumperAction.FORWARD;
 		
-		// There are two outcomes: either the agent collides and remains in place, or it moves the specified distance forward.
-		// That when the outcome is a collision the agent remains in place is of course a simplification. An alternative model is
-		// that agent remains in place only if it was already collided and the outcome is that it's still collided. But if it was
-		// not collided before and then collides, how much does it move/turn?
+		// There are two outcomes: either the agent collides again and thus remains in place, or it moves the specified distance forward.
 		Set<StochasticTransitionReward> transitions = model.getOutgoingTransitions(new StateAction(fromState, action));
 		assertEquals(2, transitions.size());
 		for (StochasticTransitionReward tr : transitions) {
@@ -118,6 +115,33 @@ public class BumperModelTests {
 			} else {
 				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001);
 				assertEquals(obstacleDistanceBefore - BumperAction.DRIVE_DISTANCE_CM, toState.getValues()[0], 0);
+			}
+		}
+	}
+	
+	@Test
+	public void get_transitions_from_state_and_action_when_agent_not_collided() {
+		// Obstacle is close in front, agent is NOT collided yet and risks forward movement (no previous observations)...
+		double obstacleDistanceBefore = obstacleDistanceDiscretizer.getMin() + 0.5*obstacleDistanceDiscretizer.getBinWidth();
+		ModeledBumperState fromState = getState(obstacleDistanceBefore);
+		fromState.setCollided(false);
+		BumperAction action = BumperAction.FORWARD;
+		
+		// There are two outcomes: either the agent collides or not. In both cases we model that the action happened in
+		// its entirety, which is of course a simplification (we don't know how much it actually moved).
+		Set<StochasticTransitionReward> transitions = model.getOutgoingTransitions(new StateAction(fromState, action));
+		assertEquals(2, transitions.size());
+		for (StochasticTransitionReward tr : transitions) {
+			assertEquals(fromState, tr.getFromState());
+			assertEquals(action, tr.getAction());
+			assertEquals(rewardFunction.getReward(tr), tr.getReward(), 0);
+			
+			ModeledBumperState toState = (ModeledBumperState) tr.getToState();
+			assertEquals(obstacleDistanceBefore - BumperAction.DRIVE_DISTANCE_CM, toState.getValues()[0], 0);
+			if (toState.isCollided()) {
+				assertEquals(PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001);
+			} else {
+				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001);
 			}
 		}
 	}

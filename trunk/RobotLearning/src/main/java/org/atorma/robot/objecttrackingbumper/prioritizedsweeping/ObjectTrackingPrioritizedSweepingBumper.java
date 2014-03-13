@@ -8,9 +8,7 @@ import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.ArrayQTable;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.StateAction;
-import org.atorma.robot.mdp.Transition;
-import org.atorma.robot.mdp.TransitionReward;
+import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
 import org.atorma.robot.objecttrackingbumper.BumperStateDiscretizer;
 import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
@@ -26,7 +24,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	
 	private BumperModel model;
 	
-	private double discountFactor = 0.9;
+	private double discountFactor = 0.1;
 	private PrioritizedSweeping prioritizedSweeping;
 	
 	private double epsilon = 0.1;
@@ -59,9 +57,9 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, prioritizedSweeping, BumperAction.values());
 		
-		Thread sweeperThread = new Thread(new Sweeper());
-		sweeperThread.setPriority(Thread.NORM_PRIORITY - 1);
-		sweeperThread.start();
+		//Thread sweeperThread = new Thread(new Sweeper());
+		//sweeperThread.setPriority(Thread.MIN_PRIORITY);
+		//sweeperThread.start();
 	}
 	
 	
@@ -77,18 +75,18 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 			
 			ModeledBumperState currentState;
 			if (previousAction != null) {
-				currentState = previousState.afterAction(previousAction);
+				currentState = previousState.afterActionAndObservation(previousAction, currentPercept);
 			} else {
-				currentState = new ModeledBumperState();
+				currentState = ModeledBumperState.initialize(currentPercept);
 			}
-			currentState.addObservation(currentPercept);
-			
+
 			if (previousAction != null) {
 				Transition transition = new Transition(previousState, previousAction, currentState);
 				double reward = rewardFunction.getReward(transition);
 				accumulatedReward += reward;
 				TransitionReward transitionReward = new TransitionReward(transition, reward);
-				observedTransitions.add(transitionReward);
+				//observedTransitions.add(transitionReward);
+				prioritizedSweeping.updateModel(transitionReward);
 			}
 			
 			if (logWriter != null) {
@@ -97,10 +95,33 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 			
 			int currentStateId = stateDiscretizer.getId(currentState);
 			BumperAction action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
-			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
+			
+			// Debug
+			if (currentState.isCollided()) {
+				System.out.println("Collided!");
+				System.out.println("Was already collided = " + previousState.isCollided());
+				System.out.println("Previous action: " + previousAction);
+				System.out.println("Next action: " + action);
+				System.out.println("Previous state id " + stateDiscretizer.getId(previousState));
+				System.out.println("Current state id " + stateDiscretizer.getId(currentState));
+				System.out.println("Previous state " + previousState);
+				System.out.println("Current state " + currentState);
+				System.out.println("Current action values:");
+				for (BumperAction a : BumperAction.values()) {
+					System.out.println(a + " value " + prioritizedSweeping.getQTable().getValue(new DiscretizedStateAction(currentStateId, a.getId())));
+				}
+			}
+			if (!currentState.isCollided() && previousState != null && previousState.isCollided()) {
+				System.out.println("Got free!");
+				System.out.println("Previous state " + previousState);
+				System.out.println("Previous action " + previousAction);
+			}
 			
 			previousState = currentState;
 			previousAction = action;
+
+			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
+			prioritizedSweeping.performIterations(1000);
 			
 			return action.getId();
 		}
@@ -119,7 +140,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 						sweepsBetweenObservations = 0;
 						prioritizedSweeping.updateModel(transitionReward);
 					}
-					sweepsBetweenObservations += prioritizedSweeping.performIterations(1);
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(2000);
 				}
 			}
 			
