@@ -3,22 +3,16 @@ package org.atorma.robot.learning.prioritizedsweeping;
 import org.atorma.robot.mdp.DiscretizedStateAction;
 import org.atorma.robot.mdp.StateAction;
 
-class PrioritizedStateAction implements Comparable<PrioritizedStateAction> {
+class PrioritizedStateAction {
 	
 	final StateAction stateAction;
 	final DiscretizedStateAction discretization;
-	final double priority;
 	
-	public PrioritizedStateAction(StateAction stateAction, DiscretizedStateAction discretization, double priority) {
+	public PrioritizedStateAction(StateAction stateAction, DiscretizedStateAction discretization) {
 		this.stateAction = stateAction;
 		this.discretization = discretization;
-		this.priority = priority;
 	}
 
-	@Override
-	public int compareTo(PrioritizedStateAction o) {
-		return (int) Math.signum(this.priority - o.priority);
-	}
 
 	@Override
 	public int hashCode() {

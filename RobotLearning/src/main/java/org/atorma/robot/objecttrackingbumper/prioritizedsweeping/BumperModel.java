@@ -65,8 +65,13 @@ public class BumperModel implements PrioritizedSweepingModel {
 		BumperAction action = (BumperAction) stateAction.getAction();
 		double collisionProbability = getCollisionProbability(fromState, action);
 		
-		// In case of collision, state is unchanged
-		ModeledBumperState toStateWhenCollided = (ModeledBumperState) fromState.copy();
+		
+		ModeledBumperState toStateWhenCollided;
+		if (fromState.isCollided()) { // In case of second collision, state is unchanged
+			toStateWhenCollided = (ModeledBumperState) fromState.copy();
+		} else {
+			toStateWhenCollided = (ModeledBumperState) fromState.afterAction(action);
+		}
 		toStateWhenCollided.setCollided(true);
 		double reward = rewardFunction.getReward(new Transition(stateAction, toStateWhenCollided));
 		StochasticTransitionReward transitionRewardWhenCollided = new StochasticTransitionReward(fromState, action, toStateWhenCollided, reward, collisionProbability);

@@ -43,11 +43,22 @@ public class ModeledBumperState extends ObjectTrackingModel {
 		this.isCollided = isCollided;
 	}
 	
-	public void addObservation(BumperPercept percept) {
-		addObservation(TrackedObject.inPolarDegreeCoordinates(percept.getDistanceToObstacleInFrontCm(), 0));
-		setCollided(percept.isCollided());
+	public ModeledBumperState afterActionAndObservation(BumperAction previousAction, BumperPercept nextPercept) {
+		ModeledBumperState updatedState;
+		if (this.isCollided && nextPercept.isCollided()) {
+			updatedState = (ModeledBumperState) this.copy();
+		} else {
+			updatedState = afterAction(previousAction);
+		}
+		updatedState.update(nextPercept);
+		return updatedState;
 	}
-
+	
+	private void update(BumperPercept percept) {
+		this.setCollided(percept.isCollided());
+		this.addObservation(TrackedObject.inPolarDegreeCoordinates(percept.getDistanceToObstacleInFrontCm(), 0));
+	}
+	
 	public ModeledBumperState afterAction(BumperAction action) {
 		switch(action) {
 		case FORWARD: 
@@ -95,4 +106,17 @@ public class ModeledBumperState extends ObjectTrackingModel {
 			return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "ModeledBumperState [isCollided=" + isCollided + ", getObjects()=" + getObjects() + "]";
+	}
+
+	
+	public static ModeledBumperState initialize(BumperPercept percept) {
+		ModeledBumperState state = new ModeledBumperState();
+		state.update(percept);
+		return state;
+	}
+	
 }

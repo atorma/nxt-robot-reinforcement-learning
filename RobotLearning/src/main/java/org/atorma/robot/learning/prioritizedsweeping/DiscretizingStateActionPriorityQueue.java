@@ -29,7 +29,7 @@ class DiscretizingStateActionPriorityQueue {
 		int stateId = stateDiscretizer.getId(stateAction.getState()); 			
 		int actionId = stateAction.getAction().getId();
 		DiscretizedStateAction discretization = new DiscretizedStateAction(stateId, actionId);
-		PrioritizedStateAction prioritized = new PrioritizedStateAction(stateAction, discretization, priority);
+		PrioritizedStateAction prioritized = new PrioritizedStateAction(stateAction, discretization);
 		
 		if (fibonacciHeap.contains(prioritized)) {
 			if (fibonacciHeap.getPriority(prioritized) > priority) {

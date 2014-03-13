@@ -81,7 +81,7 @@ public class CliffWorldPrioritizedSweepingTests {
 				
 				sweeping.updateModel(new TransitionReward(transition, reward));
 				sweeping.setSweepStartStateAction(transition.getFromStateAction());
-				sweeping.performIterations(12); // ... though of course we're a while in the sweeps now
+				sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size()); // ... though of course we're a while in the sweeps now
 				
 				fromState = toState;
 

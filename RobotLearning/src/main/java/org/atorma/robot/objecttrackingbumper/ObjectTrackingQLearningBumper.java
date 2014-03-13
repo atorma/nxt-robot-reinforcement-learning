@@ -51,11 +51,10 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 		
 		ModeledBumperState currentState;
 		if (previousAction != null) {
-			currentState = previousState.afterAction(previousAction);
+			currentState = previousState.afterActionAndObservation(previousAction, currentPercept);
 		} else {
-			currentState = new ModeledBumperState();
+			currentState = ModeledBumperState.initialize(currentPercept);
 		}
-		currentState.addObservation(currentPercept);
 		//System.out.println(currentState);
 
 		if (previousAction != null) {

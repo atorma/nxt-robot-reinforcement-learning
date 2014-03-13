@@ -78,7 +78,7 @@ public class TrackedObject {
 
 	@Override
 	public String toString() {
-		return "[distance=" + getDistance() + ", angleDeg=" + getAngleDeg() + "]";
+		return "[dist~=" + Math.round(getDistance()) + ", deg~=" + Math.round(getAngleDeg()) + "]";
 	}
 	
 	@Override

@@ -24,8 +24,13 @@ public class PrioritizedSweeping implements DiscretePolicy {
 
 	private StateAction sweepStartStateAction;
 	
+	
 	public void setSweepStartStateAction(StateAction stateAction) {
 		this.sweepStartStateAction = stateAction;
+	}
+	
+	public void clearPriorityQueue() {
+		this.stateActionQueue = new DiscretizingStateActionPriorityQueue(stateDiscretizer);
 	}
 
 	public int performIterations(int num) {
@@ -58,12 +63,11 @@ public class PrioritizedSweeping implements DiscretePolicy {
 			DiscretizedStateAction stateActionId = new DiscretizedStateAction(stateId, actionId);
 			double oldQ = qTable.getValue(stateActionId);
 			
-			double newQ = 0;
+			double updatedQ = 0;
 			for (StochasticTransitionReward tr : transitions) {
 				int toStateId = stateDiscretizer.getId(tr.getToState());
-				newQ += tr.getProbability() * ( tr.getReward() + discountFactor*qTable.getMaxValueInState(toStateId) );
+				updatedQ += tr.getProbability() * ( tr.getReward() + discountFactor*qTable.getMaxValueInState(toStateId) );
 			}
-			double updatedQ = oldQ + 0.1 * (newQ - oldQ);
 			qTable.setValue(stateActionId, updatedQ);
 				
 			double qValueChange = Math.abs(updatedQ - oldQ);
@@ -89,6 +93,7 @@ public class PrioritizedSweeping implements DiscretePolicy {
 				((HashMapQTable) qTable).addActionId(action.getId());
 			}
 		}
+		
 		isInitialized = true;
 	}
 
@@ -105,7 +110,6 @@ public class PrioritizedSweeping implements DiscretePolicy {
 		return qTable.getActionId(stateId);
 	}
 
-	
 	public double getDiscountFactor() {
 		return discountFactor;
 	}
@@ -148,5 +152,11 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	public void setQValueChangeThreshold(double qValueChangeThreshold) {
 		this.qValueChangeThreshold = qValueChangeThreshold;
 	}
+
+	public DiscretizingStateActionPriorityQueue getPriorityQueue() {
+		return this.stateActionQueue;
+	}
+
+	
 	
 }
