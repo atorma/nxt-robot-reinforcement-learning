@@ -8,8 +8,8 @@ import org.atorma.robot.mdp.StateAction;
 import org.atorma.robot.mdp.TransitionReward;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
-import org.atorma.robot.simplebumper.BumperAction;
-import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
+import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
+import org.atorma.robot.simplebumper.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,6 +40,7 @@ public class PrioritizedSweepingTests {
 	public void test_best_action_given_prior_collision_probabilities() {
 		ModeledBumperState currentState, previousState;
 		BumperAction action;
+		BumperPercept percept;
 		
 		currentState = new ModeledBumperState();
 		currentState.addObservation(TrackedObject.inPolarDegreeCoordinates(7, 0));
@@ -57,7 +58,8 @@ public class PrioritizedSweepingTests {
 		assertFalse(action == BumperAction.FORWARD);
 		
 		previousState = currentState;
-		currentState = currentState.afterAction(action);
+		percept = new BumperPercept(255, false);
+		currentState = previousState.afterActionAndObservation(action, percept);
 		prioritizedSweeping.updateModel(new TransitionReward(previousState, action, currentState, -1));
 		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 		prioritizedSweeping.performIterations(1000);
@@ -67,7 +69,8 @@ public class PrioritizedSweepingTests {
 		assertFalse(action == BumperAction.FORWARD);
 		
 		previousState = currentState;
-		currentState = currentState.afterAction(action);
+		percept = new BumperPercept(255, false);
+		currentState = previousState.afterActionAndObservation(action, percept);
 		prioritizedSweeping.updateModel(new TransitionReward(previousState, action, currentState, -1));
 		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 		prioritizedSweeping.performIterations(1000);
@@ -77,7 +80,19 @@ public class PrioritizedSweepingTests {
 		assertFalse(action == BumperAction.FORWARD);
 		
 		previousState = currentState;
-		currentState = currentState.afterAction(action);
+		percept = new BumperPercept(255, false);
+		currentState = previousState.afterActionAndObservation(action, percept);
+		prioritizedSweeping.updateModel(new TransitionReward(previousState, action, currentState, -1));
+		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
+		prioritizedSweeping.performIterations(1000);
+		
+		action = getBestActionInState(currentState);
+		System.out.println("Best action " + action);
+		//assertTrue(action == BumperAction.FORWARD);
+		
+		previousState = currentState;
+		percept = new BumperPercept(255, false);
+		currentState = previousState.afterActionAndObservation(action, percept);
 		prioritizedSweeping.updateModel(new TransitionReward(previousState, action, currentState, -1));
 		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 		prioritizedSweeping.performIterations(1000);

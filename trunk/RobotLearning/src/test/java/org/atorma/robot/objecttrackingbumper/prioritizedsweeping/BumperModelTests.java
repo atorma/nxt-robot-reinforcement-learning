@@ -181,7 +181,7 @@ public class BumperModelTests {
 				
 				forwardFromNonCollidedState = tr;
 				double expectedObstacleDistanceBefore = BumperAction.DRIVE_DISTANCE_CM + obstacleDistanceAfter;
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(0).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(0).getDistance(), 0.0001);
 				assertTrue(expectedObstacleDistanceBefore < obstacleDistanceDiscretizer.getMin() + obstacleDistanceDiscretizer.getBinWidth());
 				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001); // Because distance before was also close to obstacle 
 				
@@ -190,21 +190,21 @@ public class BumperModelTests {
 				forwardFromCollidedState = tr;
 				// Same as when not collided since our _prior_ probability does not distinguish between starting from non-collided and collided states
 				double expectedObstacleDistanceBefore = BumperAction.DRIVE_DISTANCE_CM + obstacleDistanceAfter;
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(0).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(0).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.BACKWARD && !fromState.isCollided()) {
 				
 				backwardFromNonCollidedState = tr;
 				double expectedObstacleDistanceBefore = obstacleDistanceAfter - BumperAction.DRIVE_DISTANCE_CM;
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(0).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(0).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROBABILITY_OTHERWISE, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.BACKWARD && fromState.isCollided()) {
 				
 				backwardFromCollidedState = tr;
 				double expectedObstacleDistanceBefore = obstacleDistanceAfter - BumperAction.DRIVE_DISTANCE_CM;
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(0).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(0).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROBABILITY_OTHERWISE, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.RIGHT && !fromState.isCollided()) {
@@ -213,7 +213,7 @@ public class BumperModelTests {
 				double expectedObstacleDistanceBefore = obstacleDistanceAfter;
 				// Floating point inaccuracy in to rad -> degree conversion and the fact that this turn degrees moves the object on the border of 
 				// sectors causes it to be in the wrong sector. Foesn't really matter in this case.
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(BumperAction.TURN_DEGREES - 0.00001).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(BumperAction.TURN_DEGREES - 0.00001).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROBABILITY_OTHERWISE, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.RIGHT && fromState.isCollided()) {
@@ -222,21 +222,21 @@ public class BumperModelTests {
 				double expectedObstacleDistanceBefore = obstacleDistanceAfter;
 				// Floating point inaccuracy in to rad -> degree conversion and the fact that this turn degrees moves the object on the border of 
 				// sectors causes it to be in the wrong sector. Foesn't really matter in this case.
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(BumperAction.TURN_DEGREES - 0.00001).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(BumperAction.TURN_DEGREES - 0.00001).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROBABILITY_OTHERWISE, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.LEFT && !fromState.isCollided()) {
 				
 				leftFromNonCollidedState = tr;
 				double expectedObstacleDistanceBefore = obstacleDistanceAfter;
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(-BumperAction.TURN_DEGREES).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(-BumperAction.TURN_DEGREES).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROBABILITY_OTHERWISE, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.LEFT && fromState.isCollided()) {
 				
 				leftFromCollidedState = tr;
 				double expectedObstacleDistanceBefore = obstacleDistanceAfter;
-				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInSectorDegree(-BumperAction.TURN_DEGREES).getDistance(), 0.0001);
+				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(-BumperAction.TURN_DEGREES).getDistance(), 0.0001);
 				assertEquals(1 - PRIOR_COLLISION_PROBABILITY_OTHERWISE, tr.getProbability(), 0.0001); 
 				
 			} 
@@ -282,7 +282,7 @@ public class BumperModelTests {
 			assertEquals(rewardFunction.getReward(tr), tr.getReward(), 0);
 			
 			ModeledBumperState fromState = (ModeledBumperState) tr.getFromState();
-			assertEquals(obstacleDistanceAfter, fromState.getObjectInSectorDegree(0).getDistance(), 0); // agent didn't move
+			assertEquals(obstacleDistanceAfter, fromState.getObjectInDirectionDegrees(0).getDistance(), 0); // agent didn't move
 			BumperAction action = (BumperAction) tr.getAction();
 			
 			if (action == BumperAction.FORWARD && !fromState.isCollided()) {

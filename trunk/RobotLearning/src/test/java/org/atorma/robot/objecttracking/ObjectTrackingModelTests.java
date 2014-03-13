@@ -50,7 +50,7 @@ public class ObjectTrackingModelTests {
 	
 
 	@Test
-	public void get_object_at_given_sector() {
+	public void get_object_in_given_direction() {
 		// With 6 sectors each one is 60 degrees. There is a front sector that
 		// spreads +/- 30 degrees to each side of the agent's heading. 
 		// As [left, mid, right] sectors are placed at 
@@ -62,15 +62,33 @@ public class ObjectTrackingModelTests {
 		model.addObservation(obj1);
 		model.addObservation(obj2);
 		
-		assertEquals(obj1, model.getObjectInSectorDegree(0));
-		assertEquals(obj1, model.getObjectInSectorDegree(-25));
-		assertEquals(obj1, model.getObjectInSectorDegree(25));
+		assertEquals(obj1, model.getObjectInDirectionDegrees(0));
+		assertEquals(obj1, model.getObjectInDirectionDegrees(-25));
+		assertEquals(obj1, model.getObjectInDirectionDegrees(25));
 		
-		assertEquals(obj2, model.getObjectInSectorDegree(-40));
-		assertEquals(obj2, model.getObjectInSectorDegree(300));
+		assertEquals(obj2, model.getObjectInDirectionDegrees(-40));
+		assertEquals(obj2, model.getObjectInDirectionDegrees(300));
 		
-		assertNull(model.getObjectInSectorDegree(30));
-		assertNull(model.getObjectInSectorDegree(60));
+		assertNull(model.getObjectInDirectionDegrees(30));
+		assertNull(model.getObjectInDirectionDegrees(60));
+	}
+	
+	@Test
+	public void get_nearest_in_given_sector() {
+		model = new ObjectTrackingModel(36); // 10 degree sectors
+		
+		TrackedObject obj1 = TrackedObject.inPolarDegreeCoordinates(10, 0); 
+		TrackedObject obj2 = TrackedObject.inPolarDegreeCoordinates(15, 20); 
+		TrackedObject obj3 = TrackedObject.inPolarDegreeCoordinates(7, -10); 
+		TrackedObject obj4 = TrackedObject.inPolarDegreeCoordinates(5, 90); 
+		model.addObservation(obj1);
+		model.addObservation(obj2);
+		model.addObservation(obj3);
+		model.addObservation(obj4);
+		
+		assertEquals(obj3, model.getNearestInSectorDegrees(-30, 30));
+		assertEquals(obj4, model.getNearestInSectorDegrees(20, 110));
+		
 	}
 	
 	@Test

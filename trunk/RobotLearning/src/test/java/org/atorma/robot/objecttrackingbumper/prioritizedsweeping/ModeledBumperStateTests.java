@@ -47,8 +47,8 @@ public class ModeledBumperStateTests {
 		ModeledBumperState nextState = state.afterActionAndObservation(BumperAction.FORWARD, percept);
 		
 		assertTrue(nextState.isCollided());
-		assertNull(nextState.getObjectInSectorDegree(90));
-		assertEquals(5, nextState.getObjectInSectorDegree(0).getDistance(), 0);
+		assertNull(nextState.getObjectInDirectionDegrees(90));
+		assertEquals(5, nextState.getObjectInDirectionDegrees(0).getDistance(), 0);
 	}
 	
 	@Test
@@ -59,7 +59,7 @@ public class ModeledBumperStateTests {
 		ModeledBumperState nextState = state.afterActionAndObservation(BumperAction.FORWARD, percept);
 		
 		assertTrue(nextState.isCollided());
-		assertEquals(10, nextState.getObjectInSectorDegree(90).getDistance(), 0);
-		assertEquals(5, nextState.getObjectInSectorDegree(0).getDistance(), 0);
+		assertEquals(10, nextState.getObjectInDirectionDegrees(90).getDistance(), 0);
+		assertEquals(5, nextState.getObjectInDirectionDegrees(0).getDistance(), 0);
 	}
 }

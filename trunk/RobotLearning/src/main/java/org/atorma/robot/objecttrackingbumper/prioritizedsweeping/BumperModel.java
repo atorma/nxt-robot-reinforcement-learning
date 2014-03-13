@@ -15,7 +15,11 @@ import com.google.common.collect.Sets;
 public class BumperModel implements PrioritizedSweepingModel {
 	
 	private RewardFunction rewardFunction;
+	
 	private Discretizer obstacleDistanceDiscretizer;
+	private double frontSectorLeftDegrees = -30; // TODO allow input
+	private double frontSectorRightDegrees = 30;
+	
 	// Observed data N(collision_event | front_obstacle_distance, action)
 	private Frequency collFreq = new Frequency(); 
 	// Parameters of Beta distribution prior P(collision_prob | front_obstacle_distance, action)
@@ -142,7 +146,7 @@ public class BumperModel implements PrioritizedSweepingModel {
 		ModeledBumperState fromState = (ModeledBumperState) transition.getFromState();
 		BumperAction action = (BumperAction) transition.getAction();
 		ModeledBumperState toState = (ModeledBumperState) transition.getToState();
-		TrackedObject obstacleInFront = fromState.getObjectInSectorDegree(0);
+		TrackedObject obstacleInFront = fromState.getNearestInSectorDegrees(frontSectorLeftDegrees, frontSectorRightDegrees);
 		double obstacleDistanceFront = obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE;
 		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleDistanceFront);
 		CollisionObservation collisionObservation = new CollisionObservation(discretizedDistance, fromState.isCollided(), action, toState.isCollided());
@@ -151,7 +155,7 @@ public class BumperModel implements PrioritizedSweepingModel {
 
 	
 	public double getCollisionProbability(ModeledBumperState state, BumperAction action) {
-		TrackedObject obstacleInFront = state.getObjectInSectorDegree(0);
+		TrackedObject obstacleInFront = state.getNearestInSectorDegrees(frontSectorLeftDegrees, frontSectorRightDegrees);
 		int discretizedDistance = obstacleDistanceDiscretizer.discretize(obstacleInFront != null ? obstacleInFront.getDistance() : Double.MAX_VALUE); 
 		return getCollisionProbability(discretizedDistance, state.isCollided(), action);
 	}
