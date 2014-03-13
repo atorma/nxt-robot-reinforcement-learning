@@ -104,9 +104,44 @@ public class ObjectTrackingModel implements State {
 		}
 	}
 
-	public TrackedObject getObjectInSectorDegree(double sectorDegree) {
+	public TrackedObject getObjectInDirectionDegrees(double sectorDegree) {
 		int sectorIndex = circleSectorDiscretizer.discretize(sectorDegree);
 		return objectsBySector.get(sectorIndex);
+	}
+	
+	public TrackedObject getNearestInSectorDegrees(double leftDegrees, double rightDegrees) {
+		int fromSectorId = circleSectorDiscretizer.discretize(leftDegrees);
+		int toSectorId = circleSectorDiscretizer.discretize(rightDegrees);
+		
+		TrackedObject nearest = null;
+		if (fromSectorId > toSectorId) { // sector encompasses the 0 degree direction 
+			
+			for (int sectorId = fromSectorId; sectorId <= this.numberOfSectors; sectorId++) {
+				TrackedObject obj = objectsBySector.get(sectorId);
+				if ( obj != null && (nearest == null || nearest.getDistance() > obj.getDistance()) ) {
+					nearest = obj;
+				}
+			}
+			for (int sectorId = 0; sectorId <= toSectorId; sectorId++) {
+				TrackedObject obj = objectsBySector.get(sectorId);
+				if ( obj != null && (nearest == null || nearest.getDistance() > obj.getDistance()) ) {
+					nearest = obj;
+				}
+			}
+			
+		} else {
+			
+			for (int sectorId = fromSectorId; sectorId <= toSectorId; sectorId++) {
+				TrackedObject obj = objectsBySector.get(sectorId);
+				if ( obj != null && (nearest == null || nearest.getDistance() > obj.getDistance()) ) {
+					nearest = obj;
+				}
+			}
+			
+		}
+		
+		
+		return nearest;
 	}
 
 
@@ -148,6 +183,8 @@ public class ObjectTrackingModel implements State {
 		Collections.sort(objects, new TrackedObjectAngleComparator());
 		return "ObjectTrackingModel [objects=" + objects + "]";
 	}
+
+	
 
 	
 }
