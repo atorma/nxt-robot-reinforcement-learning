@@ -2,11 +2,10 @@ package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
 import java.util.*;
 
-import org.apache.commons.math.stat.Frequency;
+import org.apache.commons.math3.stat.Frequency;
 import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.DiscreteActionModel;
 import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
 import org.atorma.robot.simplebumper.BumperAction;
 
@@ -26,7 +25,7 @@ public class BumperModel implements DiscreteActionModel {
 	
 	private RewardFunction rewardFunction;
 	private StateDiscretizer stateDiscretizer;
-	private Frequency collStats = new Frequency(); // Observed data N(collision | state, action)
+	private org.apache.commons.math3.stat.Frequency collStats = new Frequency(); // Observed data N(collision | state, action)
 
 	/**
 	 * Creates bumper world model where collision probabilities are learned for each (state id, action id)

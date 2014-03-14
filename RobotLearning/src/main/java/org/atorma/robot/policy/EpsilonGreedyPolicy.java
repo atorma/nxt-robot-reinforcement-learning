@@ -3,12 +3,10 @@ package org.atorma.robot.policy;
 import java.util.Random;
 
 import org.atorma.robot.mdp.DiscreteAction;
-import org.atorma.robot.util.Ranmar;
 
 public class EpsilonGreedyPolicy implements DiscretePolicy {
 
 	private DiscretePolicy deterministicPolicy;
-	//private Ranmar random = new Ranmar(); // Using this instead of Java's Random because it's implementation in Lejos is buggy!
 	private Random random = new Random();
 	private double epsilon = 0.1;
 	private int[] allActionIds;
