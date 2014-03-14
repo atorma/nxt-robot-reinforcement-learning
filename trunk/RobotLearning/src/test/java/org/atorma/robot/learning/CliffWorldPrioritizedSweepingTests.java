@@ -6,7 +6,6 @@ import java.util.*;
 
 import org.atorma.robot.learning.cliffworld.*;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
-import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.junit.Before;
@@ -126,7 +125,7 @@ public class CliffWorldPrioritizedSweepingTests {
 	
 	// Cliff world model where we know the world is deterministic but 
 	// we don't know the transitions nor the reward function up front.
-	private static class CliffWorldModel implements PrioritizedSweepingModel {
+	private static class CliffWorldModel implements DiscreteActionModel {
 		
 		private static final double TRANSITION_PROBABILITY = 1.0;
 		

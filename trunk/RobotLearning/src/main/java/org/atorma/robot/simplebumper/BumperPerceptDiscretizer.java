@@ -21,4 +21,9 @@ public class BumperPerceptDiscretizer implements StateDiscretizer {
 		return idFunction.getId(bumperState.getValues());
 	}
 
+	@Override
+	public int getNumberOfStates() {
+		return idFunction.getNumberOfValues();
+	}
+
 }

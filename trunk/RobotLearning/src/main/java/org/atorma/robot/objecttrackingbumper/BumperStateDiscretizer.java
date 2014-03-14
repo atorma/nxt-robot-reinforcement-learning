@@ -32,4 +32,15 @@ public class BumperStateDiscretizer implements StateDiscretizer {
 		return idFunction.getNumberOfValues();
 	}
 	
+	public double getMinDistance() {
+		return (new ObstacleDistanceDiscretizer()).getMin();
+	}
+	
+	public double getDistanceBinWidth() {
+		return (new ObstacleDistanceDiscretizer()).getBinWidth();
+	}
+	
+	public double getMaxDistance() {
+		return (new ObstacleDistanceDiscretizer()).getMax();
+	}
 }
