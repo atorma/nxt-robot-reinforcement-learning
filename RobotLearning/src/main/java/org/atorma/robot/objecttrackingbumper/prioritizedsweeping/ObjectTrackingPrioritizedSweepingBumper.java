@@ -47,6 +47,8 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	
 	private CsvLogWriter logWriter;
 	
+	private volatile boolean actionRequested;
+	
 	
 	public ObjectTrackingPrioritizedSweepingBumper(String logFile) {
 		this();
@@ -72,7 +74,6 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		//boltzmannPolicy = new BoltzmannActionSelection(directedExploration, 10, BumperAction.values());
 		
 		Thread sweeperThread = new Thread(new Sweeper());
-		sweeperThread.setPriority(Thread.NORM_PRIORITY - 1);
 		sweeperThread.start();
 	}
 	
@@ -105,71 +106,57 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	
 	@Override
 	public int getActionId(double[] currentPerceptValues) {
-		synchronized (prioritizedSweeping) {
+		actionRequested = true;
+		
+		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
+		if (currentPercept.isCollided()) {
+			accumulatedCollisions++;
+			//model.printCollisionProbabilities();
+		}
+		
+		ModeledBumperState currentState;
+		if (previousAction != null) {
+			currentState = previousState.afterActionAndObservation(previousAction, currentPercept);
+		} else {
+			currentState = ModeledBumperState.initialize(currentPercept);
+		}
+		int currentStateId = stateDiscretizer.getId(currentState);
+		
+		TransitionReward transitionReward = null;
+		if (previousAction != null) {
+			Transition transition = new Transition(previousState, previousAction, currentState);
+			double reward = rewardFunction.getReward(transition);
+			accumulatedReward += reward;
+			transitionReward = new TransitionReward(transition, reward);
+		}
+		
+		
+		BumperAction action;
+		synchronized (prioritizedSweeping) { // synchronize on observedTransitions, qTable, prioritizedSweeping
 			
-			BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
-			if (currentPercept.isCollided()) {
-				accumulatedCollisions++;
-				//model.printCollisionProbabilities();
-			}
-			
-			ModeledBumperState currentState;
-			if (previousAction != null) {
-				currentState = previousState.afterActionAndObservation(previousAction, currentPercept);
-			} else {
-				currentState = ModeledBumperState.initialize(currentPercept);
-			}
-			
-
-			if (previousAction != null) {
-				Transition transition = new Transition(previousState, previousAction, currentState);
-				double reward = rewardFunction.getReward(transition);
-				accumulatedReward += reward;
-				TransitionReward transitionReward = new TransitionReward(transition, reward);
+			if (transitionReward != null) {
 				observedTransitions.add(transitionReward);
-				//prioritizedSweeping.updateModel(transitionReward);
 			}
-			
-			if (logWriter != null) {
-				logWriter.addRow(accumulatedReward, accumulatedCollisions);
-			}
-			
-			int currentStateId = stateDiscretizer.getId(currentState);
+
 			//BumperAction action = BumperAction.getAction(boltzmannPolicy.getActionId(currentStateId));
-			BumperAction action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
+			action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
+			actionRequested = false;
 			
+			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 			//directedExploration.recordStateAction(new DiscretizedStateAction(currentStateId, action.getId()));
 			//boltzmannPolicy.setTemperature(boltzmannPolicy.getTemperature() * temperatureDiscountFactor);
-			
-			// Debug
-			if (currentState.isCollided()) {
-				System.out.println("Collided!");
-				System.out.println("Was already collided = " + previousState.isCollided());
-				System.out.println("Previous action: " + previousAction);
-				System.out.println("Next action: " + action);
-				System.out.println("Previous state id " + stateDiscretizer.getId(previousState));
-				System.out.println("Current state id " + stateDiscretizer.getId(currentState));
-				System.out.println("Previous state " + previousState);
-				System.out.println("Current state " + currentState);
-				System.out.println("Current action values:");
-				for (BumperAction a : BumperAction.values()) {
-					System.out.println(a + " value " + prioritizedSweeping.getQTable().getValue(new DiscretizedStateAction(currentStateId, a.getId())));
-				}
-			}
-			if (!currentState.isCollided() && previousState != null && previousState.isCollided()) {
-				System.out.println("Got free!");
-				System.out.println("Previous state " + previousState);
-				System.out.println("Previous action " + previousAction);
-			}
-			
-			previousState = currentState;
-			previousAction = action;
 
-			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
-			//prioritizedSweeping.performIterations(1000);
-			
-			return action.getId();
+			prioritizedSweeping.notify();
 		}
+		
+		previousState = currentState;
+		previousAction = action;
+		
+		if (logWriter != null) {
+			logWriter.addRow(accumulatedReward, accumulatedCollisions);
+		}
+		
+		return action.getId();
 	}
 	
 	private class Sweeper implements Runnable {
@@ -177,8 +164,16 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		@Override
 		public void run() {
 			int sweepsBetweenObservations = 0;
+			
 			while (true) {
 				synchronized (prioritizedSweeping) {
+					
+					while (actionRequested) {
+						try {
+							prioritizedSweeping.wait();
+						} catch (InterruptedException e) {}
+					}
+					
 					TransitionReward transitionReward = observedTransitions.poll();
 					if (transitionReward != null) {
 						//System.out.println("sweeps between observations " + sweepsBetweenObservations);
@@ -186,6 +181,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 						prioritizedSweeping.updateModel(transitionReward);
 					}
 					sweepsBetweenObservations += prioritizedSweeping.performIterations(1);
+					
 				}
 			}
 			
