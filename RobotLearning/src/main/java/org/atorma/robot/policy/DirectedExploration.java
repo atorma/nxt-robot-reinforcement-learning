@@ -3,6 +3,7 @@ package org.atorma.robot.policy;
 import java.util.*;
 
 import org.atorma.robot.learning.QTable;
+import org.atorma.robot.mdp.DiscreteAction;
 import org.atorma.robot.mdp.DiscretizedStateAction;
 
 /**
@@ -24,6 +25,16 @@ public class DirectedExploration implements QTable {
 		this.bonusMultiplier = bonusMultiplier;
 		this.defaultCount = defaultCount;
 		this.actionIds = Arrays.copyOf(actionIds, actionIds.length);
+	}
+	
+	public DirectedExploration(QTable qTable, double bonusMultiplier, double defaultCount, DiscreteAction... actions) {
+		this.qTable = qTable;
+		this.bonusMultiplier = bonusMultiplier;
+		this.defaultCount = defaultCount;
+		this.actionIds = new int[actions.length];
+		for (int i = 0; i < actionIds.length; i++) {
+			this.actionIds[i] = actions[i].getId();
+		}
 	}
 	
 
