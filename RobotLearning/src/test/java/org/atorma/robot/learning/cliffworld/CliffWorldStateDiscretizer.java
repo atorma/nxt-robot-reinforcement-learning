@@ -12,4 +12,9 @@ public class CliffWorldStateDiscretizer implements StateDiscretizer {
 		return Arrays.hashCode(state.getValues());
 	}
 
+	@Override
+	public int getNumberOfStates() {
+		return (CliffWorldState.X_MAX + 1) * (CliffWorldState.Y_MAX + 1);
+	}
+
 }

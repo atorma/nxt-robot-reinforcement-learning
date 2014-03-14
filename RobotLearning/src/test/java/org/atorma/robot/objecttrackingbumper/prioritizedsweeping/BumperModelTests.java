@@ -8,94 +8,112 @@ import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.simplebumper.BumperAction;
-import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 import org.junit.Before;
 import org.junit.Test;
 
 public class BumperModelTests {
 
-	private static final double PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE = 0.8;
-	private static final double PRIOR_COLLISION_PROBABILITY_OTHERWISE = 0.05;
+	private static final int PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED = 80;
+	private static final int PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED = 180;
+	private static final double PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE = (BumperModel.BETA_PRIOR_COLLISION + 80 - 1)/(BumperModel.BETA_PRIOR_COLLISION + 80 + BumperModel.BETA_PRIOR_NO_COLLISION + 0 - 2);
+	private static final double PRIOR_COLLISION_PROB_WHEN_COLLIDING_AGAIN = (BumperModel.BETA_PRIOR_COLLISION + 180 - 1)/(BumperModel.BETA_PRIOR_COLLISION + 180 + BumperModel.BETA_PRIOR_NO_COLLISION + 0 - 2);
+	private static final double PRIOR_COLLISION_PROBABILITY_OTHERWISE = 0.1;
 
 	private BumperModel model;
 	
-	private ObstacleDistanceDiscretizer obstacleDistanceDiscretizer = new ObstacleDistanceDiscretizer();
+	private BumperStateDiscretizer collisionStateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	
 	
 	@Before
 	public void setUp() {
-		model = new BumperModel(rewardFunction, obstacleDistanceDiscretizer); 
+		model = new BumperModel(rewardFunction, collisionStateDiscretizer); 
+		addPriorCollisionSamples();
+	}
+
+	// Adds some observations for setting up prior collision probabilities. 
+	// Note that using this and BumperStateDiscretizer for collision states is not a good
+	// idea for "production" since it does not set up sensible prior probabilities for 
+	// all the obstacle combinations.
+	private void addPriorCollisionSamples() {
+		ModeledBumperState fromState, toState;
+		BumperAction action;
+		
+		// Add collisions when an obstacle is close in front, not collision yet, and the agent drives forward
+		fromState = new ModeledBumperState();
+		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 0));
+		fromState.setCollided(false);
+		action = BumperAction.FORWARD;
+		toState = fromState.afterAction(action);
+		toState.setCollided(true);
+		for (int i = 0; i < PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
+			model.updateModel(transition);
+		}
+
+		// Same when already collided before starting the action
+		fromState.setCollided(true);
+		toState = fromState;
+		for (int i = 0; i < PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
+			model.updateModel(transition);
+		}
+		
+		// Now an obstacle is close behind and the agent reverses
+		fromState = new ModeledBumperState();
+		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 180));
+		fromState.setCollided(false);
+		action = BumperAction.BACKWARD;
+		toState = fromState.afterAction(action);
+		toState.setCollided(true);
+		for (int i = 0; i < PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
+			model.updateModel(transition);
+		}
+		
+		// Same when already collided before starting the action
+		fromState.setCollided(true);
+		toState = fromState;
+		for (int i = 0; i < PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
+			model.updateModel(transition);
+		}
 	}
 	
 	@Test
-	public void test_bayesian_collision_probability_prior() {
+	public void test_prior_collision_probability_when_no_knowledge_of_collisions() {
+		model = new BumperModel(rewardFunction, collisionStateDiscretizer); 
 		
-		for (int distanceBin = 0; distanceBin < obstacleDistanceDiscretizer.getNumberOfBins(); distanceBin++) {
-			
-			double distance = (distanceBin + 0.5) * obstacleDistanceDiscretizer.getBinWidth() + obstacleDistanceDiscretizer.getMin();
-			
+		for (int stateId = 0; stateId < collisionStateDiscretizer.getNumberOfStates(); stateId++) {
 			for (BumperAction action : BumperAction.values()) {	
-				
-				ModeledBumperState state = getState(distance);
-				
-				if (distanceBin == 0 && action == BumperAction.FORWARD) {
-					// Prior probability is big when obstacle is close in front and action is to drive forward.
-					assertEquals(PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, model.getCollisionProbability(state, action), 0.0001);
-				} else {
-					// In all other cases prior collision probability is small.
-					assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(state, action), 0.0001);
-				}
+				assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(stateId, action.getId()), 0.0001);
 			}
-		}
-		
-		// When no obstacle in front
-		ModeledBumperState state = new ModeledBumperState();
-		for (BumperAction action : BumperAction.values()) {	
-			assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(state, action), 0.0001);
 		}
 	}
 
 	@Test
-	public void collision_probability_is_updated_after_observations() {
-		
-		// Agent bumps 10 times after turning right when obstacle is close in front and the agent is already collided
-		ModeledBumperState fromState = getState(obstacleDistanceDiscretizer.getMin() + 0.5 * obstacleDistanceDiscretizer.getBinWidth());
-		fromState.setCollided(true);
-		BumperAction action = BumperAction.RIGHT;
-		ModeledBumperState toState = fromState.afterAction(action);
-		toState.setCollided(true);
-		for (int i = 0; i < 10; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100);
-			model.updateModel(transition);
-		}
-		// here we assume prior parameters alpha = 2 (collision), beta = 10 (no collision) 
-		assertEquals(0.367, model.getCollisionProbability(fromState, action), 0.001); 
-		
-		// Collision probability when turning right when obstacle is close but the agent is NOT already collided is NOT updated -
-		// these are separate probabilities.
-		fromState = getState(obstacleDistanceDiscretizer.getMin() + 0.5 * obstacleDistanceDiscretizer.getBinWidth());
-		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.001); 
-		
-		// Agent bumps 10 times after turning left when no obstacle in front.
-		// This should update the probability given the farthest obstacle distance.
-		fromState = new ModeledBumperState();
+	public void collision_probability_is_updated_after_prior_samples() {
+		ModeledBumperState fromState = getState(collisionStateDiscretizer.getMinDistance() + 0.5 * collisionStateDiscretizer.getDistanceBinWidth());
 		fromState.setCollided(false);
-		action = BumperAction.LEFT;
-		toState = fromState.afterAction(action);
-		toState.setCollided(true);
-		for (int i = 0; i < 10; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100);
-			model.updateModel(transition);
-		}
-		// again we assume prior parameters alpha = 2 (collision), beta = 20 (no collision) 
-		assertEquals(0.367, model.getCollisionProbability(fromState, action), 0.001); 
+		BumperAction action = BumperAction.FORWARD;
+
+		assertEquals(0.8, model.getCollisionProbability(fromState, action), 0.1); 
+		assertEquals(PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.0001);
+		
+		fromState.setCollided(true);
+		assertEquals(0.95, model.getCollisionProbability(fromState, action), 0.1); 
+		assertEquals(PRIOR_COLLISION_PROB_WHEN_COLLIDING_AGAIN, model.getCollisionProbability(fromState, action), 0.0001);
+		
+		// This is why a good discretization, i.e. state projection, is needed for collision probabilities.
+		// When there's an obstacle in front AND some distance to the left, it's a different state and probability... 
+		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(collisionStateDiscretizer.getMinDistance()*2, -90));
+		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.0001);
 	}
 	
 	@Test
 	public void get_transitions_from_state_and_action_when_agent_is_collided() {
-		// Obstacle is close in front, agent is already collided yet and risks forward movement (no previous observations)...
-		double obstacleDistanceBefore = obstacleDistanceDiscretizer.getMin() + 0.5*obstacleDistanceDiscretizer.getBinWidth();
+		// Obstacle is close in front, agent is already collided, and yet risks forward movement 
+		double obstacleDistanceBefore = collisionStateDiscretizer.getMinDistance() + 0.5*collisionStateDiscretizer.getDistanceBinWidth();
 		ModeledBumperState fromState = getState(obstacleDistanceBefore);
 		fromState.setCollided(true);
 		BumperAction action = BumperAction.FORWARD;
@@ -110,10 +128,10 @@ public class BumperModelTests {
 			
 			ModeledBumperState toState = (ModeledBumperState) tr.getToState();
 			if (toState.isCollided()) {
-				assertEquals(PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001);
+				assertEquals(PRIOR_COLLISION_PROB_WHEN_COLLIDING_AGAIN, tr.getProbability(), 0.0001);
 				assertEquals(obstacleDistanceBefore, toState.getValues()[0], 0);
 			} else {
-				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001);
+				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_COLLIDING_AGAIN, tr.getProbability(), 0.0001);
 				assertEquals(obstacleDistanceBefore - BumperAction.DRIVE_DISTANCE_CM, toState.getValues()[0], 0);
 			}
 		}
@@ -122,7 +140,7 @@ public class BumperModelTests {
 	@Test
 	public void get_transitions_from_state_and_action_when_agent_not_collided() {
 		// Obstacle is close in front, agent is NOT collided yet and risks forward movement (no previous observations)...
-		double obstacleDistanceBefore = obstacleDistanceDiscretizer.getMin() + 0.5*obstacleDistanceDiscretizer.getBinWidth();
+		double obstacleDistanceBefore = collisionStateDiscretizer.getMinDistance() + 0.5*collisionStateDiscretizer.getDistanceBinWidth();
 		ModeledBumperState fromState = getState(obstacleDistanceBefore);
 		fromState.setCollided(false);
 		BumperAction action = BumperAction.FORWARD;
@@ -151,7 +169,7 @@ public class BumperModelTests {
 		
 		// After some action and state, an obstacle is this close in front and the agent isn't collided. What are the 
 		// possible states and actions that can lead to this state?
-		double obstacleDistanceAfter = obstacleDistanceDiscretizer.getMin() + 0.5*obstacleDistanceDiscretizer.getBinWidth();
+		double obstacleDistanceAfter = collisionStateDiscretizer.getMinDistance() + 0.5*collisionStateDiscretizer.getDistanceBinWidth();
 		ModeledBumperState toState = getState(obstacleDistanceAfter);
 		toState.setCollided(false);
 		
@@ -182,7 +200,7 @@ public class BumperModelTests {
 				forwardFromNonCollidedState = tr;
 				double expectedObstacleDistanceBefore = BumperAction.DRIVE_DISTANCE_CM + obstacleDistanceAfter;
 				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(0).getDistance(), 0.0001);
-				assertTrue(expectedObstacleDistanceBefore < obstacleDistanceDiscretizer.getMin() + obstacleDistanceDiscretizer.getBinWidth());
+				assertTrue(expectedObstacleDistanceBefore < collisionStateDiscretizer.getMinDistance() + collisionStateDiscretizer.getDistanceBinWidth());
 				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001); // Because distance before was also close to obstacle 
 				
 			} else if (action == BumperAction.FORWARD && fromState.isCollided()) {
@@ -191,7 +209,7 @@ public class BumperModelTests {
 				// Same as when not collided since our _prior_ probability does not distinguish between starting from non-collided and collided states
 				double expectedObstacleDistanceBefore = BumperAction.DRIVE_DISTANCE_CM + obstacleDistanceAfter;
 				assertEquals(expectedObstacleDistanceBefore, fromState.getObjectInDirectionDegrees(0).getDistance(), 0.0001);
-				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001); 
+				assertEquals(1 - PRIOR_COLLISION_PROB_WHEN_COLLIDING_AGAIN, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.BACKWARD && !fromState.isCollided()) {
 				
@@ -256,7 +274,7 @@ public class BumperModelTests {
 	public void get_transitions_to_collision_state() {
 		
 		// After some action and state, an obstacle is this close in front and the agent is collided.
-		double obstacleDistanceAfter = obstacleDistanceDiscretizer.getMin() + 0.5*obstacleDistanceDiscretizer.getBinWidth();
+		double obstacleDistanceAfter = collisionStateDiscretizer.getMinDistance() + 0.5*collisionStateDiscretizer.getDistanceBinWidth();
 		ModeledBumperState toState = getState(obstacleDistanceAfter);
 		toState.setCollided(true);
 		
@@ -293,7 +311,7 @@ public class BumperModelTests {
 			} else if (action == BumperAction.FORWARD && fromState.isCollided()) {
 				
 				forwardFromCollidedState = tr;
-				assertEquals(PRIOR_COLLISION_PROB_WHEN_DRIVING_TOWARDS_NEAR_OBSTACLE, tr.getProbability(), 0.0001); 
+				assertEquals(PRIOR_COLLISION_PROB_WHEN_COLLIDING_AGAIN, tr.getProbability(), 0.0001); 
 				
 			} else if (action == BumperAction.BACKWARD && !fromState.isCollided()) {
 				

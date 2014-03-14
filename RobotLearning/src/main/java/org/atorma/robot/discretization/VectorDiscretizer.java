@@ -7,4 +7,8 @@ public interface VectorDiscretizer {
 	 */
 	int getId(double[] value);
 	
+	/**
+	 * Returns the number of possible discretized values.
+	 */
+	int getNumberOfValues();
 }

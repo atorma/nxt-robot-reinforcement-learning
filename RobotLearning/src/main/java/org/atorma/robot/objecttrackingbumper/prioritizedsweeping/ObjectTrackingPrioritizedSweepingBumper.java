@@ -5,24 +5,24 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import org.atorma.robot.DiscreteRobotController;
+import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.ArrayQTable;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
-import org.atorma.robot.objecttrackingbumper.BumperStateDiscretizer;
-import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
+import org.atorma.robot.objecttracking.TrackedObject;
+import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
-import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 
 public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotController {
 	
-	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
+	private StateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	
 	private BumperModel model;
+	private StateDiscretizer collisionStateDiscretizer = new SingleSectorCollisionStateDiscretizer(90);
 	
 	private double discountFactor = 0.1;
 	private PrioritizedSweeping prioritizedSweeping;
@@ -46,7 +46,9 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	}
 	
 	public ObjectTrackingPrioritizedSweepingBumper() {
-		model = new BumperModel(rewardFunction, new ObstacleDistanceDiscretizer());
+		//model = new BumperModel(rewardFunction, collisionStateDiscretizer);
+		model = new BumperModel(rewardFunction, stateDiscretizer);
+		//setPriorCollisionProbabilities();
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -57,9 +59,35 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, prioritizedSweeping, BumperAction.values());
 		
-		//Thread sweeperThread = new Thread(new Sweeper());
-		//sweeperThread.setPriority(Thread.MIN_PRIORITY);
-		//sweeperThread.start();
+		Thread sweeperThread = new Thread(new Sweeper());
+		sweeperThread.setPriority(Thread.NORM_PRIORITY - 1);
+		sweeperThread.start();
+	}
+	
+	private void setPriorCollisionProbabilities() {
+		ModeledBumperState fromState, toState;
+		BumperAction action;
+		
+		// Add collisions when an obstacle is close in front, not collision yet, and the agent drives forward
+		fromState = new ModeledBumperState();
+		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 0));
+		fromState.setCollided(false);
+		action = BumperAction.FORWARD;
+		toState = fromState.afterAction(action);
+		toState.setCollided(true);
+		for (int i = 0; i < 80; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // reward here doesn't matter in this implementation
+			model.updateModel(transition);
+		}
+
+		// Same when already collided before starting the action. Now we're more certain the agent collides
+		fromState.setCollided(true);
+		toState = fromState;
+		for (int i = 0; i < 180; i++) {
+			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
+			model.updateModel(transition);
+		}
+		
 	}
 	
 	
@@ -85,8 +113,8 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 				double reward = rewardFunction.getReward(transition);
 				accumulatedReward += reward;
 				TransitionReward transitionReward = new TransitionReward(transition, reward);
-				//observedTransitions.add(transitionReward);
-				prioritizedSweeping.updateModel(transitionReward);
+				observedTransitions.add(transitionReward);
+				//prioritizedSweeping.updateModel(transitionReward);
 			}
 			
 			if (logWriter != null) {
@@ -121,7 +149,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 			previousAction = action;
 
 			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
-			prioritizedSweeping.performIterations(1000);
+			//prioritizedSweeping.performIterations(1000);
 			
 			return action.getId();
 		}
@@ -136,11 +164,11 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 				synchronized (prioritizedSweeping) {
 					TransitionReward transitionReward = observedTransitions.poll();
 					if (transitionReward != null) {
-						System.out.println("sweeps between observations " + sweepsBetweenObservations);
+						//System.out.println("sweeps between observations " + sweepsBetweenObservations);
 						sweepsBetweenObservations = 0;
 						prioritizedSweeping.updateModel(transitionReward);
 					}
-					sweepsBetweenObservations += prioritizedSweeping.performIterations(2000);
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(1);
 				}
 			}
 			

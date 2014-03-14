@@ -3,8 +3,7 @@ package org.atorma.robot.learning.prioritizedsweeping;
 import java.util.Set;
 
 import org.atorma.robot.discretization.StateDiscretizer;
-import org.atorma.robot.learning.HashMapQTable;
-import org.atorma.robot.learning.QTable;
+import org.atorma.robot.learning.*;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.DiscretePolicy;
 
@@ -15,7 +14,7 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	public static final double DEFAULT_DISCOUNT_FACTOR = 1.0;
 
 	private QTable qTable;
-	private PrioritizedSweepingModel model;
+	private DiscreteActionModel model;
 	private StateDiscretizer stateDiscretizer;
 	private DiscretizingStateActionPriorityQueue stateActionQueue;
 	private double discountFactor = DEFAULT_DISCOUNT_FACTOR;
@@ -121,11 +120,11 @@ public class PrioritizedSweeping implements DiscretePolicy {
 		this.discountFactor = discountFactor;
 	}
 
-	public PrioritizedSweepingModel getModel() {
+	public DiscreteActionModel getModel() {
 		return model;
 	}
 
-	public void setModel(PrioritizedSweepingModel model) {
+	public void setModel(DiscreteActionModel model) {
 		this.model = model;
 	}
 	
