@@ -12,22 +12,22 @@ import org.atorma.robot.mdp.DiscretizedStateAction;
 public class BoltzmannActionSelection implements DiscretePolicy {
 	
 	private final QTable qTable;
-	private final double temperature;
+	private double temperature;
 	private final int[] actionIds;
 
-	public BoltzmannActionSelection(QTable qTable, double temperature, int... allActionIds) {
+	public BoltzmannActionSelection(QTable qTable, double initialTemperature, int... allActionIds) {
 		this.qTable = qTable;
-		this.temperature = temperature;
 		this.actionIds = Arrays.copyOf(allActionIds, allActionIds.length);
+		setTemperature(initialTemperature);
 	}
 	
-	public BoltzmannActionSelection(QTable qTable, double temperature, DiscreteAction... actions) {
+	public BoltzmannActionSelection(QTable qTable, double initialTemperature, DiscreteAction... actions) {
 		actionIds = new int[actions.length];
 		for (int i = 0; i < actions.length; i++) {
 			actionIds[i] = actions[i].getId();
 		}
 		this.qTable = qTable;
-		this.temperature = temperature;
+		setTemperature(initialTemperature);
 	}
 
 	@Override
@@ -45,4 +45,16 @@ public class BoltzmannActionSelection implements DiscretePolicy {
 		return new EnumeratedIntegerDistribution(actionIds, probMass);
 	}
 
+	public double getTemperature() {
+		return temperature;
+	}
+
+	public void setTemperature(double temperature) {
+		if (temperature <= 0) {
+			throw new IllegalArgumentException("Temperature must be greater than zero");
+		}
+		this.temperature = temperature;
+	}
+
+	
 }
