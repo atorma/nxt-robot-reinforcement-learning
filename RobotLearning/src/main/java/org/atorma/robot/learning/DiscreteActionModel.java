@@ -10,6 +10,8 @@ public interface DiscreteActionModel {
 
 	Set<StochasticTransitionReward> getOutgoingTransitions(StateAction fromStateAction);
 	
+	Set<StochasticTransitionReward> getOutgoingTransitions(State fromState);
+	
 	Set<StochasticTransitionReward> getIncomingTransitions(State toState);
 	
 	/**

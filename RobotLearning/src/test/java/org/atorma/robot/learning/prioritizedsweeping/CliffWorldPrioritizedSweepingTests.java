@@ -1,9 +1,11 @@
-package org.atorma.robot.learning;
+package org.atorma.robot.learning.prioritizedsweeping;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.*;
 
+import org.atorma.robot.learning.DiscreteActionModel;
+import org.atorma.robot.learning.HashMapQTable;
 import org.atorma.robot.learning.cliffworld.*;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.mdp.*;
@@ -147,6 +149,12 @@ public class CliffWorldPrioritizedSweepingTests {
 		}
 		
 		@Override
+		public Set<StochasticTransitionReward> getOutgoingTransitions(State fromState) {
+			// Not relevant in this test
+			return null;
+		}
+		
+		@Override
 		public Set<StochasticTransitionReward> getIncomingTransitions(State state) {
 			Set<StochasticTransitionReward> incoming = this.incomingTransitions.get(state);
 			if (incoming == null) {
@@ -163,6 +171,8 @@ public class CliffWorldPrioritizedSweepingTests {
 			Set<StochasticTransitionReward> incoming = getIncomingTransitions(observation.getToState());
 			incoming.add(new StochasticTransitionReward(observation, TRANSITION_PROBABILITY));
 		}
+
+		
 
 		
 	}
