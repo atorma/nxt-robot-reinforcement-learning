@@ -71,65 +71,45 @@ public class BumperModelTests {
 	// backwards, there's a high collision probability. Due to combinatorics, this is fairly slow for
 	// continuous testing.
 	private void addFullPriorCollisionSamples() {
+		
 		// Generator for possible distance permutations in 5 sectors
 		Double[] distances = new Double[discretizer.getNumberOfDistanceBins()];
 		for (int i = 0; i < discretizer.getNumberOfDistanceBins(); i++) {
 			distances[i] = discretizer.getMinDistance() + (i + 0.5)*discretizer.getDistanceBinWidth();
 		}
 		Generator<Double> permutationGen = Factory.createPermutationWithRepetitionGenerator(Factory.createVector(distances), discretizer.getNumberOfSectors() - 1);
-		
-		// Add collisions when an obstacle is close in front and the agent drives forward.
-		// Do this for all distance permutations in the other sectors. Use more samples to
-		// express more confidence in collision when the agent was already collided.
+
 		for (ICombinatoricsVector<Double> perm : permutationGen) {
 			for (boolean alreadyCollided : Arrays.asList(false, true)) {
-				ModeledBumperState fromState = new ModeledBumperState();
-				fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 0));
-				fromState.setCollided(alreadyCollided);
-				
-				int i = 0;
-				for (double sectorDegree = 0; sectorDegree < 360; sectorDegree += discretizer.getSectorWidthDegrees() ) {
-					if (sectorDegree != 0) {
-						fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sectorDegree));
-						i++;
+				for (BumperAction action : Arrays.asList(BumperAction.FORWARD, BumperAction.BACKWARD)) {
+					
+					double obstacleDirectionDegrees = -1;
+					if (action == BumperAction.FORWARD) {
+						obstacleDirectionDegrees = 0;
+					} else if (action == BumperAction.BACKWARD) {
+						obstacleDirectionDegrees = 180;
 					}
-				}
-				
-				BumperAction action = BumperAction.FORWARD;
-				ModeledBumperState toState = fromState.afterAction(action);
-				toState.setCollided(true);
-				
-				int priorSamples = alreadyCollided ? PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED : PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED;
-				for (int s = 0; s < priorSamples; s++) {
-					TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-					model.updateModel(transition);
-				}
-			}
-		}
-		
-		// Same when moving backwards toward an obstacle behind
-		for (ICombinatoricsVector<Double> perm : permutationGen) {
-			for (boolean alreadyCollided : Arrays.asList(false, true)) {
-				ModeledBumperState fromState = new ModeledBumperState();
-				fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 180));
-				fromState.setCollided(alreadyCollided);
-				
-				int i = 0;
-				for (double sectorDegree = 0; sectorDegree < 360; sectorDegree += discretizer.getSectorWidthDegrees() ) {
-					if (sectorDegree != 180) {
-						fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sectorDegree));
-						i++;
+					
+					ModeledBumperState fromState = new ModeledBumperState();
+					fromState.setCollided(alreadyCollided);
+					fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
+					
+					int i = 0;
+					for (double sectorDegree = 0; sectorDegree < 360; sectorDegree += discretizer.getSectorWidthDegrees() ) {
+						if (sectorDegree != obstacleDirectionDegrees) {
+							fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sectorDegree));
+							i++;
+						}
 					}
-				}
-				
-				BumperAction action = BumperAction.BACKWARD;
-				ModeledBumperState toState = fromState.afterAction(action);
-				toState.setCollided(true);
-				
-				int priorSamples = alreadyCollided ? PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED : PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED;
-				for (int s = 0; s < priorSamples; s++) {
-					TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-					model.updateModel(transition);
+					
+					ModeledBumperState toState = fromState.afterAction(action);
+					toState.setCollided(true);
+					
+					int priorSamples = alreadyCollided ? PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED : PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED;
+					for (int s = 0; s < priorSamples; s++) {
+						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
+						model.updateModel(transition);
+					}
 				}
 			}
 		}
@@ -181,6 +161,10 @@ public class BumperModelTests {
 		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 180));
 		action = BumperAction.BACKWARD;
 		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.0001);
+		
+		// All clear...
+		fromState = new ModeledBumperState();
+		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.0001);
 	}
 	
 	@Test
