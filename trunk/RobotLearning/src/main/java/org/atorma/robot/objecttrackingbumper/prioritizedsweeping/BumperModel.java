@@ -96,6 +96,19 @@ public class BumperModel implements DiscreteActionModel {
 		
 		return transitions;
 	}
+	
+	
+
+	@Override
+	public Set<StochasticTransitionReward> getOutgoingTransitions(State fromState) {
+		Set<StochasticTransitionReward> transitions = new LinkedHashSet<>();
+		for (DiscreteAction action : getAllActions()) {
+			StateAction stateAction = new StateAction(fromState, action);
+			transitions.addAll(getOutgoingTransitions(stateAction));
+		}
+		return transitions;
+	}
+
 
 	@Override
 	public Set<StochasticTransitionReward> getIncomingTransitions(State toState) {
