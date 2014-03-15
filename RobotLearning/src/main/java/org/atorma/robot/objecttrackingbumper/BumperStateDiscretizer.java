@@ -8,7 +8,8 @@ import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 public class BumperStateDiscretizer implements StateDiscretizer {
 	
 	public static final int NUMBER_OF_SECTORS = 6;
-	private VectorDiscretizerImpl idFunction;
+	
+	private VectorDiscretizer idFunction;
 
 	public BumperStateDiscretizer() {
 		Discretizer[] discretizers = new Discretizer[NUMBER_OF_SECTORS + 1];
@@ -32,6 +33,14 @@ public class BumperStateDiscretizer implements StateDiscretizer {
 		return idFunction.getNumberOfValues();
 	}
 	
+	public int getNumberOfSectors() {
+		return NUMBER_OF_SECTORS;
+	}
+	
+	public double getSectorWidthDegrees() {
+		return 360.0/NUMBER_OF_SECTORS;
+	}
+	
 	public double getMinDistance() {
 		return (new ObstacleDistanceDiscretizer()).getMin();
 	}
@@ -42,5 +51,9 @@ public class BumperStateDiscretizer implements StateDiscretizer {
 	
 	public double getMaxDistance() {
 		return (new ObstacleDistanceDiscretizer()).getMax();
+	}
+	
+	public int getNumberOfDistanceBins() {
+		return (new ObstacleDistanceDiscretizer()).getNumberOfBins();
 	}
 }
