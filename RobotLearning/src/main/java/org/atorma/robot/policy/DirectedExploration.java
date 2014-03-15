@@ -67,7 +67,7 @@ public class DirectedExploration implements QTable {
 	@Override
 	public DiscretizedStateAction getBestActionInState(int stateId) {
 		DiscretizedStateAction bestStateAction = null;
-		double bestQValue = Double.MIN_VALUE; 
+		double bestQValue = Double.NEGATIVE_INFINITY; 
 		for (int actionId : actionIds) {
 			DiscretizedStateAction stateIdActionId = new DiscretizedStateAction(stateId, actionId);
 			double qValue = getValue(stateIdActionId);
