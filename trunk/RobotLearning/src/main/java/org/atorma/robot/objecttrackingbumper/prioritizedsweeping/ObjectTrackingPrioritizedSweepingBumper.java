@@ -1,8 +1,7 @@
 package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
 import java.io.File;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.discretization.StateDiscretizer;
@@ -16,10 +15,11 @@ import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.policy.*;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
+import org.paukov.combinatorics.*;
 
 public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotController {
 	
-	private StateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
+	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	
 	private QTable qTable;
@@ -30,13 +30,13 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	private double discountFactor = 0.9;
 	private PrioritizedSweeping prioritizedSweeping;
 	
-	//private DirectedExploration directedExploration;
+	private DirectedExploration directedExploration;
 	
 	private double epsilon = 0.1;
-	private EpsilonGreedyPolicy epsilonGreedyPolicy;
+	//private EpsilonGreedyPolicy epsilonGreedyPolicy;
 	
-	//private BoltzmannActionSelection boltzmannPolicy;
-	//private final double temperatureDiscountFactor = 0.999; 
+	private BoltzmannActionSelection boltzmannPolicy;
+	private final double temperatureDiscountFactor = 0.9995; 
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
@@ -58,9 +58,9 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	public ObjectTrackingPrioritizedSweepingBumper() {
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		
-		model = new BumperModel(rewardFunction, collisionStateDiscretizer);
-		//model = new BumperModel(rewardFunction, stateDiscretizer);
-		setPriorCollisionProbabilities();
+		//model = new BumperModel(rewardFunction, collisionStateDiscretizer);
+		model = new BumperModel(rewardFunction, stateDiscretizer);
+		//setPriorCollisionProbabilities(0.8, 0.99);
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -69,38 +69,72 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		prioritizedSweeping.setQValueChangeThreshold(1E-4);
 		prioritizedSweeping.setQTable(qTable);
 		
-		//directedExploration = new DirectedExploration(qTable, 0.005, 0.1, BumperAction.values());
-		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qTable, BumperAction.values());
-		//boltzmannPolicy = new BoltzmannActionSelection(directedExploration, 10, BumperAction.values());
+		directedExploration = new DirectedExploration(qTable, 0.02, 0.1, BumperAction.values());
+		//epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qTable, BumperAction.values());
+		boltzmannPolicy = new BoltzmannActionSelection(directedExploration, 1, BumperAction.values());
 		
 		Thread sweeperThread = new Thread(new Sweeper());
 		sweeperThread.start();
 	}
 	
-	private void setPriorCollisionProbabilities() {
-		ModeledBumperState fromState, toState;
-		BumperAction action;
+	/**
+	 * Sets up prior collision probabilities for all states where there's an obstacle close in front or close behind
+	 * and the agent moves towards it.
+	 * 
+	 * @param collisionProbDrivingTowardObstacle
+	 * 	collision probability when the agent starts from non-collision state
+	 * @param collisionProbWhenAlreadyBumped
+	 * 	collision probability when the agent is already collided and still moves toward the obstacle in front/behind
+	 */
+	private void setPriorCollisionProbabilities(double collisionProbDrivingTowardObstacle, double collisionProbWhenAlreadyBumped) {
+		int priorSamplesNotYetCollided = (int) Math.ceil((10 * collisionProbDrivingTowardObstacle - 1)/(1 - collisionProbDrivingTowardObstacle));
+		int priorSamplesTwoCollisions = (int) Math.ceil((10 * collisionProbWhenAlreadyBumped - 1)/(1 - collisionProbWhenAlreadyBumped));
 		
-		// Add collisions when an obstacle is close in front, not collision yet, and the agent drives forward
-		fromState = new ModeledBumperState();
-		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 0));
-		fromState.setCollided(false);
-		action = BumperAction.FORWARD;
-		toState = fromState.afterAction(action);
-		toState.setCollided(true);
-		for (int i = 0; i < 80; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // reward here doesn't matter in this implementation
-			model.updateModel(transition);
+		// Generator for possible distance permutations in 5 sectors
+		Double[] distances = new Double[stateDiscretizer.getNumberOfDistanceBins()];
+		for (int i = 0; i < stateDiscretizer.getNumberOfDistanceBins(); i++) {
+			distances[i] = stateDiscretizer.getMinDistance() + (i + 0.5)*stateDiscretizer.getDistanceBinWidth();
 		}
-
-		// Same when already collided before starting the action. Now we're more certain the agent collides
-		fromState.setCollided(true);
-		toState = fromState;
-		for (int i = 0; i < 180; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
-			model.updateModel(transition);
-		}
+		Generator<Double> permutationGen = Factory.createPermutationWithRepetitionGenerator(Factory.createVector(distances), stateDiscretizer.getNumberOfSectors() - 1);
 		
+		// Add collisions when an obstacle is close in front and the agent drives forward.
+		// Do this for all distance permutations in the other sectors. Use more samples to
+		// express more confidence in collision when the agent was already collided.
+		// Repeat for reversing towards obstacle behind.
+		for (ICombinatoricsVector<Double> perm : permutationGen) {
+			for (boolean alreadyCollided : Arrays.asList(false, true)) {
+				for (BumperAction action : Arrays.asList(BumperAction.FORWARD, BumperAction.BACKWARD)) {
+					
+					double obstacleDirectionDegrees = -1;
+					if (action == BumperAction.FORWARD) {
+						obstacleDirectionDegrees = 0;
+					} else if (action == BumperAction.BACKWARD) {
+						obstacleDirectionDegrees = 180;
+					}
+					
+					ModeledBumperState fromState = new ModeledBumperState();
+					fromState.setCollided(alreadyCollided);
+					fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
+					
+					int i = 0;
+					for (double sectorDegree = 0; sectorDegree < 360; sectorDegree += stateDiscretizer.getSectorWidthDegrees() ) {
+						if (sectorDegree != obstacleDirectionDegrees) {
+							fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sectorDegree));
+							i++;
+						}
+					}
+					
+					ModeledBumperState toState = fromState.afterAction(action);
+					toState.setCollided(true);
+					
+					int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
+					for (int s = 0; s < priorSamples; s++) {
+						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
+						model.updateModel(transition);
+					}
+				}
+			}
+		}
 	}
 	
 	
@@ -138,14 +172,14 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 				observedTransitions.add(transitionReward);
 			}
 
-			//BumperAction action = BumperAction.getAction(boltzmannPolicy.getActionId(currentStateId));
-			action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
+			//action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
+			action = BumperAction.getAction(boltzmannPolicy.getActionId(currentStateId));
+			//boltzmannPolicy.setTemperature(boltzmannPolicy.getTemperature() * temperatureDiscountFactor);
 			actionRequested = false;
 			
-			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
-			//directedExploration.recordStateAction(new DiscretizedStateAction(currentStateId, action.getId()));
-			//boltzmannPolicy.setTemperature(boltzmannPolicy.getTemperature() * temperatureDiscountFactor);
+			directedExploration.recordStateAction(new DiscretizedStateAction(currentStateId, action.getId()));
 
+			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 			prioritizedSweeping.notify();
 		}
 		
