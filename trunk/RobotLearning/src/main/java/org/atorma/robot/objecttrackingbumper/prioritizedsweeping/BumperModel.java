@@ -12,9 +12,24 @@ import org.atorma.robot.simplebumper.BumperAction;
 import com.google.common.collect.Sets;
 
 /**
- * A stochastic Bumper world model. Effect of agent's moves of obstacle locations relative to it
- * are modeled deterministically, but collision probabilities given state and action
- * are learned from the data.
+ * A stochastic Bumper world model. Effect of agent's moves on relative obstacle locations
+ * are modeled deterministically, but collision probabilities given discrete (state, action)
+ * pairs are learned from the data.
+ * <p>
+ * The initial performance of the agent depends strongly on the state discretization. Either
+ * keep the number of states low or initialize prior collision probabilities "well". 
+ * It's not required that the state discretization used for action-value reinforcement learning
+ * is the same as the one used for predicting collisions.
+ * <p>
+ * To keep the number of states low, a good discretization could be one where 
+ * all states that have an obstacle at some distance interval in the front sector 
+ * (e.g. -45..45 degree sector) are projected onto a single state id.
+ * <p>
+ * You can set prior collision probabilities by creating artificial transition samples 
+ * and inputing them to {@link #updateModel(TransitionReward)}. This way, with appropriate 
+ * obstacle location, action and result combinations, it's possible to prime the model 
+ * even when modeling collision probabilities using more than one sector and combinatorics
+ * of obstacle locations come into play.
  */
 public class BumperModel implements DiscreteActionModel {
 	
@@ -31,18 +46,6 @@ public class BumperModel implements DiscreteActionModel {
 	 * Creates bumper world model where collision probabilities are learned for each (state id, action id)
 	 * tuple and the state ids are determined by the given <tt>collisionStateDiscretizer</tt>.
 	 * The prior collision probability is 0.1 for each (state id, action id).  
-	 * <p>
-	 * A sensible discretization of collision estimation states is, for example, one where 
-	 * all states that have an obstacle at some distance interval in the front sector (e.g. -45..45 degree sector) 
-	 * are collapsed into a single state. Obstacles elsewhere around agent are ignored 
-	 * because e.g. a state where there's an obstacle far to the left and near to the front would 
-	 * in this model be a totally different state from the one with just the obstacle in front
-	 * and would have its own collision probabilities for each action to be learned.
-	 * <p>
-	 * You can initialize prior collision probabilities by creating artificial transition samples 
-	 * and inputing them to {@link #updateModel(TransitionReward)}. This way, with appropriate 
-	 * obstacle location, action and result combinations, it's possible to prime the model 
-	 * even when modeling collision probabilities using more than one sector.
 	 * 
 	 * @param rewardFunction
 	 * 	reward function
@@ -70,9 +73,11 @@ public class BumperModel implements DiscreteActionModel {
 		BumperAction action = (BumperAction) stateAction.getAction();
 		double collisionProbability = getCollisionProbability(fromState, action);
 		
-		
+		// In case of collision being the result, if the agent wasn't already collided
+		// we model that the action was carried out entirely (e.g. moved the full distance).
+		// But if the agent was collided to begin with, then we model no movement.
 		ModeledBumperState toStateWhenCollided;
-		if (fromState.isCollided()) { // In case of second collision, state is unchanged
+		if (fromState.isCollided()) {
 			toStateWhenCollided = (ModeledBumperState) fromState.copy();
 		} else {
 			toStateWhenCollided = (ModeledBumperState) fromState.afterAction(action);
