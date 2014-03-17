@@ -23,8 +23,15 @@ public class CliffWorldState implements State {
 	public double[] getValues() {
 		return new double[] {x, y};
 	}
-	
-	
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
 	@Override
 	public String toString() {
 		return "CliffWorldState [x=" + x + ", y=" + y + "]";

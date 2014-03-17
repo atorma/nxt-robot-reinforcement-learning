@@ -2,6 +2,7 @@ package org.atorma.robot.learning;
 
 import java.util.*;
 
+import org.atorma.robot.mdp.DiscreteAction;
 import org.atorma.robot.mdp.DiscretizedStateAction;
 
 /**
@@ -29,6 +30,13 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 		this.defaultQValue = defaultQValue;
 		for (int actionId : actionIds) {
 			addActionId(actionId);
+		}
+	}
+	
+	public HashMapQTable(double defaultQValue, DiscreteAction... actions) {
+		this.defaultQValue = defaultQValue;
+		for (DiscreteAction action : actions) {
+			addActionId(action.getId());
 		}
 	}
 	
