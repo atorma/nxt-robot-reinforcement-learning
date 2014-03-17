@@ -17,6 +17,7 @@ public class FirstVisitOnPolicyMonteCarlo {
 	private int horizon;
 	private double discountFactor;
 	private Map<DiscretizedStateAction, Integer> timesUpdatedMap = new HashMap<>();
+	private Random random = new Random();
 	
 	private State startState;
 	
@@ -35,6 +36,10 @@ public class FirstVisitOnPolicyMonteCarlo {
 	}
 	
 	public void performRollouts(int num) {
+		
+		if (startState == null) {
+			return;
+		}
 
 		for (int i = 0; i < num; i++) {
 			// Simulate the policy until the horizon or end state
@@ -73,7 +78,8 @@ public class FirstVisitOnPolicyMonteCarlo {
 			for (Map.Entry<DiscretizedStateAction, Double> saReward : firstVisitRewards.entrySet()) {
 				DiscretizedStateAction sa = saReward.getKey();
 				double oldQ = qTable.getValue(sa);
-				int timesUpdated = timesUpdatedMap.get(sa) + 1;
+				int timesUpdated = timesUpdatedMap.get(sa) != null ? timesUpdatedMap.get(sa) : 0;
+				timesUpdated++;
 				double newQ = oldQ + 1/timesUpdated * (saReward.getValue() - oldQ);
 				qTable.setValue(sa, newQ);
 				timesUpdatedMap.put(sa, timesUpdated);
@@ -82,20 +88,39 @@ public class FirstVisitOnPolicyMonteCarlo {
 	}
 	
 	private StochasticTransitionReward simulatePolicy(State fromState) {
-		int stateId = stateDiscretizer.getId(fromState);
-		int actionId = policy.getActionId(stateId);
 		Set<StochasticTransitionReward> outgoing = model.getOutgoingTransitions(fromState);
-		
 		if (outgoing.isEmpty()) {
 			return null;
 		}
 		
+		int stateId = stateDiscretizer.getId(fromState);
+		int actionId = policy.getActionId(stateId);
+		Set<StochasticTransitionReward> outgoingFromStateAction = new HashSet<>();
 		for (StochasticTransitionReward tr : outgoing) {
 			if (tr.getAction().getId() == actionId) {
+				outgoingFromStateAction.add(tr);
+			}
+		}
+		
+		if (outgoingFromStateAction.isEmpty()) {
+			throw new IllegalStateException("Model's transitions do not contain action selected by policy");
+		}
+		
+		return sampleFrom(outgoingFromStateAction);
+	}
+	
+	private StochasticTransitionReward sampleFrom(Set<StochasticTransitionReward> transitions) {
+		double prob = random.nextDouble();
+		double cumProb = 0;
+		for (StochasticTransitionReward tr : transitions) {
+			cumProb += tr.getProbability();
+			if (prob < cumProb) {
 				return tr;
 			}
 		}
-		throw new IllegalStateException("Model's transitions do not contain action selected by policy");
+		
+		// Should not happen if transitions not empty
+		return transitions.iterator().next();
 	}
 	
 }
