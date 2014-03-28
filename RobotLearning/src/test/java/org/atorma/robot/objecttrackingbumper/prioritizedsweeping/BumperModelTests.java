@@ -54,7 +54,7 @@ public class BumperModelTests {
 		toState.setCollided(true);
 		for (int i = 0; i < PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED; i++) {
 			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-			model.updateModel(transition);
+			model.update(transition);
 		}
 
 		// Same when already collided before starting the action
@@ -62,7 +62,7 @@ public class BumperModelTests {
 		toState = fromState;
 		for (int i = 0; i < PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED; i++) {
 			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
-			model.updateModel(transition);
+			model.update(transition);
 		}
 	}
 	
@@ -108,7 +108,7 @@ public class BumperModelTests {
 					int priorSamples = alreadyCollided ? PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED : PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED;
 					for (int s = 0; s < priorSamples; s++) {
 						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-						model.updateModel(transition);
+						model.update(transition);
 					}
 				}
 			}

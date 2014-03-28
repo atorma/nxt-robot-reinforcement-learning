@@ -9,6 +9,6 @@ public class UctPlanningParameters {
 	public StateDiscretizer stateDiscretizer;
 	public QTable qTable;
 	public int horizon;
-
-	
+	public double uctConstant;
+	public double discountFactor;
 }

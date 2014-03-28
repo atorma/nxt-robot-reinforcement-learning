@@ -48,7 +48,7 @@ public class CliffWorldPrioritizedSweepingTests {
 			CliffWorldState nextState = state.getNextState(action);
 			Transition transition = new Transition(state, action, nextState);
 			TransitionReward transitionReward = new TransitionReward(transition, rewardFunction.getReward(transition));
-			sweeping.updateModel(transitionReward);
+			model.update(transitionReward);
 			
 			sweeping.setSweepStartStateAction(new StateAction(state, action));
 			sweeping.performIterations(numIter);
@@ -79,7 +79,7 @@ public class CliffWorldPrioritizedSweepingTests {
 				Transition transition = new Transition(fromState, byAction, toState);
 				double reward = rewardFunction.getReward(transition);
 				
-				sweeping.updateModel(new TransitionReward(transition, reward));
+				model.update(new TransitionReward(transition, reward));
 				sweeping.setSweepStartStateAction(transition.getFromStateAction());
 				sweeping.performIterations(CliffWorldEnvironment.OPTIMAL_PATH.size()); // ... though of course we're a while in the sweeps now
 				

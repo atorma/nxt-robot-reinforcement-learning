@@ -106,7 +106,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 			int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
 			for (int s = 0; s < priorSamples; s++) {
 				TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-				model.updateModel(transition);
+				model.update(transition);
 			}
 		}
 	}
@@ -164,7 +164,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 					int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
 					for (int s = 0; s < priorSamples; s++) {
 						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-						model.updateModel(transition);
+						model.update(transition);
 					}
 				}
 			}
@@ -246,7 +246,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 					if (transitionReward != null) {
 						//System.out.println("sweeps between observations " + sweepsBetweenObservations);
 						sweepsBetweenObservations = 0;
-						prioritizedSweeping.updateModel(transitionReward);
+						model.update(transitionReward);
 					}
 					sweepsBetweenObservations += prioritizedSweeping.performIterations(1); // Increase the number of iterations to ensure minimum
 					
