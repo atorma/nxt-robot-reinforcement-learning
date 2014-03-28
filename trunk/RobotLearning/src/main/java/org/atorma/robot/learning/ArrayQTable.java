@@ -1,5 +1,7 @@
 package org.atorma.robot.learning;
 
+import java.util.*;
+
 import org.atorma.robot.mdp.DiscretizedStateAction;
 
 /**
@@ -14,6 +16,7 @@ public class ArrayQTable implements QTable {
 	private final int numStates;
 	private final int numActions;
 	private double[][] qTable;
+	private Random random = new Random();
 
 	public ArrayQTable(int numStates, int numActions) {
 		this(numStates, numActions, DEFAULT_Q_VALUE);
@@ -52,15 +55,20 @@ public class ArrayQTable implements QTable {
 	@Override
 	public DiscretizedStateAction getBestActionInState(int stateId) {
 		Double bestActionValue = null;
-		Integer bestActionId = null;
+		List<Integer> bestActions = new ArrayList<>();
 		
 		for (int actionId = 0; actionId < numActions; actionId++) {
 			double q = getValue(new DiscretizedStateAction(stateId, actionId));
 			if (bestActionValue == null || q > bestActionValue) {
 				bestActionValue = q;
-				bestActionId = actionId;
+				bestActions.clear();
+				bestActions.add(actionId);
+			} else if (q == bestActionValue) {
+				bestActions.add(actionId);
 			}
 		}
+		
+		Integer bestActionId = bestActions.get(random.nextInt(bestActions.size()));
 		
 		return new DiscretizedStateAction(stateId, bestActionId);
 	}

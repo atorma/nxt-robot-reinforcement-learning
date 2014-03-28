@@ -25,11 +25,13 @@ public class CliffWorldPrioritizedSweepingTests {
 	public void setUp() {
 		model = new LearningCliffWorldModel();
 		
+		HashMapQTable qTable = new HashMapQTable(0, CliffWorldAction.values());
+		
 		sweeping = new PrioritizedSweeping();
 		sweeping.setDiscountFactor(discountFactor);
 		sweeping.setStateDiscretizer(stateDiscretizer);
 		sweeping.setModel(model);
-		sweeping.setQTable(new HashMapQTable());
+		sweeping.setQTable(qTable);
 	}
 	
 	@Test
@@ -64,7 +66,7 @@ public class CliffWorldPrioritizedSweepingTests {
 		CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 		EpsilonGreedyPolicy policy = new EpsilonGreedyPolicy(0.1, sweeping, CliffWorldAction.values());
 		
-		for (int episode = 0; episode < 10; episode++) { // Q-learning takes about 500 episodes to learn the optimal path with high probability 
+		for (int episode = 0; episode < 20; episode++) { // Q-learning takes about 500 episodes to learn the optimal path with high probability 
 			
 			CliffWorldState fromState = CliffWorldState.START;
 			CliffWorldState toState;
@@ -83,7 +85,7 @@ public class CliffWorldPrioritizedSweepingTests {
 				
 				fromState = toState;
 
-			} while (!toState.isGoal());
+			} while (!toState.isEnd());
 
 		}
 		
@@ -94,7 +96,7 @@ public class CliffWorldPrioritizedSweepingTests {
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isGoal() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
+		while (!state.isEnd() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state);
 			int actionId = sweeping.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);

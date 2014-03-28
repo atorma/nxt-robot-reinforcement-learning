@@ -2,9 +2,12 @@ package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
 import java.util.*;
 
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
 import org.apache.commons.math3.stat.Frequency;
+import org.apache.commons.math3.util.Pair;
 import org.atorma.robot.discretization.StateDiscretizer;
-import org.atorma.robot.learning.DiscreteActionModel;
+import org.atorma.robot.learning.montecarlo.ForwardModel;
+import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
 import org.atorma.robot.simplebumper.BumperAction;
@@ -31,7 +34,7 @@ import com.google.common.collect.Sets;
  * even when modeling collision probabilities using more than one sector and combinatorics
  * of obstacle locations come into play.
  */
-public class BumperModel implements DiscreteActionModel {
+public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 	
 	// Parameters of Beta distribution prior P(collision_prob | front_obstacle_distance, action)
 	// for Beta posterior P(collision_prob | data, front_obstacle_distance, action) 
@@ -61,7 +64,7 @@ public class BumperModel implements DiscreteActionModel {
 		
 	
 	@Override
-	public Set<? extends DiscreteAction> getAllActions() {
+	public Set<? extends DiscreteAction> getAllowedActions(State state) {
 		return Sets.newHashSet(BumperAction.values());
 	}
 
@@ -94,18 +97,6 @@ public class BumperModel implements DiscreteActionModel {
 		StochasticTransitionReward transitionRewardWhenNotCollided = new StochasticTransitionReward(fromState, action, toStateWhenNotCollided, reward, 1 - collisionProbability);
 		transitions.add(transitionRewardWhenNotCollided);
 		
-		return transitions;
-	}
-	
-	
-
-	@Override
-	public Set<StochasticTransitionReward> getOutgoingTransitions(State fromState) {
-		Set<StochasticTransitionReward> transitions = new LinkedHashSet<>();
-		for (DiscreteAction action : getAllActions()) {
-			StateAction stateAction = new StateAction(fromState, action);
-			transitions.addAll(getOutgoingTransitions(stateAction));
-		}
 		return transitions;
 	}
 
@@ -247,5 +238,18 @@ public class BumperModel implements DiscreteActionModel {
 		}
 
 		
+	}
+
+
+	@Override
+	public TransitionReward simulateAction(StateAction fromStateAction) {
+		Set<StochasticTransitionReward> outgoing = getOutgoingTransitions(fromStateAction);
+
+		List<Pair<StochasticTransitionReward, Double>> pmf = new ArrayList<>(outgoing.size());
+		for (StochasticTransitionReward tr : outgoing) {
+			pmf.add(new Pair<>(tr, tr.getProbability()));
+		}
+		
+		return new EnumeratedDistribution<>(pmf).sample();
 	}
 }

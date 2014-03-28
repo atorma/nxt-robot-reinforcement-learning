@@ -1,17 +1,15 @@
-package org.atorma.robot.learning;
+package org.atorma.robot.learning.prioritizedsweeping;
 
 import java.util.Set;
 
 import org.atorma.robot.mdp.*;
 
-public interface DiscreteActionModel {
+public interface PrioritizedSweepingModel {
 	
-	Set<? extends DiscreteAction> getAllActions();
+	Set<? extends DiscreteAction> getAllowedActions(State state);
 
 	Set<StochasticTransitionReward> getOutgoingTransitions(StateAction fromStateAction);
-	
-	Set<StochasticTransitionReward> getOutgoingTransitions(State fromState);
-	
+		
 	Set<StochasticTransitionReward> getIncomingTransitions(State toState);
 	
 	/**

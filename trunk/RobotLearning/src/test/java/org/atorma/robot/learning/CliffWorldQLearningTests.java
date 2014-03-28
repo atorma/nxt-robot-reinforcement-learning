@@ -17,6 +17,7 @@ public class CliffWorldQLearningTests {
 	private QLearning qLearning;
 	private double learningRate = 0.1;
 	private double discountFactor = 1;
+	private QTable qTable;
 	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
@@ -24,8 +25,9 @@ public class CliffWorldQLearningTests {
 	
 	@Before
 	public void setUp() {
-		qLearning = new QLearning(learningRate, discountFactor);
-		policy = new EpsilonGreedyPolicy(0.1, qLearning, CliffWorldAction.UP, CliffWorldAction.DOWN, CliffWorldAction.LEFT, CliffWorldAction.RIGHT);
+		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), CliffWorldAction.values().length, 0);
+		qLearning = new QLearning(learningRate, discountFactor, qTable);
+		policy = new EpsilonGreedyPolicy(0.1, qLearning, CliffWorldAction.values());
 	}
 	
 	@Test
@@ -38,7 +40,7 @@ public class CliffWorldQLearningTests {
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isGoal() && learnedActions.size() <= CliffWorldEnvironment.OPTIMAL_PATH.size()) {
+		while (!state.isEnd() && learnedActions.size() <= CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state);
 			int actionId = qLearning.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
@@ -67,9 +69,10 @@ public class CliffWorldQLearningTests {
 				double reward = rewardFunction.getReward(transition);
 				
 				qLearning.update(new DiscretizedTransitionReward(fromStateId, byActionId, toStateId, reward));
+
 				fromState = toState;
 
-			} while (!toState.isGoal());
+			} while (!toState.isEnd());
 
 		}
 	}

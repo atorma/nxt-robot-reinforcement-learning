@@ -10,6 +10,8 @@ public class CliffWorldRewardFunction implements RewardFunction {
 		CliffWorldState toState = (CliffWorldState) transition.getToState();
 		if (toState.isCliff()) {
 			return -100;
+		} else if (toState.isGoal()){
+			return 0;
 		} else {
 			return -1;
 		}
