@@ -9,7 +9,7 @@ public class ObjectTrackingPrioritzedSweepingBumperSimulation {
 
 	public static void main(String[] args) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH.mm");
-		String fileName = "object tracking sweeping bumper " + sdf.format(new Date()) + ".csv";
+		String fileName = "PS with prior prob " + sdf.format(new Date()) + ".csv";
 		ObjectTrackingPrioritizedSweepingBumper learningControl = new ObjectTrackingPrioritizedSweepingBumper(fileName);
 		SimbadBumper robot = new SimbadBumper(learningControl);
 		robot.startSimulationGUI();

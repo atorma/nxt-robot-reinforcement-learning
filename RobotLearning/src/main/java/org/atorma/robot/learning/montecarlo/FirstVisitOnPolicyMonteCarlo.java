@@ -3,26 +3,24 @@ package org.atorma.robot.learning.montecarlo;
 import java.util.*;
 
 import org.atorma.robot.discretization.StateDiscretizer;
-import org.atorma.robot.learning.DiscreteActionModel;
 import org.atorma.robot.learning.QTable;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.DiscretePolicy;
 
 public class FirstVisitOnPolicyMonteCarlo {
 
-	private DiscreteActionModel model;
+	private ForwardModel model;
 	private StateDiscretizer stateDiscretizer;
 	private DiscretePolicy policy;
 	private QTable qTable;
 	private int horizon;
 	private double discountFactor;
 	private Map<DiscretizedStateAction, Integer> timesUpdatedMap = new HashMap<>();
-	private Random random = new Random();
 	
 	private State startState;
 	
 	
-	public FirstVisitOnPolicyMonteCarlo(DiscreteActionModel model, StateDiscretizer stateDiscretizer, DiscretePolicy policy, QTable qTable, int horizon, double discountFactor) {
+	public FirstVisitOnPolicyMonteCarlo(ForwardModel model, StateDiscretizer stateDiscretizer, DiscretePolicy policy, QTable qTable, int horizon, double discountFactor) {
 		this.model = model;
 		this.stateDiscretizer = stateDiscretizer;
 		this.policy = policy;
@@ -43,11 +41,11 @@ public class FirstVisitOnPolicyMonteCarlo {
 
 		for (int i = 0; i < num; i++) {
 			// Simulate the policy until the horizon or end state
-			List<StochasticTransitionReward> visited = new ArrayList<>(horizon);		
+			List<TransitionReward> visited = new ArrayList<>(horizon);		
 			State state = startState;		
 			int step = 0;
 			while (step < horizon) {
-				StochasticTransitionReward tr = simulatePolicy(state);
+				TransitionReward tr = simulatePolicy(state);
 				if (tr != null) {
 					visited.add(tr);
 					state = tr.getToState();
@@ -64,7 +62,7 @@ public class FirstVisitOnPolicyMonteCarlo {
 			while(!visited.isEmpty()) {
 				step--;
 				int lastIndex = visited.size() - 1;
-				StochasticTransitionReward tr = visited.get(lastIndex);
+				TransitionReward tr = visited.get(lastIndex);
 				visited.remove(lastIndex);
 				
 				totalReward += Math.pow(discountFactor, step) * tr.getReward();
@@ -87,40 +85,23 @@ public class FirstVisitOnPolicyMonteCarlo {
 		}
 	}
 	
-	private StochasticTransitionReward simulatePolicy(State fromState) {
-		Set<StochasticTransitionReward> outgoing = model.getOutgoingTransitions(fromState);
-		if (outgoing.isEmpty()) {
+	private TransitionReward simulatePolicy(State fromState) {
+		Set<? extends DiscreteAction> actions = model.getAllowedActions(fromState);
+		if (actions.isEmpty()) {
 			return null;
 		}
 		
 		int stateId = stateDiscretizer.getId(fromState);
 		int actionId = policy.getActionId(stateId);
-		Set<StochasticTransitionReward> outgoingFromStateAction = new HashSet<>();
-		for (StochasticTransitionReward tr : outgoing) {
-			if (tr.getAction().getId() == actionId) {
-				outgoingFromStateAction.add(tr);
+		DiscreteAction action = null;
+		for (DiscreteAction a : actions) {
+			if (a.getId() == actionId) {
+				action = a;
 			}
 		}
 		
-		if (outgoingFromStateAction.isEmpty()) {
-			throw new IllegalStateException("Model's transitions do not contain action selected by policy");
-		}
-		
-		return sampleFrom(outgoingFromStateAction);
+		return model.simulateAction(new StateAction(fromState, action));
 	}
-	
-	private StochasticTransitionReward sampleFrom(Set<StochasticTransitionReward> transitions) {
-		double prob = random.nextDouble();
-		double cumProb = 0;
-		for (StochasticTransitionReward tr : transitions) {
-			cumProb += tr.getProbability();
-			if (prob < cumProb) {
-				return tr;
-			}
-		}
-		
-		// Should not happen if transitions not empty
-		return transitions.iterator().next();
-	}
+
 	
 }

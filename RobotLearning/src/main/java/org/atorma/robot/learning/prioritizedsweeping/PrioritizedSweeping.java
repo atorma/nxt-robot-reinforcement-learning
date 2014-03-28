@@ -14,7 +14,7 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	public static final double DEFAULT_DISCOUNT_FACTOR = 1.0;
 
 	private QTable qTable;
-	private DiscreteActionModel model;
+	private PrioritizedSweepingModel model;
 	private StateDiscretizer stateDiscretizer;
 	private DiscretizingStateActionPriorityQueue stateActionQueue;
 	private double discountFactor = DEFAULT_DISCOUNT_FACTOR;
@@ -86,13 +86,6 @@ public class PrioritizedSweeping implements DiscretePolicy {
 	
 	private void initialize() {
 		this.stateActionQueue = new DiscretizingStateActionPriorityQueue(stateDiscretizer);
-		
-		if (qTable instanceof HashMapQTable) { // a bit ugly...
-			for (DiscreteAction action : model.getAllActions()) {
-				((HashMapQTable) qTable).addActionId(action.getId());
-			}
-		}
-		
 		isInitialized = true;
 	}
 
@@ -120,11 +113,11 @@ public class PrioritizedSweeping implements DiscretePolicy {
 		this.discountFactor = discountFactor;
 	}
 
-	public DiscreteActionModel getModel() {
+	public PrioritizedSweepingModel getModel() {
 		return model;
 	}
 
-	public void setModel(DiscreteActionModel model) {
+	public void setModel(PrioritizedSweepingModel model) {
 		this.model = model;
 	}
 	

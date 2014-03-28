@@ -10,8 +10,7 @@ import org.atorma.robot.learning.cliffworld.*;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.DiscretePolicy;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 	
@@ -31,10 +30,11 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 		monteCarlo = new FirstVisitOnPolicyMonteCarlo(model, stateDiscretizer, policy, qTable, 10, discountFactor);
 	}
 	
-	@Test
+	// TODO fix, seems to run infinitely
+	@Test 
 	public void learns_optimal_path_in_few_episodes() {
 
-		for (int episode = 0; episode < 10; episode++) { // Q-learning takes about 500 episodes to learn the optimal path with high probability 
+		for (int episode = 0; episode < 50; episode++) { // Q-learning takes about 500 episodes to learn the optimal path with high probability 
 			
 			CliffWorldState fromState = CliffWorldState.START;
 			CliffWorldState toState;
@@ -54,7 +54,7 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 
 				fromState = toState;
 
-			} while (!toState.isGoal());
+			} while (!toState.isEnd());
 
 		}
 		

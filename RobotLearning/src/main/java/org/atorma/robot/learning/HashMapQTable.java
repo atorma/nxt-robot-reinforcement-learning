@@ -17,7 +17,7 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 	private double defaultQValue = DEFAULT_Q_VALUE;
 	private Set<Integer> stateIds = new HashSet<>();
 	private Set<Integer> actionIds = new HashSet<>();
-	
+	private Random random = new Random();
 	
 	public HashMapQTable() {
 	}
@@ -86,15 +86,20 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 		}
 		
 		Double bestActionValue = null;
-		Integer bestActionId = null;
+		List<Integer> bestActions = new ArrayList<>();
 		
 		for (int actionId : actionIds) {
 			double q = getValue(new DiscretizedStateAction(stateId, actionId));
 			if (bestActionValue == null || q > bestActionValue) {
 				bestActionValue = q;
-				bestActionId = actionId;
+				bestActions.clear();
+				bestActions.add(actionId);
+			} else if (q == bestActionValue) {
+				bestActions.add(actionId);
 			}
 		}
+		
+		Integer bestActionId = bestActions.get(random.nextInt(bestActions.size()));
 		
 		return new DiscretizedStateAction(stateId, bestActionId);
 	}

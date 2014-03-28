@@ -30,13 +30,13 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	private double discountFactor = 0.9;
 	private PrioritizedSweeping prioritizedSweeping;
 	
-	private DirectedExploration directedExploration;
+	//private DirectedExploration directedExploration;
 	
 	private double epsilon = 0.1;
-	//private EpsilonGreedyPolicy epsilonGreedyPolicy;
+	private EpsilonGreedyPolicy epsilonGreedyPolicy;
 	
-	private BoltzmannActionSelection boltzmannPolicy;
-	private final double temperatureDiscountFactor = 0.9995; 
+	//private BoltzmannActionSelection boltzmannPolicy;
+	//private double temperatureDiscountFactor = 0.9995; 
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
@@ -58,9 +58,10 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	public ObjectTrackingPrioritizedSweepingBumper() {
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		
-		//model = new BumperModel(rewardFunction, collisionStateDiscretizer);
-		model = new BumperModel(rewardFunction, stateDiscretizer);
+		model = new BumperModel(rewardFunction, collisionStateDiscretizer);
+		//model = new BumperModel(rewardFunction, stateDiscretizer);
 		//setPriorCollisionProbabilities(0.8, 0.99);
+		setForwardPriorCollisionProbabilities(0.8, 0.99);
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -69,12 +70,45 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		prioritizedSweeping.setQValueChangeThreshold(1E-4);
 		prioritizedSweeping.setQTable(qTable);
 		
-		directedExploration = new DirectedExploration(qTable, 0.02, 0.1, BumperAction.values());
-		//epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qTable, BumperAction.values());
-		boltzmannPolicy = new BoltzmannActionSelection(directedExploration, 1, BumperAction.values());
+		//directedExploration = new DirectedExploration(qTable, 0.02, 0.1, BumperAction.values());
+		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qTable, BumperAction.values());
+		//boltzmannPolicy = new BoltzmannActionSelection(directedExploration, 1, BumperAction.values());
 		
 		Thread sweeperThread = new Thread(new Sweeper());
 		sweeperThread.start();
+	}
+	
+	/**
+	 * Sets up prior collision probabilities for all states where there's an obstacle close in front and the agent moves towards it.
+	 * 
+	 * @param collisionProbDrivingTowardObstacle
+	 * 	collision probability when the agent starts from non-collision state
+	 * @param collisionProbWhenAlreadyBumped
+	 * 	collision probability when the agent is already collided and still moves toward the obstacle in front/behind
+	 */
+	private void setForwardPriorCollisionProbabilities(double collisionProbDrivingTowardObstacle, double collisionProbWhenAlreadyBumped) {
+		int priorSamplesNotYetCollided = (int) Math.ceil((10 * collisionProbDrivingTowardObstacle - 1)/(1 - collisionProbDrivingTowardObstacle));
+		int priorSamplesTwoCollisions = (int) Math.ceil((10 * collisionProbWhenAlreadyBumped - 1)/(1 - collisionProbWhenAlreadyBumped));
+
+		// Add collisions when an obstacle is close in front and the agent drives forward.
+		// Use more samples to express more confidence in collision when the agent was already collided.
+		for (boolean alreadyCollided : Arrays.asList(false, true)) {
+			BumperAction action = BumperAction.FORWARD;
+			double obstacleDirectionDegrees = 0;
+		
+			ModeledBumperState fromState = new ModeledBumperState();
+			fromState.setCollided(alreadyCollided);
+			fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
+
+			ModeledBumperState toState = fromState.afterAction(action);
+			toState.setCollided(true);
+			
+			int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
+			for (int s = 0; s < priorSamples; s++) {
+				TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
+				model.updateModel(transition);
+			}
+		}
 	}
 	
 	/**
@@ -172,12 +206,12 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 				observedTransitions.add(transitionReward);
 			}
 
-			//action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
-			action = BumperAction.getAction(boltzmannPolicy.getActionId(currentStateId));
+			action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
+			//action = BumperAction.getAction(boltzmannPolicy.getActionId(currentStateId));
 			//boltzmannPolicy.setTemperature(boltzmannPolicy.getTemperature() * temperatureDiscountFactor);
 			actionRequested = false;
 			
-			directedExploration.recordStateAction(new DiscretizedStateAction(currentStateId, action.getId()));
+			//directedExploration.recordStateAction(new DiscretizedStateAction(currentStateId, action.getId()));
 
 			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 			prioritizedSweeping.notify();
@@ -214,7 +248,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 						sweepsBetweenObservations = 0;
 						prioritizedSweeping.updateModel(transitionReward);
 					}
-					sweepsBetweenObservations += prioritizedSweeping.performIterations(1);
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(1); // Increase the number of iterations to ensure minimum
 					
 				}
 			}

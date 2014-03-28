@@ -41,7 +41,7 @@ public class CliffWorldState implements State {
 	// Cliff world environment
 
 	public boolean isOutOfBounds() {
-		return x < X_MIN || x > X_MAX || y < Y_MIN || y > X_MAX;
+		return x < X_MIN || x > X_MAX || y < Y_MIN || y > Y_MAX;
 	}
 	
 	public boolean isCliff() {
@@ -52,12 +52,16 @@ public class CliffWorldState implements State {
 		return x == X_MAX && y == Y_MIN;
 	}
 	
+	public boolean isEnd() {
+		return isGoal() || isCliff();
+	}
+	
 	public CliffWorldState getNextState(CliffWorldAction action) {
 		CliffWorldState nextState = new CliffWorldState(x + action.dx, y + action.dy);
-		if (nextState.isOutOfBounds() || isGoal()) {
+		if (this.isCliff() || this.isGoal()) {
+			return null;
+		} else if (nextState.isOutOfBounds()) {
 			return this;
-		} else if (nextState.isCliff()) {
-			return START;
 		} else {
 			return nextState;
 		}

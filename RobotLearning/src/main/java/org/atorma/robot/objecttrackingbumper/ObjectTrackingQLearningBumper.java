@@ -3,7 +3,7 @@ package org.atorma.robot.objecttrackingbumper;
 import java.io.File;
 
 import org.atorma.robot.DiscreteRobotController;
-import org.atorma.robot.learning.QLearning;
+import org.atorma.robot.learning.*;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.StateActionDiscretizer;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
@@ -18,6 +18,7 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private double learningRate = 0.1;
 	private double discountFactor = 0.9;
+	private QTable qTable;
 	private QLearning qLearning;
 	
 	private double epsilon = 0.1;
@@ -37,7 +38,8 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	}
 	
 	public ObjectTrackingQLearningBumper() {
-		qLearning = new QLearning(learningRate, discountFactor);
+		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
+		qLearning = new QLearning(learningRate, discountFactor, qTable);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qLearning, BumperAction.values());
 	}
 	
