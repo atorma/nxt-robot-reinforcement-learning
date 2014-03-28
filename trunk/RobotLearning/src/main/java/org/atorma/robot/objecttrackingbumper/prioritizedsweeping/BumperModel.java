@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
  * (e.g. -45..45 degree sector) are projected onto a single state id.
  * <p>
  * You can set prior collision probabilities by creating artificial transition samples 
- * and inputing them to {@link #updateModel(TransitionReward)}. This way, with appropriate 
+ * and inputing them to {@link #update(TransitionReward)}. This way, with appropriate 
  * obstacle location, action and result combinations, it's possible to prime the model 
  * even when modeling collision probabilities using more than one sector and combinatorics
  * of obstacle locations come into play.
@@ -151,8 +151,12 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 		}
 	}
 
-	@Override
-	public void updateModel(TransitionReward transition) {
+	/**
+	 * Updates the model with the given transition. This can be 
+	 * a real transition or it can be used to set up prior collision 
+	 * probabilities.
+	 */
+	public void update(TransitionReward transition) {
 		int fromStateId = stateDiscretizer.getId(transition.getFromState());
 		ModeledBumperState toState = (ModeledBumperState) transition.getToState();
 		

@@ -110,7 +110,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 					int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
 					for (int s = 0; s < priorSamples; s++) {
 						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-						model.updateModel(transition);
+						model.update(transition);
 					}
 				}
 			}
@@ -187,7 +187,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 					if (transitionReward != null) {
 						System.out.println("sweeps between observations " + sweepsBetweenObservations);
 						sweepsBetweenObservations = 0;
-						model.updateModel(transitionReward);
+						model.update(transitionReward);
 					}
 					monteCarlo.performRollouts(1);
 					sweepsBetweenObservations += 1;

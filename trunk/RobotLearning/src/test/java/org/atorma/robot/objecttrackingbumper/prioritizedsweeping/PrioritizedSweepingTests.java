@@ -52,7 +52,7 @@ public class PrioritizedSweepingTests {
 		toState.setCollided(true);
 		for (int i = 0; i < 80; i++) {
 			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-			model.updateModel(transition);
+			model.update(transition);
 		}
 
 		// Same when already collided before starting the action
@@ -60,7 +60,7 @@ public class PrioritizedSweepingTests {
 		toState = fromState;
 		for (int i = 0; i < 180; i++) {
 			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
-			model.updateModel(transition);
+			model.update(transition);
 		}
 		
 	}

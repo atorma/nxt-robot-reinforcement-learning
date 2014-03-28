@@ -40,18 +40,20 @@ public class FirstVisitOnPolicyMonteCarlo {
 		}
 
 		for (int i = 0; i < num; i++) {
+			
 			// Simulate the policy until the horizon or end state
 			List<TransitionReward> visited = new ArrayList<>(horizon);		
 			State state = startState;		
 			int step = 0;
 			while (step < horizon) {
-				TransitionReward tr = simulatePolicy(state);
-				if (tr != null) {
-					visited.add(tr);
-					state = tr.getToState();
-				} else {
-					break; // state is an end state
+				
+				if (model.getAllowedActions(state).isEmpty()) {
+					break; // end state
 				}
+				
+				TransitionReward tr = simulatePolicy(state);
+				visited.add(tr);
+				state = tr.getToState();
 				step++;
 			}
 			

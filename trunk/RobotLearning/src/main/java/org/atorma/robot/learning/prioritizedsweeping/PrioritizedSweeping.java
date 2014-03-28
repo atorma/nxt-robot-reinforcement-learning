@@ -88,11 +88,6 @@ public class PrioritizedSweeping implements DiscretePolicy {
 		this.stateActionQueue = new DiscretizingStateActionPriorityQueue(stateDiscretizer);
 		isInitialized = true;
 	}
-
-	public void updateModel(TransitionReward transitionReward) {
-		model.updateModel(transitionReward);
-	}
-	
 	
 	@Override
 	public Integer getActionId(int stateId) {

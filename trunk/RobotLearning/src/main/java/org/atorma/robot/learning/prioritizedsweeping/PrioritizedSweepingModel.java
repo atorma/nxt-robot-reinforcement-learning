@@ -12,10 +12,4 @@ public interface PrioritizedSweepingModel {
 		
 	Set<StochasticTransitionReward> getIncomingTransitions(State toState);
 	
-	/**
-	 * Updates the model with a transition. The transition can be an observed one or
-	 * a sample for setting prior probabilities.
-	 */
-	void updateModel(TransitionReward transition);
-	
 }
