@@ -13,7 +13,7 @@ import org.atorma.robot.policy.DiscretePolicy;
 /**
  * Upper confidence bounds in tree.
  */
-public class UctPlanning implements DiscretePolicy {
+public class EveryVisitUctPlanning implements DiscretePolicy {
 
 	private ForwardModel model;
 	private StateDiscretizer stateDiscretizer;
@@ -31,7 +31,7 @@ public class UctPlanning implements DiscretePolicy {
 	
 	
 	
-	public UctPlanning(UctPlanningParameters parameters) {
+	public EveryVisitUctPlanning(UctPlanningParameters parameters) {
 		this.model = parameters.model;
 		this.stateDiscretizer = parameters.stateDiscretizer;
 		this.longTermQValues = parameters.qTable;

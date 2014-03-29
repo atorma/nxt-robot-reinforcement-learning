@@ -24,7 +24,7 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 
 	@Before
 	public void setUp() {
-		model = new ExactCliffWorldForwardModel();
+		model = new ExactCliffWorldForwardModel(new ScaledCliffWorldRewardFunction());
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), CliffWorldAction.values().length);
 		
 		DirectedExploration directedExploration = new DirectedExploration(qTable, 0.02, 0.1, CliffWorldAction.values());
