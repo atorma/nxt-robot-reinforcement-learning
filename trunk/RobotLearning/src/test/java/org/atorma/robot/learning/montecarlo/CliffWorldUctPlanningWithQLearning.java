@@ -1,6 +1,6 @@
 package org.atorma.robot.learning.montecarlo;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,25 +13,25 @@ import org.junit.*;
 
 public class CliffWorldUctPlanningWithQLearning {
 	
-	private UctPlanning uctPlanning;
+	private FirstVisitUctPlanning uctPlanning;
 	private double discountFactor = 1;
 	
 	private QLearning qLearning;
 	private double learningRate = 0.1;
 	
-	private int planningHorizon = 20;
+	private int planningHorizon = 50;
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private QTable qTable;
 	private ExactCliffWorldForwardModel model;
 	
-	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
+	private ScaledCliffWorldRewardFunction rewardFunction = new ScaledCliffWorldRewardFunction();
 	
 
 	@Before
 	public void setUp() {
-		model = new ExactCliffWorldForwardModel();
+		model = new ExactCliffWorldForwardModel(rewardFunction);
 		
-		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), CliffWorldAction.values().length);
+		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), CliffWorldAction.values().length, 1);
 		qLearning = new QLearning(learningRate, discountFactor, qTable);
 		
 		UctPlanningParameters uctParams = new UctPlanningParameters();
@@ -41,21 +41,38 @@ public class CliffWorldUctPlanningWithQLearning {
 		uctParams.qTable = qTable;
 		uctParams.stateDiscretizer = stateDiscretizer;
 		uctParams.uctConstant = 1.0;
-		uctPlanning = new UctPlanning(uctParams);
+		uctPlanning = new FirstVisitUctPlanning(uctParams);
 	}
 	
+	@Test
+	public void next_to_goal_planned_action_is_to_go_goal() {
+		
+		CliffWorldState state = new CliffWorldState(11, 1);
+		assertTrue(state.getNextState(CliffWorldAction.DOWN).isGoal());
+		
+		uctPlanning.setRolloutStartState(state);
+		uctPlanning.performRollouts(10); 
+		
+		int stateId = stateDiscretizer.getId(state);
+		Integer plannedActionId = uctPlanning.getActionId(stateId);
+		assertEquals(CliffWorldAction.DOWN.getId(), plannedActionId.intValue());
+	}
 
-	@Test @Ignore // same problem as with first visit monte carlo
+	@Test  // same problem as with first visit monte carlo
 	public void learns_optimal_path() {
 
-		for (int episode = 0; episode < 50; episode++) { // Q-learning takes about 500 episodes to learn the optimal path with high probability 
+		for (int episode = 0; episode < 50; episode++) { 
 			
 			CliffWorldState fromState = CliffWorldState.START;
 			CliffWorldState toState;
 			
 			do {
+				if (fromState.getX() == 11) {
+					System.out.println("Almost there!");
+				}
+				System.out.println(fromState);
 				uctPlanning.setRolloutStartState(fromState);
-				uctPlanning.performRollouts(50); 
+				uctPlanning.performRollouts(1000); 
 				
 				int fromStateId = stateDiscretizer.getId(fromState);
 				Integer byActionId = uctPlanning.getActionId(fromStateId);

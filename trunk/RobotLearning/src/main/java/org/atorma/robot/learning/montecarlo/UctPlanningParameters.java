@@ -11,4 +11,5 @@ public class UctPlanningParameters {
 	public int horizon;
 	public double uctConstant;
 	public double discountFactor;
+	public double learningRate;
 }

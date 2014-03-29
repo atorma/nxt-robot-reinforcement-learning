@@ -10,7 +10,11 @@ import com.google.common.collect.Sets;
 
 public class ExactCliffWorldForwardModel implements ForwardModel {
 	
-	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
+	private RewardFunction rewardFunction;
+	
+	public ExactCliffWorldForwardModel(RewardFunction rewardFunction) {
+		this.rewardFunction = rewardFunction;
+	}
 
 	@Override
 	public Set<? extends DiscreteAction> getAllowedActions(State state) {
