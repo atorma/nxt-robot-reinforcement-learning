@@ -46,12 +46,13 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions"); 
 	}
 	
+	// TODO has to have Q-learning for long-term memory!
 	public ObjectTrackingMonteCarloBumper() {
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		model = new BumperModel(rewardFunction, stateDiscretizer);
 		//setPriorCollisionProbabilities(0.8, 0.99);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(0.1, qTable, BumperAction.values());
-		monteCarlo = new FirstVisitOnPolicyMonteCarlo(model, stateDiscretizer, epsilonGreedyPolicy, qTable, 10, discountFactor);
+		monteCarlo = new FirstVisitOnPolicyMonteCarlo(model, stateDiscretizer, epsilonGreedyPolicy, 10, discountFactor);
 		
 		Thread sweeperThread = new Thread(new Sweeper());
 		sweeperThread.start();
