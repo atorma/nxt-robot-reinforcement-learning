@@ -67,7 +67,7 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isGoal() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
+		while (!state.isEnd() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state);
 			int actionId = qTable.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);

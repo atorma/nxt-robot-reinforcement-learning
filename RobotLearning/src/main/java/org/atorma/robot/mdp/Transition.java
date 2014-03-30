@@ -75,5 +75,11 @@ public class Transition {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "Transition [fromState=" + fromState + ", byAction=" + byAction
+				+ ", toState=" + toState + "]";
+	}
+
 	
 }

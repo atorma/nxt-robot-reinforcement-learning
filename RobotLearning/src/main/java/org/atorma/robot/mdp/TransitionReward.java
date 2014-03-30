@@ -23,5 +23,15 @@ public class TransitionReward extends Transition {
 		return reward;
 	}
 
+	@Override
+	public String toString() {
+		return "TransitionReward [s="+ getFromState() + ", a=" + getAction()
+				+ ", s'=" + getToState() + ", r=" + reward + "]";
+	}
+
+	
+
+	
+	
 	
 }
