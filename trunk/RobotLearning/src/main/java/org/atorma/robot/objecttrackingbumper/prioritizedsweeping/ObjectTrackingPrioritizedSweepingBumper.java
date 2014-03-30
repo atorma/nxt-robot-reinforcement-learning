@@ -58,10 +58,10 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	public ObjectTrackingPrioritizedSweepingBumper() {
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		
-		model = new BumperModel(rewardFunction, collisionStateDiscretizer);
-		//model = new BumperModel(rewardFunction, stateDiscretizer);
+		//model = new BumperModel(rewardFunction, collisionStateDiscretizer);
+		model = new BumperModel(rewardFunction, stateDiscretizer);
 		//setPriorCollisionProbabilities(0.8, 0.99);
-		setForwardPriorCollisionProbabilities(0.8, 0.99);
+		//setForwardPriorCollisionProbabilities(0.8, 0.99);
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);

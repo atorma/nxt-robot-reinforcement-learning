@@ -23,7 +23,9 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 	private double uctConstant;
 	private double discountFactor;
 	
-	private Map<DiscretizedStateAction, Integer> visits;
+	private Map<DiscretizedStateAction, Integer> stateActionVisits;
+	private Map<Integer, Integer> stateVisits;
+	
 	private State startState;
 
 	private Random random = new Random();
@@ -37,13 +39,15 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		this.uctConstant = parameters.uctConstant;
 		this.discountFactor = parameters.discountFactor;
 		
-		//visits = new HashMap<>();
-		//uctQValues = new HashMapQTable(Double.NEGATIVE_INFINITY); // infinity marks (s,a) for which we don't yet have an UCT Q-value
+		//stateVisits = new HashMap<>();
+		//stateActionVisits = new HashMap<>();
+		uctQValues = new HashMapQTable(Double.NEGATIVE_INFINITY); // infinity marks (s,a) for which we don't yet have an UCT Q-value
 	}
 	
 	public void setRolloutStartState(State startState) {
 		this.startState = startState;
-		visits = new HashMap<>();
+		stateVisits = new HashMap<>();
+		stateActionVisits = new HashMap<>();
 		uctQValues = new HashMapQTable(Double.NEGATIVE_INFINITY); // infinity marks (s,a) for which we don't yet have an UCT Q-value
 	}
 	
@@ -53,19 +57,57 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		}
 	}
 	
-	private void performRollout() {
-		List<TransitionReward> trajectory = simulateTrajectory();
-		updateVisits(trajectory);
-		Map<DiscretizedStateAction, Double> returns = computeReturns(trajectory);
-		updateUctQValues(returns);
+	private void performRollout() {	
+		State state = startState;	
+		double totalReward = rolloutAndUpdateUctQValues(state, 0, new HashSet<DiscretizedStateAction>());
 	}
 	
-	// Simulate a trajectory from the startState and updates the number of visits to each (s,a)
-	private List<TransitionReward> simulateTrajectory() {
-		List<TransitionReward> trajectory = new ArrayList<>(horizon);		
+	private double rolloutAndUpdateUctQValues(State state, int depth, Set<DiscretizedStateAction> visitedInRollout) {
+		if (model.getAllowedActions(state).isEmpty() || depth > horizon) {
+			return 0; // terminal state, end recursion and return reward 0
+		}
+		
+		int stateId = stateDiscretizer.getId(state);
+		incrementVisits(stateId);
+		
+		// Always perform unexplored action first
+		// Otherwise select action based on UCT exploration policy
+		DiscreteAction action = getUnvisitedAction(state, stateId);
+		if (action == null) {
+			action = getUctAction(state, stateId);
+		}
+		incrementVisits(stateId, action.getId());
+		TransitionReward tr = model.simulateAction(new StateAction(state, action));
+		//System.out.println(tr);
+		
+		DiscretizedStateAction stateIdActionId = new DiscretizedStateAction(stateId, action.getId());
+		boolean firstVisit = visitedInRollout.add(stateIdActionId);
+
+		// Total discounted return following visit to (s,a). Note: recursive.
+		double ret = tr.getReward() + discountFactor*rolloutAndUpdateUctQValues(tr.getToState(), depth + 1, visitedInRollout);
+		//System.out.println("Total reward " + ret);
+		
+		// Update UCT Q-value
+		if (firstVisit) {
+			double oldQ = getUctQValue(stateId, action.getId());
+			int nsa = getNumberOfVisits(stateId, action.getId());
+			double newQ = oldQ + 1.0/nsa * (ret - oldQ);
+			uctQValues.setValue(stateIdActionId, newQ);
+		}
+		
+		return ret;
+	}
+	
+	/*
+	private void performRollout() {	
 		State state = startState;	
+		List<Double> cumulativeRewards = new ArrayList<Double>(horizon);
+		List<DiscretizedStateAction> trajectory = new ArrayList<>(horizon);
 		
 		for (int s = 0; s < horizon; s++) {	
+			
+			int stateId = stateDiscretizer.getId(state);
+			incrementVisits(stateId);
 			
 			if (model.getAllowedActions(state).isEmpty()) {
 				break; // we're at end state
@@ -73,97 +115,74 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 			
 			// Always perform unexplored action first
 			// Otherwise select action based on UCT exploration policy
-			DiscreteAction chosenAction = getUnvisitedAction(state);
+			DiscreteAction chosenAction = getUnvisitedAction(state, stateId);
 			if (chosenAction == null) {
-				chosenAction = getUctAction(state);
+				chosenAction = getUctAction(state, stateId);
 			}
+			trajectory.add(new DiscretizedStateAction(stateId, chosenAction.getId()));
+			incrementVisits(stateId, chosenAction.getId());
 			
 			StateAction chosenStateAction = new StateAction(state, chosenAction);
 			TransitionReward tr = model.simulateAction(chosenStateAction);
-			trajectory.add(tr);
+			cumulativeRewards.add(tr.getReward());
 
 			// Next state in trajectory
 			state = tr.getToState();
 		}
-		
-		return trajectory;
-	}
 
-	private Map<DiscretizedStateAction, Double> computeReturns(List<TransitionReward> trajectory) {
-		trajectory = new ArrayList<>(trajectory);
-		Map<DiscretizedStateAction, Double> firstVisitRewards = new HashMap<>();
-		double totalReward = 0;
-		int step = trajectory.size();
-		while(!trajectory.isEmpty()) {
-			step--;
-			int lastIndex = trajectory.size() - 1;
-			TransitionReward tr = trajectory.get(lastIndex);
-			trajectory.remove(lastIndex);
-			
-			totalReward += Math.pow(discountFactor, step) * tr.getReward();
-			
-			int fromStateId = stateDiscretizer.getId(tr.getFromState());
-			int actionId = tr.getAction().getId();
-			firstVisitRewards.put(new DiscretizedStateAction(fromStateId, actionId), totalReward);
-		}
-		return firstVisitRewards;
-	}
-	
-	private void updateVisits(List<TransitionReward> trajectory) {
-		for (TransitionReward tr : trajectory) {
-			DiscretizedStateAction stateIdActionId = discretize(tr.getFromStateAction());
-			int numVisits = getNumberOfVisits(stateIdActionId);
-			visits.put(stateIdActionId, numVisits + 1);
-		}
-	}
-	
-	private void updateUctQValues(Map<DiscretizedStateAction, Double> returns) {
-		for (Map.Entry<DiscretizedStateAction, Double> saReward : returns.entrySet()) {
-			DiscretizedStateAction sa = saReward.getKey();
-			double oldQ = getUctQValue(sa);
-			int nsa = getNumberOfVisits(sa);
-			double newQ = oldQ + 1/nsa * (saReward.getValue() - oldQ);
-			uctQValues.setValue(sa, newQ);
-		}
-	}
-	
-	
-	private DiscreteAction getUnvisitedAction(State state) {
-		for (DiscreteAction action : model.getAllowedActions(state)) {
-			if (getNumberOfVisits(new StateAction(state, action)) == 0) { // Always perform unexplored action first
-				return action;
+		// Update Q-values
+		Set<DiscretizedStateAction> visited = new HashSet<>();
+		double totalReturn = cumulativeRewards.get(trajectory.size() - 1);
+		for (int i = 0; i < trajectory.size(); i++) {
+			DiscretizedStateAction stateAction = trajectory.get(i);
+			if (!visited.contains(stateAction)) {
+				int stateId = stateAction.getStateId();
+				int actionId = stateAction.getActionId();
+				
+				double firstVisitReturn = totalReturn - (i == 0 ? 0 : cumulativeRewards.get(i-1));
+				double oldQ = getUctQValue(stateId, actionId);
+				int nsa = getNumberOfVisits(stateId, actionId);
+				double newQ = oldQ + 1/nsa * (firstVisitReturn- oldQ);
+				uctQValues.setValue(stateAction, newQ);
+				
+				visited.add(stateAction);
 			}
 		}
-		return null;
+	}
+	*/
+
+	private DiscreteAction getUnvisitedAction(State state, int stateId) {
+		List<DiscreteAction> unvisited = new ArrayList<DiscreteAction>();
+		for (DiscreteAction action : model.getAllowedActions(state)) {
+			if (getNumberOfVisits(stateId, action.getId()) == 0) { 
+				unvisited.add(action);
+			}
+		}
+		
+		if (unvisited.isEmpty()) {
+			return null;
+		} else {
+			return unvisited.get(random.nextInt(unvisited.size()));
+		}
 	}
 	
 	
-	private DiscreteAction getUctAction(State state) {
-		int stateId = stateDiscretizer.getId(state);
-		
-		// Compute number of visits to state
-		int ns = 0;
-		for (DiscreteAction action : model.getAllowedActions(state)) {
-			ns += getNumberOfVisits(new DiscretizedStateAction(stateId, action.getId()));
-		}
-		
-		
-		// Find best action, breaking ties at random
-		
+	private DiscreteAction getUctAction(State state, int stateId) {
+
 		double bestValue = Double.NEGATIVE_INFINITY;
 		List<DiscreteAction> bestActions = new ArrayList<>();
 		
 		for (DiscreteAction action : model.getAllowedActions(state)) {
-			DiscretizedStateAction stateIdActionId = new DiscretizedStateAction(stateId, action.getId());
-			double q = getUctQValue(stateIdActionId);
-			int nsa = getNumberOfVisits(stateIdActionId);
-			double qUct = q + uctConstant*sqrt(2*log(ns)/nsa); // Q-value + UCT exploration term
+			double qUct = getUctQValue(stateId, action.getId());
+			int ns = getNumberOfVisits(stateId);
+			int nsa = getNumberOfVisits(stateId, action.getId());
+			double qEx = qUct + uctConstant*sqrt(2*log(ns)/nsa); // Q-value + UCT exploration term
 			
-			if (qUct > bestValue) {
+			if (qEx > bestValue) {
 				bestActions.clear();
 				bestActions.add(action);
-				bestValue = qUct;
-			} else if (qUct == bestValue) {
+				bestValue = qEx;
+			} else if (qEx == bestValue) {
 				bestActions.add(action);
 			}
 		}
@@ -172,7 +191,8 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		return bestAction;
 	}
 	
-	private double getUctQValue(DiscretizedStateAction stateAction) {
+	public double getUctQValue(int stateId, int actionId) {
+		DiscretizedStateAction stateAction = new DiscretizedStateAction(stateId, actionId);
 		if (uctQValues.getValue(stateAction) == Double.NEGATIVE_INFINITY) {
 			double q = longTermQValues.getValue(stateAction);
 			uctQValues.setValue(stateAction, q);
@@ -182,27 +202,35 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		}
 				
 	}
-
-	private int getNumberOfVisits(StateAction stateAction) {
-		DiscretizedStateAction discretizedStateAction = discretize(stateAction);
-		return getNumberOfVisits(discretizedStateAction);
-	}
 	
-	private int getNumberOfVisits(DiscretizedStateAction stateAction) {
-		if (visits.containsKey(stateAction)) {
-			return visits.get(stateAction);
+	public int getNumberOfVisits(int stateId, int actionId) {
+		DiscretizedStateAction stateAction = new DiscretizedStateAction(stateId, actionId);
+		if (stateActionVisits.containsKey(stateAction)) {
+			return stateActionVisits.get(stateAction);
 		} else {
 			return 0;
 		}
 	}
 	
-	private DiscretizedStateAction discretize(StateAction stateAction) {
-		int stateId = stateDiscretizer.getId(stateAction.getState());
-		int actionId = stateAction.getAction().getId();
-		DiscretizedStateAction discretizedStateAction = new DiscretizedStateAction(stateId, actionId);
-		return discretizedStateAction;
+	private void incrementVisits(int stateId, int actionId) {
+		int visits = getNumberOfVisits(stateId, actionId);
+		stateActionVisits.put(new DiscretizedStateAction(stateId, actionId), visits + 1);
 	}
 	
+	private int getNumberOfVisits(int stateId) {
+		if (stateVisits.containsKey(stateId)) {
+			return stateVisits.get(stateId);
+		} else {
+			return 0;
+		}
+	}
+	
+	private void incrementVisits(int stateId) {
+		int visits = getNumberOfVisits(stateId);
+		stateVisits.put(stateId, visits + 1);
+	}
+	
+
 
 	@Override
 	public Integer getActionId(int stateId) {

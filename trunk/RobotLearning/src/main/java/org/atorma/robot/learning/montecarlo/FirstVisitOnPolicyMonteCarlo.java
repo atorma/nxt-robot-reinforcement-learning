@@ -80,7 +80,7 @@ public class FirstVisitOnPolicyMonteCarlo {
 				double oldQ = qTable.getValue(sa);
 				int timesUpdated = timesUpdatedMap.get(sa) != null ? timesUpdatedMap.get(sa) : 0;
 				timesUpdated++;
-				double newQ = oldQ + 1/timesUpdated * (saReward.getValue() - oldQ);
+				double newQ = oldQ + 1.0/timesUpdated * (saReward.getValue() - oldQ);
 				qTable.setValue(sa, newQ);
 				timesUpdatedMap.put(sa, timesUpdated);
 			}

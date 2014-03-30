@@ -6,6 +6,7 @@ import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.*;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.StateActionDiscretizer;
+import org.atorma.robot.objecttrackingbumper.prioritizedsweeping.SingleSectorCollisionStateDiscretizer;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
@@ -13,6 +14,7 @@ import org.atorma.robot.simplebumper.BumperPercept;
 public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
+	//private SingleSectorCollisionStateDiscretizer stateDiscretizer = new SingleSectorCollisionStateDiscretizer(90);
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private StateActionDiscretizer transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 	

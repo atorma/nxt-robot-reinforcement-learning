@@ -8,12 +8,11 @@ import org.atorma.robot.simplebumper.CollisionDiscretizer;
 import org.atorma.robot.simplebumper.ObstacleDistanceDiscretizer;
 
 /**
- * Discretizes {@link ModeledBumperState}s for collision probability estimation
- * by only considering obstacles with a specified sector in the front of the
- * agent. Obstacle distance within that sector is discretized using 
- * {@link ObstacleDistanceDiscretizer}. State where the agent is not yet
+ * Discretizes {@link ModeledBumperState}s by only considering obstacles 
+ * in a sector in the front of the agent. Obstacle distance within that sector 
+ * is discretized using  {@link ObstacleDistanceDiscretizer}. States where the agent is not yet
  * collided versus is already collided are also considered different. Obstacles
- * elswhere around the agent are ignored.  
+ * elsewhere around the agent are ignored.  
  */
 public class SingleSectorCollisionStateDiscretizer implements StateDiscretizer {
 	
