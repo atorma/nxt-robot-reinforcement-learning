@@ -33,7 +33,13 @@ public class ExactCliffWorldForwardModel implements ForwardModel {
 		CliffWorldState nextState = state.getNextState(action);
 		Transition tr = new Transition(fromStateAction, nextState);
 		double reward = rewardFunction.getReward(tr);
-		return new TransitionReward(tr, reward);
+		
+		// Trick to make Monte Carlo search work (same as in Sutton & Barto's example for Q-learning and Sarsa)
+		if (nextState.isCliff()) {
+			return new TransitionReward(state, action, CliffWorldState.START, reward);
+		} else {
+			return new TransitionReward(tr, reward);
+		}
 	}
 
 }

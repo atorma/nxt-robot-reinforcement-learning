@@ -7,8 +7,7 @@ import java.util.List;
 
 import org.atorma.robot.learning.*;
 import org.atorma.robot.learning.cliffworld.*;
-import org.atorma.robot.mdp.DiscretizedTransitionReward;
-import org.atorma.robot.mdp.Transition;
+import org.atorma.robot.mdp.*;
 import org.junit.*;
 
 public class CliffWorldUctPlanningWithQLearning {
@@ -17,7 +16,7 @@ public class CliffWorldUctPlanningWithQLearning {
 	private double discountFactor = 1;
 	
 	private QLearning qLearning;
-	private double learningRate = 1;
+	private double learningRate = 0.2;
 	
 	private int planningHorizon = 25;
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
@@ -54,15 +53,29 @@ public class CliffWorldUctPlanningWithQLearning {
 		uctPlanning.setRolloutStartState(state);
 		uctPlanning.performRollouts(4); 
 		
-		int stateId = stateDiscretizer.getId(state);
-		System.out.println("UCT Q-value for DOWN: " + uctPlanning.getUctQValue(stateId, CliffWorldAction.DOWN.getId()));
-		Integer plannedActionId = uctPlanning.getActionId(stateId);
-		System.out.println("Planned action " + CliffWorldAction.getActionById(plannedActionId) + " UCT Q-value: " + uctPlanning.getUctQValue(stateId, plannedActionId) );
-		System.out.println("UCT Q-value for DOWN: " + uctPlanning.getUctQValue(stateId, CliffWorldAction.DOWN.getId()));
-		assertEquals(CliffWorldAction.DOWN.getId(), plannedActionId.intValue());
+		DiscreteAction plannedAction = uctPlanning.getPlannedAction(state);
+		assertEquals(CliffWorldAction.DOWN, plannedAction);
 		
 	}
+	
+	@Test  
+	public void next_to_cliff_planned_action_is_not_to_fall_off_the_cliff() {
+		
+		CliffWorldState state = CliffWorldState.START;
+		assertTrue(state.getNextState(CliffWorldAction.RIGHT).isCliff());
+		
+		uctPlanning.setRolloutStartState(state);
+		uctPlanning.performRollouts(100); 
+		
+		DiscreteAction plannedAction = uctPlanning.getPlannedAction(state);
+		assertTrue(CliffWorldAction.RIGHT != plannedAction);
+	}
 
+	// Slow in learning because of the reward setting. The agent gets negative rewards when
+	// moving and a big negative reward if falling of the cliff. In action 
+	// planning falling off the cliff is much more likely than ending up in the goal state,
+	// so the planner finds it best to jump off the cliff to minimize costs rather than
+	// wander around and then fall off!
 	@Test 
 	public void learns_optimal_path() {
 
@@ -72,22 +85,18 @@ public class CliffWorldUctPlanningWithQLearning {
 			CliffWorldState toState;
 			
 			do {
-				if (fromState.getX() == 11) {
-					System.out.println("Almost there!");
-				}
 				System.out.println(fromState);
 				uctPlanning.setRolloutStartState(fromState);
 				uctPlanning.performRollouts(50); 
 				
-				int fromStateId = stateDiscretizer.getId(fromState);
-				Integer byActionId = uctPlanning.getActionId(fromStateId);
-				CliffWorldAction byAction = CliffWorldAction.getActionById(byActionId);
-				toState = fromState.getNextState(byAction);
-				int toStateId = stateDiscretizer.getId(toState);
+				CliffWorldAction byAction = (CliffWorldAction) uctPlanning.getPlannedAction(fromState);
+				TransitionReward transition = model.simulateAction(new StateAction(fromState, byAction)); // shortcut, this is a deterministic model!
+				toState = (CliffWorldState) transition.getToState();
 				
-				Transition transition = new Transition(fromState, byAction, toState);
-				double reward = rewardFunction.getReward(transition);
-				qLearning.update(new DiscretizedTransitionReward(fromStateId, byActionId, toStateId, reward));
+				int fromStateId = stateDiscretizer.getId(fromState);
+				int byActionId = byAction.getId();
+				int toStateId = stateDiscretizer.getId(transition.getToState());
+				qLearning.update(new DiscretizedTransitionReward(fromStateId, byActionId, toStateId, transition.getReward()));
 
 				fromState = toState;
 
@@ -102,9 +111,9 @@ public class CliffWorldUctPlanningWithQLearning {
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isEnd() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
+		while (!state.isEnd() && learnedActions.size() <= 10*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state);
-			int actionId = qTable.getActionId(stateId);
+			int actionId = qLearning.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
 			learnedActions.add(action);
 			state = state.getNextState(action);

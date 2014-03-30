@@ -8,7 +8,7 @@ import org.atorma.robot.mdp.DiscretizedStateAction;
  * A Q-table that stores the values in a 2D array. State and action ids
  * are required to be integers in the range [0..numStates), [0..numActions).
  */
-public class ArrayQTable implements QTable {
+public class ArrayQTable extends AbstractQTable implements QTable {
 	
 	public static final double DEFAULT_Q_VALUE = 0;
 	
@@ -16,7 +16,8 @@ public class ArrayQTable implements QTable {
 	private final int numStates;
 	private final int numActions;
 	private double[][] qTable;
-	private Random random = new Random();
+	
+	private final Set<Integer> actionIds; // Action ids available in all states
 
 	public ArrayQTable(int numStates, int numActions) {
 		this(numStates, numActions, DEFAULT_Q_VALUE);
@@ -29,6 +30,12 @@ public class ArrayQTable implements QTable {
 		this.numStates = numStates;
 		this.numActions = numActions;
 		this.defaultQValue = defaultQValue;
+		
+		LinkedHashSet<Integer> ids = new LinkedHashSet<>(numActions);
+		for (int actionId = 0; actionId < numActions; actionId++) {
+			ids.add(actionId);
+		}
+		actionIds = Collections.unmodifiableSet(ids);
 		
 		initQTable();
 	}
@@ -51,37 +58,12 @@ public class ArrayQTable implements QTable {
 	public void setValue(DiscretizedStateAction stateIdActionId, double qValue) {
 		qTable[stateIdActionId.getStateId()][stateIdActionId.getActionId()] = qValue;
 	}
-	
-	@Override
-	public DiscretizedStateAction getBestActionInState(int stateId) {
-		Double bestActionValue = null;
-		List<Integer> bestActions = new ArrayList<>();
-		
-		for (int actionId = 0; actionId < numActions; actionId++) {
-			double q = getValue(new DiscretizedStateAction(stateId, actionId));
-			if (bestActionValue == null || q > bestActionValue) {
-				bestActionValue = q;
-				bestActions.clear();
-				bestActions.add(actionId);
-			} else if (q == bestActionValue) {
-				bestActions.add(actionId);
-			}
-		}
-		
-		Integer bestActionId = bestActions.get(random.nextInt(bestActions.size()));
-		
-		return new DiscretizedStateAction(stateId, bestActionId);
-	}
-	
-	@Override
-	public double getMaxValueInState(int stateId) {
-		return getValue(getBestActionInState(stateId));
-	}
 
 	@Override
-	public Integer getActionId(int stateId) {
-		return getBestActionInState(stateId).getActionId();
+	protected Set<Integer> getActionIds() {
+		return actionIds;
 	}
+	
 
 	
 }

@@ -1,6 +1,7 @@
 package org.atorma.robot.learning.montecarlo;
 
-import static java.lang.Math.*;
+import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
 
 import java.util.*;
 
@@ -8,17 +9,20 @@ import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.HashMapQTable;
 import org.atorma.robot.learning.QTable;
 import org.atorma.robot.mdp.*;
-import org.atorma.robot.policy.DiscretePolicy;
 
 /**
- * Upper confidence bounds in tree.
+ * UCT (upper confidence bounds applied to trees) action selection.
+ * Computes Q-values consisting of long-term Q-values
+ * learned by another algorithm and temporary planning Q-values that 
+ * balance exploration and exploitation. The temporary Q-values
+ * are computed by simulating rollouts from given state.
  */
-public class FirstVisitUctPlanning implements DiscretePolicy {
+public class FirstVisitUctPlanning {
 
 	private ForwardModel model;
 	private StateDiscretizer stateDiscretizer;
 	private QTable longTermQValues;
-	private QTable uctQValues;
+	private HashMapQTable uctQValues;
 	private int horizon;
 	private double uctConstant;
 	private double discountFactor;
@@ -38,31 +42,22 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		this.horizon = parameters.horizon;
 		this.uctConstant = parameters.uctConstant;
 		this.discountFactor = parameters.discountFactor;
-		
-		//stateVisits = new HashMap<>();
-		//stateActionVisits = new HashMap<>();
-		uctQValues = new HashMapQTable(Double.NEGATIVE_INFINITY); // infinity marks (s,a) for which we don't yet have an UCT Q-value
 	}
 	
 	public void setRolloutStartState(State startState) {
 		this.startState = startState;
 		stateVisits = new HashMap<>();
 		stateActionVisits = new HashMap<>();
-		uctQValues = new HashMapQTable(Double.NEGATIVE_INFINITY); // infinity marks (s,a) for which we don't yet have an UCT Q-value
+		uctQValues = new HashMapQTable(); 
 	}
 	
 	public void performRollouts(int num) {
 		for (int i = 0; i < num; i++) {
-			performRollout();
+			double totalReward = performRollout(startState, 0, new HashSet<DiscretizedStateAction>());
 		}
 	}
-	
-	private void performRollout() {	
-		State state = startState;	
-		double totalReward = rolloutAndUpdateUctQValues(state, 0, new HashSet<DiscretizedStateAction>());
-	}
-	
-	private double rolloutAndUpdateUctQValues(State state, int depth, Set<DiscretizedStateAction> visitedInRollout) {
+		
+	private double performRollout(State state, int depth, Set<DiscretizedStateAction> visitedInRollout) {
 		if (model.getAllowedActions(state).isEmpty() || depth > horizon) {
 			return 0; // terminal state, end recursion and return reward 0
 		}
@@ -74,7 +69,7 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		// Otherwise select action based on UCT exploration policy
 		DiscreteAction action = getUnvisitedAction(state, stateId);
 		if (action == null) {
-			action = getUctAction(state, stateId);
+			action = getUctAction(state, stateId, true); // with exploration
 		}
 		incrementVisits(stateId, action.getId());
 		TransitionReward tr = model.simulateAction(new StateAction(state, action));
@@ -84,12 +79,12 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		boolean firstVisit = visitedInRollout.add(stateIdActionId);
 
 		// Total discounted return following visit to (s,a). Note: recursive.
-		double ret = tr.getReward() + discountFactor*rolloutAndUpdateUctQValues(tr.getToState(), depth + 1, visitedInRollout);
+		double ret = tr.getReward() + discountFactor*performRollout(tr.getToState(), depth + 1, visitedInRollout);
 		//System.out.println("Total reward " + ret);
 		
-		// Update UCT Q-value
+		// Update UCT planning Q-values
 		if (firstVisit) {
-			double oldQ = getUctQValue(stateId, action.getId());
+			double oldQ = uctQValues.getValue(stateIdActionId);
 			int nsa = getNumberOfVisits(stateId, action.getId());
 			double newQ = oldQ + 1.0/nsa * (ret - oldQ);
 			uctQValues.setValue(stateIdActionId, newQ);
@@ -97,59 +92,7 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		
 		return ret;
 	}
-	
-	/*
-	private void performRollout() {	
-		State state = startState;	
-		List<Double> cumulativeRewards = new ArrayList<Double>(horizon);
-		List<DiscretizedStateAction> trajectory = new ArrayList<>(horizon);
-		
-		for (int s = 0; s < horizon; s++) {	
-			
-			int stateId = stateDiscretizer.getId(state);
-			incrementVisits(stateId);
-			
-			if (model.getAllowedActions(state).isEmpty()) {
-				break; // we're at end state
-			}
-			
-			// Always perform unexplored action first
-			// Otherwise select action based on UCT exploration policy
-			DiscreteAction chosenAction = getUnvisitedAction(state, stateId);
-			if (chosenAction == null) {
-				chosenAction = getUctAction(state, stateId);
-			}
-			trajectory.add(new DiscretizedStateAction(stateId, chosenAction.getId()));
-			incrementVisits(stateId, chosenAction.getId());
-			
-			StateAction chosenStateAction = new StateAction(state, chosenAction);
-			TransitionReward tr = model.simulateAction(chosenStateAction);
-			cumulativeRewards.add(tr.getReward());
 
-			// Next state in trajectory
-			state = tr.getToState();
-		}
-
-		// Update Q-values
-		Set<DiscretizedStateAction> visited = new HashSet<>();
-		double totalReturn = cumulativeRewards.get(trajectory.size() - 1);
-		for (int i = 0; i < trajectory.size(); i++) {
-			DiscretizedStateAction stateAction = trajectory.get(i);
-			if (!visited.contains(stateAction)) {
-				int stateId = stateAction.getStateId();
-				int actionId = stateAction.getActionId();
-				
-				double firstVisitReturn = totalReturn - (i == 0 ? 0 : cumulativeRewards.get(i-1));
-				double oldQ = getUctQValue(stateId, actionId);
-				int nsa = getNumberOfVisits(stateId, actionId);
-				double newQ = oldQ + 1/nsa * (firstVisitReturn- oldQ);
-				uctQValues.setValue(stateAction, newQ);
-				
-				visited.add(stateAction);
-			}
-		}
-	}
-	*/
 
 	private DiscreteAction getUnvisitedAction(State state, int stateId) {
 		List<DiscreteAction> unvisited = new ArrayList<DiscreteAction>();
@@ -167,40 +110,34 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 	}
 	
 	
-	private DiscreteAction getUctAction(State state, int stateId) {
+	private DiscreteAction getUctAction(State state, int stateId, boolean isExploration) {
 
 		double bestValue = Double.NEGATIVE_INFINITY;
 		List<DiscreteAction> bestActions = new ArrayList<>();
 		
 		for (DiscreteAction action : model.getAllowedActions(state)) {
-			double qUct = getUctQValue(stateId, action.getId());
+			DiscretizedStateAction sa = new DiscretizedStateAction(stateId, action.getId());
+			
+			double qLt = longTermQValues != null ? longTermQValues.getValue(sa) : 0;
+			double qUct = uctQValues.getValue(sa);
+			
 			int ns = getNumberOfVisits(stateId);
 			int nsa = getNumberOfVisits(stateId, action.getId());
-			double qEx = qUct + uctConstant*sqrt(2*log(ns)/nsa); // Q-value + UCT exploration term
+			double expl = isExploration ? uctConstant*sqrt(2*log(ns)/nsa) : 0;
 			
-			if (qEx > bestValue) {
+			double q = qLt + qUct + expl; 
+			
+			if (q > bestValue) {
 				bestActions.clear();
 				bestActions.add(action);
-				bestValue = qEx;
-			} else if (qEx == bestValue) {
+				bestValue = q;
+			} else if (q == bestValue) {
 				bestActions.add(action);
 			}
 		}
 		
 		DiscreteAction bestAction = bestActions.get(random.nextInt(bestActions.size()));
 		return bestAction;
-	}
-	
-	public double getUctQValue(int stateId, int actionId) {
-		DiscretizedStateAction stateAction = new DiscretizedStateAction(stateId, actionId);
-		if (uctQValues.getValue(stateAction) == Double.NEGATIVE_INFINITY) {
-			double q = longTermQValues.getValue(stateAction);
-			uctQValues.setValue(stateAction, q);
-			return q;
-		} else {
-			return uctQValues.getValue(stateAction);
-		}
-				
 	}
 	
 	public int getNumberOfVisits(int stateId, int actionId) {
@@ -230,11 +167,15 @@ public class FirstVisitUctPlanning implements DiscretePolicy {
 		stateVisits.put(stateId, visits + 1);
 	}
 	
-
-
-	@Override
-	public Integer getActionId(int stateId) {
-		return uctQValues.getActionId(stateId);
+	
+	/**
+	 * Returns the planned action for the given state after the rollouts performed
+	 * so far. The input state is typically the rollout start state, but its
+	 * close successors can also be visited enough times for reasonable value estimates
+	 * for action selection.
+	 */
+	public DiscreteAction getPlannedAction(State state) {
+		return getUctAction(state, stateDiscretizer.getId(state), false); // select best action without the exploration term
 	}
 	
 }

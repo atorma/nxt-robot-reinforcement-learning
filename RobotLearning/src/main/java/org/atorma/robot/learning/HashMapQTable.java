@@ -9,15 +9,13 @@ import org.atorma.robot.mdp.DiscretizedStateAction;
  * A Q-table that does not need to know state and actions ids beforehand
  * and they are not restricted to positive integers.
  */
-public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> implements QTable {
-	private static final long serialVersionUID = -1394200057253869720L;
-	
+public class HashMapQTable extends AbstractQTable {	
 	public static final double DEFAULT_Q_VALUE = 0;
 	
+	private Map<DiscretizedStateAction, Double> qTable = new HashMap<>();
 	private double defaultQValue = DEFAULT_Q_VALUE;
 	private Set<Integer> stateIds = new HashSet<>();
 	private Set<Integer> actionIds = new HashSet<>();
-	private Random random = new Random();
 	
 	public HashMapQTable() {
 	}
@@ -49,10 +47,7 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 		this.stateIds.add(stateId);
 	}
 	
-	public void removestateId(int stateId) {
-		this.stateIds.remove(stateId);
-	}
-	
+	@Override
 	public Set<Integer> getActionIds() {
 		return Collections.unmodifiableSet(actionIds);
 	}
@@ -61,14 +56,9 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 		this.actionIds.add(actionId);
 	}
 	
-	public void removeActionId(int actionId) {
-		this.actionIds.remove(actionId);
-	}
-	
-	
 	@Override
 	public double getValue(DiscretizedStateAction stateIdActionId) {
-		Double qValue = this.get(stateIdActionId);
+		Double qValue = qTable.get(stateIdActionId);
 		return qValue != null ? qValue : defaultQValue;
 	}
 
@@ -76,43 +66,7 @@ public class HashMapQTable extends HashMap<DiscretizedStateAction, Double> imple
 	public void setValue(DiscretizedStateAction stateIdActionId, double qValue) {
 		this.stateIds.add(stateIdActionId.getStateId());
 		this.actionIds.add(stateIdActionId.getActionId());
-		this.put(stateIdActionId, qValue);
+		qTable.put(stateIdActionId, qValue);
 	}
-	
-	@Override
-	public DiscretizedStateAction getBestActionInState(int stateId) {
-		if (this.actionIds.isEmpty()) {
-			throw new IllegalStateException("No actions known");
-		}
-		
-		Double bestActionValue = null;
-		List<Integer> bestActions = new ArrayList<>();
-		
-		for (int actionId : actionIds) {
-			double q = getValue(new DiscretizedStateAction(stateId, actionId));
-			if (bestActionValue == null || q > bestActionValue) {
-				bestActionValue = q;
-				bestActions.clear();
-				bestActions.add(actionId);
-			} else if (q == bestActionValue) {
-				bestActions.add(actionId);
-			}
-		}
-		
-		Integer bestActionId = bestActions.get(random.nextInt(bestActions.size()));
-		
-		return new DiscretizedStateAction(stateId, bestActionId);
-	}
-	
-	@Override
-	public double getMaxValueInState(int stateId) {
-		return getValue(getBestActionInState(stateId));
-	}
-
-	@Override
-	public Integer getActionId(int stateId) {
-		return getBestActionInState(stateId).getActionId();
-	}
-
 	
 }
