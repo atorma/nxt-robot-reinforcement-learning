@@ -9,16 +9,30 @@ public class QLearning implements DiscretePolicy {
 	public static final double DEFAULT_Q_VALUE = 0;
 
 	private QTable qTable;
-	
 	private double learningRate;
-	private double discountFactor;
+	private EligibilityTraces traces;
 	
 	private double accumulatedReward = 0;
 
-	
+	/**
+	 * Standard Q-learning i.e. Q-learning without eligibility traces i.e. Q(0) . 
+	 */
 	public QLearning(double learningRate, double discountFactor, QTable qTable) {
 		this.learningRate = learningRate;
-		this.discountFactor = discountFactor;
+		this.traces = new AccumulatingEligibilityTraces(discountFactor, 0, 0); 
+		this.qTable = qTable;
+	}
+	
+	/**
+	 * Naive Q(lambda): Q-learning with eligibility traces that are not zeroed 
+	 * in case of exploratory actions.
+	 * <p>
+	 * The user of this algorithm is responsible for resetting the traces for the
+	 * next episode.  
+	 */
+	public QLearning(double learningRate, EligibilityTraces traces, QTable qTable) {
+		this.learningRate = learningRate;
+		this.traces = traces;
 		this.qTable = qTable;
 	}
 
@@ -26,12 +40,19 @@ public class QLearning implements DiscretePolicy {
 		accumulatedReward += transition.getReward();
 		
 		DiscretizedStateAction fromStateActionIds = transition.getFromStateIdActionId();
+		traces.update(fromStateActionIds);
+		
 		double oldQ = qTable.getValue(fromStateActionIds);
 		DiscretizedStateAction maxStateActionIds = new DiscretizedStateAction(transition.getToStateId(), getActionId(transition.getToStateId()));
 		double maxQ = qTable.getValue(maxStateActionIds);
-		double newQ = oldQ + learningRate*( transition.getReward() + discountFactor*maxQ - oldQ );
+		double delta = transition.getReward() + traces.getDiscountFactor()*maxQ - oldQ;
 		
-		qTable.setValue(fromStateActionIds, newQ);
+		for (DiscretizedStateAction sa : traces.getNonZeroStateActions()) {
+			double q = qTable.getValue(sa);
+			double e = traces.getTrace(sa);
+			double newQ  = q + learningRate * delta * e;
+			qTable.setValue(sa, newQ);
+		}
 	}
 	
 	@Override

@@ -7,9 +7,8 @@ public class UctPlanningParameters {
 	
 	public ForwardModel model;
 	public StateDiscretizer stateDiscretizer;
-	public QTable qTable;
-	public int horizon;
+	public QTable longTermQValues;
+	public int planningHorizon;
 	public double uctConstant;
 	public double discountFactor;
-	public double learningRate;
 }
