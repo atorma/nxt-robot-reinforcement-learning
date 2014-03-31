@@ -36,9 +36,9 @@ public class CliffWorldUctPlanningWithQLearning {
 		
 		UctPlanningParameters uctParams = new UctPlanningParameters();
 		uctParams.discountFactor = discountFactor;
-		uctParams.horizon = planningHorizon;
+		uctParams.planningHorizon = planningHorizon;
 		uctParams.model = model;
-		uctParams.qTable = qTable;
+		uctParams.longTermQValues = qTable;
 		uctParams.stateDiscretizer = stateDiscretizer;
 		uctParams.uctConstant = 15.0;
 		uctPlanning = new FirstVisitUctPlanning(uctParams);

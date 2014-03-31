@@ -189,6 +189,18 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 		
 	}
 	
+	@Override
+	public TransitionReward simulateAction(StateAction fromStateAction) {
+		Set<StochasticTransitionReward> outgoing = getOutgoingTransitions(fromStateAction);
+
+		List<Pair<StochasticTransitionReward, Double>> pmf = new ArrayList<>(outgoing.size());
+		for (StochasticTransitionReward tr : outgoing) {
+			pmf.add(new Pair<>(tr, tr.getProbability()));
+		}
+		
+		return new EnumeratedDistribution<>(pmf).sample();
+	}
+	
 	
 	private static class CollisionObservation implements Comparable<CollisionObservation> {
 		
@@ -245,15 +257,5 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 	}
 
 
-	@Override
-	public TransitionReward simulateAction(StateAction fromStateAction) {
-		Set<StochasticTransitionReward> outgoing = getOutgoingTransitions(fromStateAction);
-
-		List<Pair<StochasticTransitionReward, Double>> pmf = new ArrayList<>(outgoing.size());
-		for (StochasticTransitionReward tr : outgoing) {
-			pmf.add(new Pair<>(tr, tr.getProbability()));
-		}
-		
-		return new EnumeratedDistribution<>(pmf).sample();
-	}
+	
 }

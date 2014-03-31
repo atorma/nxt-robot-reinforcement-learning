@@ -38,8 +38,8 @@ public class FirstVisitUctPlanning {
 	public FirstVisitUctPlanning(UctPlanningParameters parameters) {
 		this.model = parameters.model;
 		this.stateDiscretizer = parameters.stateDiscretizer;
-		this.longTermQValues = parameters.qTable;
-		this.horizon = parameters.horizon;
+		this.longTermQValues = parameters.longTermQValues;
+		this.horizon = parameters.planningHorizon;
 		this.uctConstant = parameters.uctConstant;
 		this.discountFactor = parameters.discountFactor;
 	}

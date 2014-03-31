@@ -1,6 +1,6 @@
 package org.atorma.robot.learning;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,25 +22,37 @@ public class CliffWorldQLearningTests {
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
 	private CliffWorldRewardFunction rewardFunction = new CliffWorldRewardFunction();
 	private EpsilonGreedyPolicy policy;
+	private EligibilityTraces traces;
 	
 	@Before
 	public void setUp() {
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), CliffWorldAction.values().length, 0);
-		qLearning = new QLearning(learningRate, discountFactor, qTable);
-		policy = new EpsilonGreedyPolicy(0.1, qLearning, CliffWorldAction.values());
+		policy = new EpsilonGreedyPolicy(0.1, qTable, CliffWorldAction.values());
 	}
 	
 	@Test
-	public void cliff_world_q_learning_with_epsilon_greedy_policy_finds_optimal_policy() {
-		learnPolicy();
+	public void standard_q_learning_with_epsilon_greedy_exploration_learns_optimal_policy() {
+		qLearning = new QLearning(learningRate, discountFactor, qTable);
+		int totalIterations = learnPolicy(500);
+		System.out.println("Cliff world standard Q-learning: " + totalIterations + " total iterations");
 		List<CliffWorldAction> learnedPath = getLearnedPath();
 		assertEquals(CliffWorldEnvironment.OPTIMAL_PATH, learnedPath);
+	}
+	
+	@Test
+	public void q_learning_with_traces_and_epsilon_greed_exploration_learns_good_policy() {
+		traces = new ReplacingEligibilityTraces(discountFactor, 0.99, 0.001);
+		qLearning = new QLearning(learningRate, traces, qTable);
+		int totalIterations = learnPolicy(100);
+		System.out.println("Cliff world Q-learning with eligibility traces: " + totalIterations + " total iterations");
+		List<CliffWorldAction> learnedPath = getLearnedPath();
+		assertTrue(learnedPath.size() <= 1.5 * CliffWorldEnvironment.OPTIMAL_PATH.size());
 	}
 
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isEnd() && learnedActions.size() <= CliffWorldEnvironment.OPTIMAL_PATH.size()) {
+		while (!state.isEnd() && learnedActions.size() <= 5*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state);
 			int actionId = qLearning.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);
@@ -51,13 +63,16 @@ public class CliffWorldQLearningTests {
 	}
 	
 
-	private void learnPolicy() {
-		int numEpisodes = 500;
+	private int learnPolicy(int numEpisodes) {
+		int totalIterations = 0;
 		
 		for (int episode=0; episode<numEpisodes; episode++) {
 			
 			CliffWorldState fromState = CliffWorldState.START;
 			CliffWorldState toState;
+			if (traces != null) {
+				traces.clear();
+			}
 			
 			do {
 				int fromStateId = stateDiscretizer.getId(fromState);
@@ -68,13 +83,18 @@ public class CliffWorldQLearningTests {
 				Transition transition = new Transition(fromState, byAction, toState);
 				double reward = rewardFunction.getReward(transition);
 				
-				qLearning.update(new DiscretizedTransitionReward(fromStateId, byActionId, toStateId, reward));
+				DiscretizedTransitionReward trReward = new DiscretizedTransitionReward(fromStateId, byActionId, toStateId, reward);
+				qLearning.update(trReward);
 
 				fromState = toState;
+				
+				totalIterations++;
 
 			} while (!toState.isEnd());
 
 		}
+		
+		return totalIterations;
 	}
 
 }

@@ -9,7 +9,7 @@ public class ObjectTrackingMonteCarloBumperSimulation {
 
 	public static void main(String[] args) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH.mm");
-		String fileName = "object tracking monte-carlo bumper " + sdf.format(new Date()) + ".csv";
+		String fileName = "object tracking uct bumper " + sdf.format(new Date()) + ".csv";
 		ObjectTrackingMonteCarloBumper learningControl = new ObjectTrackingMonteCarloBumper(fileName);
 		SimbadBumper robot = new SimbadBumper(learningControl);
 		robot.startSimulationGUI();
