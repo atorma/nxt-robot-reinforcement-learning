@@ -42,7 +42,7 @@ public class FirstVisitOnPolicyMonteCarlo implements DiscretePolicy {
 	
 	public void performRollouts(int num) {
 		for (int i = 0; i < num; i++) {
-			double totalReward = performRollout(startState, 0, new HashSet<DiscretizedStateAction>());
+			performRollout(startState, 0, new HashSet<DiscretizedStateAction>());
 		}
 	}
 
