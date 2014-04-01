@@ -12,10 +12,13 @@ import org.atorma.robot.mdp.*;
 
 /**
  * UCT (upper confidence bounds applied to trees) action selection.
- * Computes Q-values consisting of long-term Q-values
+ * The best action is selected based on on long-term Q-values
  * learned by another algorithm and temporary planning Q-values that 
  * balance exploration and exploitation. The temporary Q-values
  * are computed by simulating rollouts from given state.
+ * <p>
+ * This variant computes planning Q-values as return following the
+ * first visit to (state, action).
  */
 public class FirstVisitUctPlanning {
 
@@ -53,7 +56,7 @@ public class FirstVisitUctPlanning {
 	
 	public void performRollouts(int num) {
 		for (int i = 0; i < num; i++) {
-			double totalReward = performRollout(startState, 0, new HashSet<DiscretizedStateAction>());
+			performRollout(startState, 0, new HashSet<DiscretizedStateAction>());
 		}
 	}
 		
