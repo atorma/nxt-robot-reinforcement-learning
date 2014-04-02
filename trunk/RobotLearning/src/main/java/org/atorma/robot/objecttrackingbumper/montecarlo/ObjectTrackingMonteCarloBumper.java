@@ -8,8 +8,7 @@ import org.atorma.robot.learning.*;
 import org.atorma.robot.learning.montecarlo.*;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
-import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
+import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.objecttrackingbumper.prioritizedsweeping.BumperModel;
 import org.atorma.robot.objecttrackingbumper.prioritizedsweeping.SingleSectorCollisionStateDiscretizer;
 import org.atorma.robot.simplebumper.BumperAction;
@@ -20,15 +19,18 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 	private BumperModel model;
 
 	private RewardFunction rewardFunction = new BumperRewardFunction();
-	private StateDiscretizer stateDiscretizer = new SingleSectorCollisionStateDiscretizer(90);
+	private StateDiscretizer stateDiscretizer = new SingleSectorCollisionStateDiscretizer(60);
+	//private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
 	private double discountFactor = 0.8;
 	
 	private QTable qTable;
 	private QLearning qLearning;
 	private double learningRate = 0.1;
+	private double traceDecay = 0.8;
+	private EligibilityTraces traces;
 	
-	private FirstVisitUctPlanning uctPlanning;
-	private int planningHorizon = 15;
+	private QLearningUctPlanning uctPlanning;
+	private int planningHorizon = 30;
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
@@ -51,17 +53,19 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		model = new BumperModel(rewardFunction, stateDiscretizer);
 		//setPriorCollisionProbabilities(0.8, 0.99);
+		traces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
+		qLearning = new QLearning(learningRate, traces, qTable);
 		
-		qLearning = new QLearning(learningRate, discountFactor, qTable);
-		
-		FirstVisitUctPlanningParameters uctParams = new FirstVisitUctPlanningParameters();
-		uctParams.discountFactor = discountFactor;
-		uctParams.planningHorizon = planningHorizon;
-		uctParams.uctConstant = 15;
+		QLearningUctPlanningParameters uctParams = new QLearningUctPlanningParameters();
 		uctParams.model = model;
+		uctParams.allActions = BumperAction.values();
 		uctParams.stateDiscretizer = stateDiscretizer;
+		uctParams.planningHorizon = planningHorizon;
+		uctParams.learningRate = learningRate;
+		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
+		uctParams.uctConstant = 3;
 		uctParams.longTermQValues = qTable;
-		uctPlanning = new FirstVisitUctPlanning(uctParams);
+		uctPlanning = new QLearningUctPlanning(uctParams);
 	}
 
 	
@@ -91,7 +95,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		}
 		
 		uctPlanning.setRolloutStartState(currentState);
-		uctPlanning.performRollouts(100);
+		uctPlanning.performRollouts(50);
 		BumperAction action = (BumperAction) uctPlanning.getPlannedAction(currentState);
 		
 		previousState = currentState;
