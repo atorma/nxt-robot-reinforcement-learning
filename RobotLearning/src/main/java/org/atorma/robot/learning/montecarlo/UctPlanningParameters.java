@@ -10,5 +10,4 @@ public class UctPlanningParameters {
 	public QTable longTermQValues;
 	public int planningHorizon;
 	public double uctConstant;
-	public double discountFactor;
 }
