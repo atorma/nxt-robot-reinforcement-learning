@@ -9,7 +9,7 @@ public class ObjectTrackingPrioritzedSweepingBumperSimulation {
 
 	public static void main(String[] args) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH.mm");
-		String fileName = "PS from scratch multiple sectors " + sdf.format(new Date()) + ".csv";
+		String fileName = "PS from scratch 3 sectors " + sdf.format(new Date()) + ".csv";
 		ObjectTrackingPrioritizedSweepingBumper learningControl = new ObjectTrackingPrioritizedSweepingBumper(fileName);
 		SimbadBumper robot = new SimbadBumper(learningControl);
 		robot.startSimulationGUI();
