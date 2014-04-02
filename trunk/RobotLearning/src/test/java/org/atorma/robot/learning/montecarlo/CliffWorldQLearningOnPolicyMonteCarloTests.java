@@ -12,14 +12,15 @@ import org.atorma.robot.mdp.*;
 import org.atorma.robot.policy.*;
 import org.junit.*;
 
-public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
+public class CliffWorldQLearningOnPolicyMonteCarloTests {
 	
 	private QLearning qLearning;
-	private double learningRate = 0.25;
-	private double discountFactor = 0.9;
+	private double learningRate = 0.4;
+	private double discountFactor = 1;
 	private QTable qTable;
+	private EligibilityTraces longTermTraces;
 	
-	private FirstVisitOnPolicyMonteCarlo monteCarlo;
+	private QLearningOnPolicyMonteCarlo monteCarlo;
 	private int planningHorizon = 25;
 	
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
@@ -32,15 +33,25 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 	@Before
 	public void setUp() {
 		model = new ExactCliffWorldForwardModel(rewardFunction);
+		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), CliffWorldAction.values().length);
-		qLearning = new QLearning(learningRate, discountFactor, qTable);
+		longTermTraces = new ReplacingEligibilityTraces(discountFactor, 0.8);
+		qLearning = new QLearning(learningRate, longTermTraces, qTable);
 		
 		//DirectedExploration directedExploration = new DirectedExploration(qTable, 0.02, 0.1, CliffWorldAction.values());
 		//EpsilonGreedyPolicy epsilonGreedyPolicy = new EpsilonGreedyPolicy(0.1, directedExploration, CliffWorldAction.values());
 		//policy = new DirectedExplorationPolicy(epsilonGreedyPolicy, directedExploration);
 		explorationPolicy = new EpsilonGreedyPolicy(0.1, qLearning, CliffWorldAction.values());
 		
-		monteCarlo = new FirstVisitOnPolicyMonteCarlo(model, stateDiscretizer, explorationPolicy, planningHorizon, discountFactor);
+		QLearningOnPolicyMonteCarloParameters parameters = new QLearningOnPolicyMonteCarloParameters();
+		parameters.model = model;
+		parameters.policy = explorationPolicy;
+		parameters.allActions = CliffWorldAction.values();
+		parameters.stateDiscretizer = stateDiscretizer;
+		parameters.horizon = planningHorizon;
+		parameters.learningRate = learningRate;
+		parameters.traces = new ReplacingEligibilityTraces(discountFactor, 0.8); 
+		monteCarlo = new QLearningOnPolicyMonteCarlo(parameters);
 	}
 	
 	@Test  
@@ -71,10 +82,9 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 		assertTrue(CliffWorldAction.RIGHT != plannedAction);
 	}
 	
-	// Requires a function that rewards highly on getting to goal. 
-	// Otherwise action planning is simply too pessimistic to ever take a step towards the goal (except by accident).
-	@Test @Ignore // Fairly slow, but works
-	public void learns_good_path() {
+	// Slow! The action selection method would probably benefit from long-term Q-values.
+	@Test @Ignore
+	public void learns_near_optimal_path() {
 
 		for (int episode = 0; episode < 50; episode++) { 
 			
@@ -83,7 +93,7 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 			
 			do {
 				monteCarlo.setRolloutStartState(fromState);
-				monteCarlo.performRollouts(30); 
+				monteCarlo.performRollouts(50); 
 				
 				int fromStateId = stateDiscretizer.getId(fromState);
 				Integer byActionId = monteCarlo.getActionId(fromStateId);
@@ -109,7 +119,7 @@ public class CliffWorldFirstVisitOnPolicyMonteCarloTests {
 	private List<CliffWorldAction> getLearnedPath() {
 		CliffWorldState state = CliffWorldState.START;
 		List<CliffWorldAction> learnedActions = new ArrayList<>();
-		while (!state.isGoal() && learnedActions.size() <= 2*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
+		while (!state.isGoal() && learnedActions.size() <= 5*CliffWorldEnvironment.OPTIMAL_PATH.size()) {
 			int stateId = stateDiscretizer.getId(state);
 			int actionId = qLearning.getActionId(stateId);
 			CliffWorldAction action = CliffWorldAction.getActionById(actionId);

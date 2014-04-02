@@ -7,6 +7,10 @@ import org.atorma.robot.mdp.DiscretizedStateAction;
 
 public class AccumulatingEligibilityTraces extends AbstractEligibilityTraces {
 
+	public AccumulatingEligibilityTraces(double discountFactor, double traceDecay) {
+		super(discountFactor, traceDecay, 0.0001);
+	}
+	
 	public AccumulatingEligibilityTraces(double discountFactor, double traceDecay, double thresholdForRemoval) {
 		super(discountFactor, traceDecay, thresholdForRemoval);
 	}

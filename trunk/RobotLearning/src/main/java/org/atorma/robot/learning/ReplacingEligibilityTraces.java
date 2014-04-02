@@ -6,6 +6,10 @@ import java.util.Map.Entry;
 import org.atorma.robot.mdp.DiscretizedStateAction;
 
 public class ReplacingEligibilityTraces extends AbstractEligibilityTraces {
+	
+	public ReplacingEligibilityTraces(double discountFactor, double traceDecay) {
+		super(discountFactor, traceDecay, 0.0001);
+	}
 
 	public ReplacingEligibilityTraces(double discountFactor, double traceDecay, double thresholdForRemoval) {
 		super(discountFactor, traceDecay, thresholdForRemoval);

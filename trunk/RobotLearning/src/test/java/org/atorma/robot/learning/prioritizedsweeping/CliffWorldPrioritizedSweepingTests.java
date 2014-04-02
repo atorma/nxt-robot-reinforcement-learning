@@ -105,22 +105,4 @@ public class CliffWorldPrioritizedSweepingTests {
 		}
 		return learnedActions;
 	}
-	
-	
-	// Modified reward function to give reward upon reaching the goal. 
-	// Makes it easier to test this case of prioritized sweeping where the model
-	// does not know the transitions nor the reward function.
-	private static class ModifiedCliffWorldRewardFunction extends CliffWorldRewardFunction {
-
-		@Override
-		public double getReward(Transition transition) {
-			CliffWorldState toState = (CliffWorldState) transition.getToState();
-			if (toState.isGoal()) {
-				return 100.0;
-			} else {
-				return super.getReward(transition);
-			}
-		}
-		
-	}
 }

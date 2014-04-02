@@ -5,8 +5,7 @@ import java.io.File;
 import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.*;
-import org.atorma.robot.learning.montecarlo.FirstVisitUctPlanning;
-import org.atorma.robot.learning.montecarlo.UctPlanningParameters;
+import org.atorma.robot.learning.montecarlo.*;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
@@ -55,7 +54,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		
 		qLearning = new QLearning(learningRate, discountFactor, qTable);
 		
-		UctPlanningParameters uctParams = new UctPlanningParameters();
+		FirstVisitUctPlanningParameters uctParams = new FirstVisitUctPlanningParameters();
 		uctParams.discountFactor = discountFactor;
 		uctParams.planningHorizon = planningHorizon;
 		uctParams.uctConstant = 15;
