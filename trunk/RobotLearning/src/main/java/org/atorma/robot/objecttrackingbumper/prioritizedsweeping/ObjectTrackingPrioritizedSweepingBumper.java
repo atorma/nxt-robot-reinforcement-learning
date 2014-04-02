@@ -4,28 +4,27 @@ import java.io.File;
 import java.util.*;
 
 import org.atorma.robot.DiscreteRobotController;
-import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.ArrayQTable;
 import org.atorma.robot.learning.QTable;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
-import org.atorma.robot.policy.*;
+import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
 import org.paukov.combinatorics.*;
 
 public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotController {
 	
-	private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
+	private BumperStateDiscretizer stateDiscretizer;
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	
 	private QTable qTable;
 	
 	private BumperModel model;
-	private StateDiscretizer collisionStateDiscretizer = new SingleSectorCollisionStateDiscretizer(90);
 	
 	private double discountFactor = 0.9;
 	private PrioritizedSweeping prioritizedSweeping;
@@ -56,6 +55,12 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	}
 	
 	public ObjectTrackingPrioritizedSweepingBumper() {
+		List<CircleSector> obstacleSectors = Arrays.asList(
+				new CircleSector(270, 330),
+				new CircleSector(330, 30),
+				new CircleSector(30, 90));
+		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
+		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		
 		//model = new BumperModel(rewardFunction, collisionStateDiscretizer);

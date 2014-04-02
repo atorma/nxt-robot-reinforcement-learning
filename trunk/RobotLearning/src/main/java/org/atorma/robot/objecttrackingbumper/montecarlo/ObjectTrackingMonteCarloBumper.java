@@ -1,13 +1,17 @@
 package org.atorma.robot.objecttrackingbumper.montecarlo;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.*;
-import org.atorma.robot.learning.montecarlo.*;
+import org.atorma.robot.learning.montecarlo.QLearningUctPlanning;
+import org.atorma.robot.learning.montecarlo.QLearningUctPlanningParameters;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.objecttrackingbumper.prioritizedsweeping.BumperModel;
 import org.atorma.robot.objecttrackingbumper.prioritizedsweeping.SingleSectorCollisionStateDiscretizer;
@@ -19,8 +23,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 	private BumperModel model;
 
 	private RewardFunction rewardFunction = new BumperRewardFunction();
-	private StateDiscretizer stateDiscretizer = new SingleSectorCollisionStateDiscretizer(60);
-	//private BumperStateDiscretizer stateDiscretizer = new BumperStateDiscretizer();
+	private StateDiscretizer stateDiscretizer;
 	private double discountFactor = 0.8;
 	
 	private QTable qTable;
@@ -38,7 +41,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 	private double accumulatedReward = 0;
 	private int accumulatedCollisions = 0;
 	
-	private StateActionDiscretizer transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
+	private StateActionDiscretizer transitionDiscretizer;
 	
 	private CsvLogWriter logWriter;
 	
@@ -50,6 +53,16 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 	
 
 	public ObjectTrackingMonteCarloBumper() {
+//		List<CircleSector> obstacleSectors = Arrays.asList(
+//				new CircleSector(270, 330),
+//				new CircleSector(330, 30),
+//				new CircleSector(30, 90));
+//		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
+//		stateDiscretizer = new BumperStateDiscretizer(Arrays.asList(new CircleSector(-30, 30)));
+		stateDiscretizer = new SingleSectorCollisionStateDiscretizer(60);
+		
+		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
+		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		model = new BumperModel(rewardFunction, stateDiscretizer);
 		//setPriorCollisionProbabilities(0.8, 0.99);

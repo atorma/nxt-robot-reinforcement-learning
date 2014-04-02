@@ -2,11 +2,14 @@ package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
 import static org.junit.Assert.*;
 
+import java.util.*;
+
 import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.ArrayQTable;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.mdp.StateAction;
 import org.atorma.robot.mdp.TransitionReward;
+import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
@@ -19,8 +22,7 @@ public class PrioritizedSweepingTests {
 	private PrioritizedSweeping prioritizedSweeping;
 	private double discountFactor = 0.9;
 	
-	private StateDiscretizer bumperStateDiscretizer = new BumperStateDiscretizer();
-	private StateDiscretizer collisionStateDiscretizer = new SingleSectorCollisionStateDiscretizer(90);
+	private StateDiscretizer bumperStateDiscretizer;
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private BumperModel model;
 	
@@ -28,7 +30,12 @@ public class PrioritizedSweepingTests {
 	
 	@Before
 	public void setUp() {
-		model = new BumperModel(rewardFunction, collisionStateDiscretizer);
+		List<CircleSector> obstacleSectors = Arrays.asList(
+				new CircleSector(270, 330),
+				new CircleSector(330, 30),
+				new CircleSector(30, 90));
+		bumperStateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
+		model = new BumperModel(rewardFunction, bumperStateDiscretizer);
 		setPriorCollisionProbabilities();
 		
 		prioritizedSweeping = new PrioritizedSweeping();
@@ -79,7 +86,7 @@ public class PrioritizedSweepingTests {
 		currentState.setCollided(true);
 		
 		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, BumperAction.FORWARD));
-		prioritizedSweeping.performIterations(5000);
+		prioritizedSweeping.performIterations(3000);
 		
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
@@ -105,7 +112,7 @@ public class PrioritizedSweepingTests {
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
 		System.out.println("Best action " + action);
-		assertTrue(action == BumperAction.FORWARD);
+		assertFalse(action == BumperAction.FORWARD);
 		
 		currentState = currentState.afterAction(action);
 		

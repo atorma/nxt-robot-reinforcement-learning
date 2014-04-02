@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.atorma.robot.mdp.*;
+import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.simplebumper.BumperAction;
@@ -95,9 +96,9 @@ public class BumperModelTests {
 					fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
 					
 					int i = 0;
-					for (double sectorDegree = 0; sectorDegree < 360; sectorDegree += discretizer.getSectorWidthDegrees() ) {
-						if (sectorDegree != obstacleDirectionDegrees) {
-							fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sectorDegree));
+					for (CircleSector sector : discretizer.getSectors()) {
+						if (!sector.contains(obstacleDirectionDegrees)) {
+							fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sector.getMidAngleDeg()));
 							i++;
 						}
 					}
