@@ -67,54 +67,6 @@ public class BumperModelTests {
 		}
 	}
 	
-	// Here we train the collision model so that for all obstacle combinations where there's an
-	// obstacle close to in front and the agent drives forward, or close behind and the agent drives
-	// backwards, there's a high collision probability. Due to combinatorics, this is fairly slow for
-	// continuous testing.
-	private void addFullPriorCollisionSamples() {
-		
-		// Generator for possible distance permutations in 5 sectors
-		Double[] distances = new Double[discretizer.getNumberOfDistanceBins()];
-		for (int i = 0; i < discretizer.getNumberOfDistanceBins(); i++) {
-			distances[i] = discretizer.getMinDistance() + (i + 0.5)*discretizer.getDistanceBinWidth();
-		}
-		Generator<Double> permutationGen = Factory.createPermutationWithRepetitionGenerator(Factory.createVector(distances), discretizer.getNumberOfSectors() - 1);
-
-		for (ICombinatoricsVector<Double> perm : permutationGen) {
-			for (boolean alreadyCollided : Arrays.asList(false, true)) {
-				for (BumperAction action : Arrays.asList(BumperAction.FORWARD, BumperAction.BACKWARD)) {
-					
-					double obstacleDirectionDegrees = -1;
-					if (action == BumperAction.FORWARD) {
-						obstacleDirectionDegrees = 0;
-					} else if (action == BumperAction.BACKWARD) {
-						obstacleDirectionDegrees = 180;
-					}
-					
-					ModeledBumperState fromState = new ModeledBumperState();
-					fromState.setCollided(alreadyCollided);
-					fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
-					
-					int i = 0;
-					for (CircleSector sector : discretizer.getSectors()) {
-						if (!sector.contains(obstacleDirectionDegrees)) {
-							fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sector.getMidAngleDeg()));
-							i++;
-						}
-					}
-					
-					ModeledBumperState toState = fromState.afterAction(action);
-					toState.setCollided(true);
-					
-					int priorSamples = alreadyCollided ? PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED : PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED;
-					for (int s = 0; s < priorSamples; s++) {
-						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-						model.update(transition);
-					}
-				}
-			}
-		}
-	}
 	
 	@Test
 	public void test_prior_collision_probability_when_no_knowledge_of_collisions() {
@@ -134,14 +86,14 @@ public class BumperModelTests {
 		BumperAction action = BumperAction.FORWARD;
 
 		assertEquals(0.8, model.getCollisionProbability(fromState, action), 0.1); 
-		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.0001);
+		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.01);
 		
 		fromState.setCollided(true);
 		assertEquals(0.95, model.getCollisionProbability(fromState, action), 0.1); 
-		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_OBSTACLE_AFTER_ALREADY_COLLIDED, model.getCollisionProbability(fromState, action), 0.0001);
+		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_OBSTACLE_AFTER_ALREADY_COLLIDED, model.getCollisionProbability(fromState, action), 0.01);
 	}
 	
-	@Test @Ignore // Slow test
+	@Test  // Slow test
 	public void test_collision_probabilities_with_full_prior_samples() {
 		ModeledBumperState fromState = getState(BumperAction.DRIVE_DISTANCE_CM);
 		fromState.setCollided(false);
@@ -151,21 +103,21 @@ public class BumperModelTests {
 		// is needed. The state with an obstacle near in front AND near to the left is totally different from 
 		// the state with just the obstacle near in front. 
 		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(discretizer.getMinDistance()*2, -90));
-		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.0001); // Not what common sense would say!
+		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.01); // Not what common sense would say!
 		
 		// Now with full model training
 		model = new BumperModel(rewardFunction, discretizer); 
-		addFullPriorCollisionSamples();
-		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.0001); 
+		BumperModelUtils.setPriorCollisionProbabilities(model, discretizer, PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_OBSTACLE_AFTER_ALREADY_COLLIDED);
+		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.01); 
 		
 		// driving backwards toward obstacle
 		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 180));
 		action = BumperAction.BACKWARD;
-		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.0001);
+		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.01);
 		
 		// All clear...
 		fromState = new ModeledBumperState();
-		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.0001);
+		assertEquals(PRIOR_COLLISION_PROBABILITY_OTHERWISE, model.getCollisionProbability(fromState, action), 0.01);
 	}
 	
 	@Test

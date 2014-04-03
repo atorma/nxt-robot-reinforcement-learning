@@ -1,4 +1,4 @@
-package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
+package org.atorma.robot.objecttrackingbumper;
 
 import java.util.*;
 
@@ -9,7 +9,6 @@ import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.montecarlo.ForwardModel;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweepingModel;
 import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttrackingbumper.ModeledBumperState;
 import org.atorma.robot.simplebumper.BumperAction;
 
 import com.google.common.collect.Sets;
