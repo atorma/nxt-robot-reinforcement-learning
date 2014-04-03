@@ -12,8 +12,6 @@ public class QLearning implements DiscretePolicy {
 	private double learningRate;
 	private EligibilityTraces traces;
 	
-	private double accumulatedReward = 0;
-
 	/**
 	 * Standard Q-learning i.e. Q-learning without eligibility traces i.e. Q(0) . 
 	 */
@@ -37,7 +35,6 @@ public class QLearning implements DiscretePolicy {
 	}
 
 	public void update(DiscretizedTransitionReward transition) {
-		accumulatedReward += transition.getReward();
 		
 		DiscretizedStateAction fromStateActionIds = transition.getFromStateIdActionId();
 		traces.update(fromStateActionIds);
@@ -53,15 +50,12 @@ public class QLearning implements DiscretePolicy {
 			double newQ  = q + learningRate * delta * e;
 			qTable.setValue(sa, newQ);
 		}
+		
 	}
 	
 	@Override
 	public Integer getActionId(int stateId) {
 		return qTable.getActionId(stateId);
-	}
-
-	public double getAccumulatedReward() {
-		return accumulatedReward;
 	}
 
 	
