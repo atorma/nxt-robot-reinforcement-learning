@@ -26,6 +26,7 @@ public class QLearningBumper implements DiscreteRobotController {
 	private BumperAction previousAction;
 	
 	private int accumulatedCollisions = 0;
+	private double accumulatedReward = 0;
 	
 	private CsvLogWriter logWriter;
 	
@@ -51,12 +52,13 @@ public class QLearningBumper implements DiscreteRobotController {
 		}
 	
 		if (previousState != null) {
-			qLearning.update(transitionDiscretizer.discretizeAndComputeReward(previousState, previousAction, currentState));
-			//System.out.println("Total reward: " + qLearning.getAccumulatedReward());
+			DiscretizedTransitionReward transition = transitionDiscretizer.discretizeAndComputeReward(previousState, previousAction, currentState);
+			qLearning.update(transition);
+			accumulatedReward += transition.getReward();
 		}
 		
 		if (logWriter != null) {
-			logWriter.addRow(qLearning.getAccumulatedReward(), accumulatedCollisions);
+			logWriter.addRow(accumulatedReward, accumulatedCollisions);
 		}
 		
 		BumperAction nextAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(currentState)));
