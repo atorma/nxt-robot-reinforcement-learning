@@ -25,12 +25,13 @@ public class PrioritizedSweepingTests {
 	private StateDiscretizer bumperStateDiscretizer;
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private BumperModel model;
+	private List<CircleSector> obstacleSectors;
 	
 	
 	
 	@Before
 	public void setUp() {
-		List<CircleSector> obstacleSectors = Arrays.asList(
+		obstacleSectors = Arrays.asList(
 				new CircleSector(270, 330),
 				new CircleSector(330, 30),
 				new CircleSector(30, 90));

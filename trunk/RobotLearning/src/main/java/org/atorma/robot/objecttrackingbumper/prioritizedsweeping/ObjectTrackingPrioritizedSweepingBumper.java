@@ -63,10 +63,8 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		
-		//model = new BumperModel(rewardFunction, collisionStateDiscretizer);
 		model = new BumperModel(rewardFunction, stateDiscretizer);
-		//setPriorCollisionProbabilities(0.8, 0.99);
-		//setForwardPriorCollisionProbabilities(0.8, 0.99);
+		BumperModelUtils.setPriorCollisionProbabilities(model, stateDiscretizer, 0.8, 0.99);
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -82,101 +80,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		Thread sweeperThread = new Thread(new Sweeper());
 		sweeperThread.start();
 	}
-	
-	/**
-	 * Sets up prior collision probabilities for all states where there's an obstacle close in front and the agent moves towards it.
-	 * 
-	 * @param collisionProbDrivingTowardObstacle
-	 * 	collision probability when the agent starts from non-collision state
-	 * @param collisionProbWhenAlreadyBumped
-	 * 	collision probability when the agent is already collided and still moves toward the obstacle in front/behind
-	 */
-	private void setForwardPriorCollisionProbabilities(double collisionProbDrivingTowardObstacle, double collisionProbWhenAlreadyBumped) {
-		int priorSamplesNotYetCollided = (int) Math.ceil((10 * collisionProbDrivingTowardObstacle - 1)/(1 - collisionProbDrivingTowardObstacle));
-		int priorSamplesTwoCollisions = (int) Math.ceil((10 * collisionProbWhenAlreadyBumped - 1)/(1 - collisionProbWhenAlreadyBumped));
 
-		// Add collisions when an obstacle is close in front and the agent drives forward.
-		// Use more samples to express more confidence in collision when the agent was already collided.
-		for (boolean alreadyCollided : Arrays.asList(false, true)) {
-			BumperAction action = BumperAction.FORWARD;
-			double obstacleDirectionDegrees = 0;
-		
-			ModeledBumperState fromState = new ModeledBumperState();
-			fromState.setCollided(alreadyCollided);
-			fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
-
-			ModeledBumperState toState = fromState.afterAction(action);
-			toState.setCollided(true);
-			
-			int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
-			for (int s = 0; s < priorSamples; s++) {
-				TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-				model.update(transition);
-			}
-		}
-	}
-	
-	/**
-	 * Sets up prior collision probabilities for all states where there's an obstacle close in front or close behind
-	 * and the agent moves towards it.
-	 * 
-	 * @param collisionProbDrivingTowardObstacle
-	 * 	collision probability when the agent starts from non-collision state
-	 * @param collisionProbWhenAlreadyBumped
-	 * 	collision probability when the agent is already collided and still moves toward the obstacle in front/behind
-	 */
-	private void setPriorCollisionProbabilities(double collisionProbDrivingTowardObstacle, double collisionProbWhenAlreadyBumped) {
-		int priorSamplesNotYetCollided = (int) Math.ceil((10 * collisionProbDrivingTowardObstacle - 1)/(1 - collisionProbDrivingTowardObstacle));
-		int priorSamplesTwoCollisions = (int) Math.ceil((10 * collisionProbWhenAlreadyBumped - 1)/(1 - collisionProbWhenAlreadyBumped));
-		
-		// Generator for possible distance permutations in 5 sectors
-		Double[] distances = new Double[stateDiscretizer.getNumberOfDistanceBins()];
-		for (int i = 0; i < stateDiscretizer.getNumberOfDistanceBins(); i++) {
-			distances[i] = stateDiscretizer.getMinDistance() + (i + 0.5)*stateDiscretizer.getDistanceBinWidth();
-		}
-		Generator<Double> permutationGen = Factory.createPermutationWithRepetitionGenerator(Factory.createVector(distances), stateDiscretizer.getNumberOfSectors() - 1);
-		
-		// Add collisions when an obstacle is close in front and the agent drives forward.
-		// Do this for all distance permutations in the other sectors. Use more samples to
-		// express more confidence in collision when the agent was already collided.
-		// Repeat for reversing towards obstacle behind.
-		for (ICombinatoricsVector<Double> perm : permutationGen) {
-			for (boolean alreadyCollided : Arrays.asList(false, true)) {
-				for (BumperAction action : Arrays.asList(BumperAction.FORWARD, BumperAction.BACKWARD)) {
-					
-					double obstacleDirectionDegrees = -1;
-					if (action == BumperAction.FORWARD) {
-						obstacleDirectionDegrees = 0;
-					} else if (action == BumperAction.BACKWARD) {
-						obstacleDirectionDegrees = 180;
-					}
-					
-					ModeledBumperState fromState = new ModeledBumperState();
-					fromState.setCollided(alreadyCollided);
-					fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, obstacleDirectionDegrees));
-					
-					int i = 0;
-					for (double sectorDegree = 0; sectorDegree < 360; sectorDegree += stateDiscretizer.getSectorWidthDegrees() ) {
-						if (sectorDegree != obstacleDirectionDegrees) {
-							fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(perm.getValue(i), sectorDegree));
-							i++;
-						}
-					}
-					
-					ModeledBumperState toState = fromState.afterAction(action);
-					toState.setCollided(true);
-					
-					int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
-					for (int s = 0; s < priorSamples; s++) {
-						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-						model.update(transition);
-					}
-				}
-			}
-		}
-	}
-	
-	
 	@Override
 	public int getActionId(double[] currentPerceptValues) {
 		actionRequested = true;
@@ -184,8 +88,9 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-			//model.printCollisionProbabilities();
+			
 		}
+		//model.printCollisionProbabilities();
 		
 		ModeledBumperState currentState;
 		if (previousAction != null) {
@@ -221,6 +126,8 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 			prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, action));
 			prioritizedSweeping.notify();
 		}
+		
+		//System.out.println("Collision prob = " + model.getCollisionProbability(currentState, action));
 		
 		previousState = currentState;
 		previousAction = action;
