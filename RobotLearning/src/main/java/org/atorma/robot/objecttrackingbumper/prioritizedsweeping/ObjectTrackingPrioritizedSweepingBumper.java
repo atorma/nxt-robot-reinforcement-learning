@@ -10,30 +10,25 @@ import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttracking.CircleSector;
-import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 import org.atorma.robot.simplebumper.BumperAction;
 import org.atorma.robot.simplebumper.BumperPercept;
-import org.paukov.combinatorics.*;
 
 public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotController {
 	
 	private BumperStateDiscretizer stateDiscretizer;
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
-	
-	private QTable qTable;
-	
 	private BumperModel model;
 	
+	private QTable qTable;
 	private double discountFactor = 0.9;
 	private PrioritizedSweeping prioritizedSweeping;
-	
-	//private DirectedExploration directedExploration;
-	
+
 	private double epsilon = 0.1;
 	private EpsilonGreedyPolicy epsilonGreedyPolicy;
 	
+	//private DirectedExploration directedExploration;
 	//private BoltzmannActionSelection boltzmannPolicy;
 	//private double temperatureDiscountFactor = 0.9995; 
 	
@@ -55,6 +50,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	}
 	
 	public ObjectTrackingPrioritizedSweepingBumper() {
+		
 		List<CircleSector> obstacleSectors = Arrays.asList(
 				new CircleSector(270, 330),
 				new CircleSector(330, 30),
@@ -88,9 +84,8 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-			
+			model.printCollisionProbabilities();
 		}
-		//model.printCollisionProbabilities();
 		
 		ModeledBumperState currentState;
 		if (previousAction != null) {
