@@ -35,14 +35,17 @@ import com.google.common.collect.Sets;
  */
 public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 	
-	// Parameters of Beta distribution prior P(collision_prob | front_obstacle_distance, action)
-	// for Beta posterior P(collision_prob | data, front_obstacle_distance, action) 
-	public static final double BETA_PRIOR_COLLISION = 2;
-	public static final double BETA_PRIOR_NO_COLLISION = 10;
-	
 	private RewardFunction rewardFunction;
 	private StateDiscretizer stateDiscretizer;
-	private org.apache.commons.math3.stat.Frequency collStats = new Frequency(); // Observed data N(collision | state, action)
+	
+	// Parameters of Beta distribution prior P(collision_prob | state, action)
+	// for Beta posterior P(collision_prob | data, state, action) 
+	private Map<DiscretizedStateAction, Double> priorParamCollision = new HashMap<>();
+	private Map<DiscretizedStateAction, Double> priorParamNoCollision = new HashMap<>();
+	private double defaultPriorParamCollision = 1;
+	private double defaultPriorParamNoCollision = 2;
+	
+	private Frequency collStats = new Frequency(); // Observed data N(collision | state, action)
 
 	/**
 	 * Creates bumper world model where collision probabilities are learned for each (state id, action id)
@@ -172,10 +175,23 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 	public double getCollisionProbability(int stateId, int actionId) {
 		CollisionObservation collided = new CollisionObservation(stateId, actionId, true);
 		CollisionObservation notCollided = new CollisionObservation(stateId, actionId, false);
+		double alpha = getPriorParamCollision(stateId, actionId);
+		double beta = getPriorParamNoCollision(stateId, actionId);
 	
-		double probability = (collStats.getCount(collided) + BETA_PRIOR_COLLISION - 1) / 
-				             (collStats.getCount(collided) + BETA_PRIOR_COLLISION + collStats.getCount(notCollided) + BETA_PRIOR_NO_COLLISION - 2);
+		double probability = (collStats.getCount(collided) + alpha - 1) / 
+				             (collStats.getCount(collided) + alpha + collStats.getCount(notCollided) + beta - 2);
 		return probability;
+	}
+	
+
+	private double getPriorParamCollision(int stateId, int actionId) {
+		Double alpha = priorParamCollision.get(new DiscretizedStateAction(stateId, actionId));
+		return alpha != null ? alpha : defaultPriorParamCollision;
+	}
+	
+	private double getPriorParamNoCollision(int stateId, int actionId) {
+		Double beta = priorParamNoCollision.get(new DiscretizedStateAction(stateId, actionId));
+		return beta != null ? beta : defaultPriorParamNoCollision;
 	}
 	
 	public void printCollisionProbabilities() {
@@ -188,6 +204,25 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 		
 	}
 	
+	public void setDefaultCollisionProbabilityPrior(double priorParamCollision, double priorParamNoCollision) {
+		this.defaultPriorParamCollision = priorParamCollision;
+		this.defaultPriorParamNoCollision = priorParamNoCollision;
+	}
+	
+	public void setCollisionProbabilityPrior(DiscretizedStateAction sa, double priorParamCollision, double priorParamNoCollision) {
+		this.priorParamCollision.put(sa, priorParamCollision);
+		this.priorParamNoCollision.put(sa, priorParamNoCollision);
+	}
+	
+	public double getDefaultPriorParamCollision() {
+		return defaultPriorParamCollision;
+	}
+	
+	public double getDefaultPriorParamNoCollision() {
+		return defaultPriorParamNoCollision;
+	}
+	
+	
 	@Override
 	public TransitionReward simulateAction(StateAction fromStateAction) {
 		Set<StochasticTransitionReward> outgoing = getOutgoingTransitions(fromStateAction);
@@ -199,6 +234,7 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 		
 		return new EnumeratedDistribution<>(pmf).sample();
 	}
+	
 	
 	
 	private static class CollisionObservation implements Comparable<CollisionObservation> {
@@ -254,6 +290,13 @@ public class BumperModel implements PrioritizedSweepingModel, ForwardModel {
 
 		
 	}
+
+
+
+	
+
+
+	
 
 
 	

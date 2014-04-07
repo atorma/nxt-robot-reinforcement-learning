@@ -2,9 +2,9 @@ package org.atorma.robot.objecttrackingbumper.montecarlo;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 import org.atorma.robot.DiscreteRobotController;
-import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.*;
 import org.atorma.robot.learning.montecarlo.QLearningUctPlanning;
 import org.atorma.robot.learning.montecarlo.QLearningUctPlanningParameters;
@@ -20,48 +20,51 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 	private BumperModel model;
 
 	private RewardFunction rewardFunction = new BumperRewardFunction();
-	private StateDiscretizer stateDiscretizer;
-	private double discountFactor = 0.8;
-	
+	private List<CircleSector> obstacleSectors;
+	private BumperStateDiscretizer stateDiscretizer;
+	private StateActionDiscretizer transitionDiscretizer;
+
 	private QTable qTable;
 	private QLearning qLearning;
-	private double learningRate = 0.1;
-	private double traceDecay = 0.8;
+	private double discountFactor = 0.9;
+	private double learningRate = 0.2;
+	private double traceDecay = 0.9;
 	private EligibilityTraces traces;
 	
 	private QLearningUctPlanning uctPlanning;
-	private int planningHorizon = 30;
+	private int planningHorizon = 20;
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
 	
 	private double accumulatedReward = 0;
 	private int accumulatedCollisions = 0;
-	
-	private StateActionDiscretizer transitionDiscretizer;
-	
 	private CsvLogWriter logWriter;
+	
+	private volatile boolean actionRequested;
+
+	
 	
 	
 	public ObjectTrackingMonteCarloBumper(String logFile) {
 		this();
-		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions"); 
+		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions", "Collided", "Action"); 
 	}
 	
 
 	public ObjectTrackingMonteCarloBumper() {
-//		List<CircleSector> obstacleSectors = Arrays.asList(
-//				new CircleSector(270, 330),
-//				new CircleSector(330, 30),
-//				new CircleSector(30, 90));
-//		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
-		stateDiscretizer = new BumperStateDiscretizer(Arrays.asList(new CircleSector(-30, 30)));
+		obstacleSectors = Arrays.asList(
+				new CircleSector(-77, -30),
+				new CircleSector(-30, 30),
+				new CircleSector(30, 75));
+		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 		
-		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		model = new BumperModel(rewardFunction, stateDiscretizer);
-		//setPriorCollisionProbabilities(0.8, 0.99);
+//		BumperModelUtils.setPriorCollisionProbabilities(model, stateDiscretizer, 0.8, 0.99);
+		
+		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		traces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
 		qLearning = new QLearning(learningRate, traces, qTable);
 		
@@ -72,9 +75,12 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		uctParams.planningHorizon = planningHorizon;
 		uctParams.learningRate = learningRate;
 		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
-		uctParams.uctConstant = 3;
+		uctParams.uctConstant = (1 + 100)/(1- discountFactor);
 		uctParams.longTermQValues = qTable;
 		uctPlanning = new QLearningUctPlanning(uctParams);
+		
+		Thread sweeperThread = new Thread(new Sweeper());
+		sweeperThread.start();
 	}
 
 	
@@ -84,38 +90,74 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
+			model.printCollisionProbabilities();
 		}
 		
 		ModeledBumperState currentState;
+		TransitionReward transitionReward = null;
 		if (previousAction != null) {
 			currentState = previousState.afterActionAndObservation(previousAction, currentPercept);
+			Transition transition = new Transition(previousState, previousAction, currentState);
+			double reward = rewardFunction.getReward(transition);
+			accumulatedReward += reward;
+			transitionReward = new TransitionReward(transition, reward); 
 		} else {
 			currentState = ModeledBumperState.initialize(currentPercept);
 		}
 		
-		if (previousAction != null) {
-			Transition transition = new Transition(previousState, previousAction, currentState);
-			double reward = rewardFunction.getReward(transition);
-			accumulatedReward += reward;
-			TransitionReward rewardTransition = new TransitionReward(transition, reward); 
+//		for (CircleSector cs : obstacleSectors) {
+//			System.out.println(cs + " " + currentState.getNearestInSectorDegrees(cs.getFromAngleDeg(), cs.getToAngleDeg()));
+//		}
+
+		actionRequested = true;
+		BumperAction action;
+		synchronized(uctPlanning) {
+			if (transitionReward != null) {
+				model.update(transitionReward);
+				qLearning.update(transitionDiscretizer.discretize(transitionReward));
+			}
 			
-			model.update(rewardTransition);
-			qLearning.update(transitionDiscretizer.discretize(rewardTransition));
+			action = (BumperAction) uctPlanning.getPlannedAction(currentState);
+			actionRequested = false;
+			
+			uctPlanning.setRolloutStartState(currentState);
+			uctPlanning.notify();
 		}
-		
-		uctPlanning.setRolloutStartState(currentState);
-		uctPlanning.performRollouts(50);
-		BumperAction action = (BumperAction) uctPlanning.getPlannedAction(currentState);
 		
 		previousState = currentState;
 		previousAction = action;
 		
 		if (logWriter != null) {
-			logWriter.addRow(accumulatedReward, accumulatedCollisions);
+			logWriter.addRow(accumulatedReward, accumulatedCollisions, currentState.isCollided(), action);
 		}
 		
 		return action.getId();
 	}
 	
 
+	private class Sweeper implements Runnable {
+
+		@Override
+		public void run() {
+			int rolloutsBetweenActions = 0;
+			
+			while (true) {
+				synchronized (uctPlanning) {
+					
+					while (actionRequested) {
+						try {
+							uctPlanning.wait();
+						} catch (InterruptedException e) {}
+						//System.out.println("Rollouts: " + rolloutsBetweenActions);
+						rolloutsBetweenActions = 0;
+					}
+
+					uctPlanning.performRollouts(1); // Increase the number to ensure minimum
+					rolloutsBetweenActions++;
+				}
+			}
+			
+		}
+		
+	}
 }
