@@ -1,11 +1,9 @@
 package org.atorma.robot.simplebumper;
 
-import java.io.File;
-
-import org.atorma.robot.*;
+import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.*;
-import org.atorma.robot.logging.CsvLogWriter;
-import org.atorma.robot.mdp.*;
+import org.atorma.robot.mdp.DiscretizedTransitionReward;
+import org.atorma.robot.mdp.StateActionDiscretizer;
 import org.atorma.robot.policy.EpsilonGreedyPolicy;
 
 public class QLearningBumper implements DiscreteRobotController {
@@ -28,12 +26,12 @@ public class QLearningBumper implements DiscreteRobotController {
 	private int accumulatedCollisions = 0;
 	private double accumulatedReward = 0;
 	
-	private CsvLogWriter logWriter;
+	private BumperLogWriter logWriter;
 	
 	
 	public QLearningBumper(String logFile) {
 		this();
-		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions"); 
+		logWriter = new BumperLogWriter(logFile); 
 	}
 	
 	public QLearningBumper() {
@@ -56,17 +54,17 @@ public class QLearningBumper implements DiscreteRobotController {
 			qLearning.update(transition);
 			accumulatedReward += transition.getReward();
 		}
+
+		BumperAction action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(currentState)));
 		
 		if (logWriter != null) {
-			logWriter.addRow(accumulatedReward, accumulatedCollisions);
+			logWriter.log(accumulatedReward, accumulatedCollisions, currentState.isCollided(), action);
 		}
 		
-		BumperAction nextAction = BumperAction.getAction(epsilonGreedyPolicy.getActionId(stateDiscretizer.getId(currentState)));
-		
 		previousState = currentState;
-		previousAction = nextAction;
+		previousAction = action;
 		
-		return nextAction.getId();
+		return action.getId();
 			
 	}
 

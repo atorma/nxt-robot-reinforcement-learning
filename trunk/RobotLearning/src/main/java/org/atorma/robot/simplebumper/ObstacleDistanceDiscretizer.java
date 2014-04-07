@@ -5,7 +5,7 @@ import org.atorma.robot.discretization.EqualWidthDiscretizer;
 public class ObstacleDistanceDiscretizer extends EqualWidthDiscretizer {
 
 	public ObstacleDistanceDiscretizer() {
-		super(10, 50, 4);
+		super(5, 45, 4);
 	}
 
 }
