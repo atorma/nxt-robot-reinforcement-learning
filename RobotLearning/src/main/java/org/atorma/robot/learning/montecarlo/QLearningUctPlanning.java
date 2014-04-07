@@ -38,9 +38,10 @@ public class QLearningUctPlanning extends AbstractUctPlanning {
 		while (step < horizon && !model.getAllowedActions(state).isEmpty()) {
 			
 			int stateId = stateDiscretizer.getId(state);
-			incrementVisits(stateId);
 			
 			DiscreteAction action = chooseAction(state, stateId);
+			
+			incrementVisits(stateId);
 			incrementVisits(stateId, action.getId());
 		
 			TransitionReward tr = model.simulateAction(new StateAction(state, action));

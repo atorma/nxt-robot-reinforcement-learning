@@ -2,7 +2,7 @@ package org.atorma.robot.objecttrackingbumper;
 
 import java.util.Arrays;
 
-import org.atorma.robot.mdp.TransitionReward;
+import org.atorma.robot.mdp.DiscretizedStateAction;
 import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.simplebumper.BumperAction;
@@ -15,7 +15,7 @@ public class BumperModelUtils {
 	 * and the agent moves towards it.
 	 * 
 	 * @param model
-	 * 	the model to train
+	 * 	the model to set up
 	 * @param stateDiscretizer
 	 * 	discretizer of states for collision probabilities
 	 * @param collisionProbDrivingTowardObstacle
@@ -25,17 +25,17 @@ public class BumperModelUtils {
 	 */
 	public static void setPriorCollisionProbabilities(BumperModel model, BumperStateDiscretizer stateDiscretizer, double collisionProbDrivingTowardObstacle, double collisionProbWhenAlreadyBumped) {
 		
-		int priorSamplesNotYetCollided = getNumberOfSamples(model, collisionProbDrivingTowardObstacle);
-		int priorSamplesTwoCollisions = getNumberOfSamples(model, collisionProbWhenAlreadyBumped);
+		double priorParamNotYetCollided = getCollisionPriorParam(model, collisionProbDrivingTowardObstacle);
+		double priorParamTwoCollisions = getCollisionPriorParam(model, collisionProbWhenAlreadyBumped);
 		
-		// Generator for possible distance permutations in the other sectors than where the robot is driving towards
+		// Generator for distance permutations in the other sectors than the one with the obstacle that the robot is driving towards
 		Double[] distances = new Double[stateDiscretizer.getNumberOfDistanceBins()];
 		for (int i = 0; i < stateDiscretizer.getNumberOfDistanceBins(); i++) {
 			distances[i] = stateDiscretizer.getMinDistance() + (i + 0.5)*stateDiscretizer.getDistanceBinWidth();
 		}
 		Generator<Double> permutationGen = Factory.createPermutationWithRepetitionGenerator(Factory.createVector(distances), stateDiscretizer.getNumberOfSectors() - 1);
 		
-		// Add collisions when an obstacle is close in front and the agent drives forward.
+		// Set prior parameters of collision probability when an obstacle is close in front and the agent drives forward.
 		// Do this for all distance permutations in the other sectors. Use more samples to
 		// express more confidence in collision when the agent was already collided.
 		// Repeat for reversing towards obstacle behind.	
@@ -49,7 +49,8 @@ public class BumperModelUtils {
 					obstacleDirectionDegrees = 180;
 				}
 				
-				// Make sure the obstacle is within a collision tracking sector - otherwise we'll make the model too pessimistic
+				// Make sure the obstacle is within a collision tracking sector.
+				// Otherwise we'll teach that collision is likely even if no obstacle in sight!
 				boolean found = false;
 				for (CircleSector sector : stateDiscretizer.getSectors()) {
 					if (sector.contains(obstacleDirectionDegrees)) {
@@ -77,14 +78,23 @@ public class BumperModelUtils {
 						}
 					}
 					
+					DiscretizedStateAction sa = new DiscretizedStateAction(stateDiscretizer.getId(fromState), action.getId());
+					if (alreadyCollided) {
+						model.setCollisionProbabilityPrior(sa, priorParamTwoCollisions, model.getDefaultPriorParamNoCollision());
+					} else {
+						model.setCollisionProbabilityPrior(sa, priorParamNotYetCollided, model.getDefaultPriorParamNoCollision());
+					}
+					
+					/*
 					ModeledBumperState toState = fromState.afterAction(action);
 					toState.setCollided(true);
 					
-					int priorSamples = alreadyCollided ? priorSamplesTwoCollisions : priorSamplesNotYetCollided;
+					int priorSamples = alreadyCollided ? priorParamTwoCollisions : priorParamNotYetCollided;
 					for (int s = 0; s < priorSamples; s++) {
 						TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
 						model.update(transition);
 					}
+					*/
 					
 				}
 				
@@ -92,11 +102,10 @@ public class BumperModelUtils {
 		}
 	}
 	
-	private static int getNumberOfSamples(BumperModel model, double collisionProb) {
-		double a = BumperModel.BETA_PRIOR_COLLISION;
-		double b = BumperModel.BETA_PRIOR_NO_COLLISION;
+	private static double getCollisionPriorParam(BumperModel model, double collisionProb) {
+		double b = model.getDefaultPriorParamNoCollision();
 		double p = collisionProb;
-		double n = ( (2 - a - b)*p + a - 1 )/( p - 1 );
-		return (int) Math.ceil(n);
+		double a = ( p*(b - 2) + 1 )/( 1 - p );
+		return a;
 	}
 }

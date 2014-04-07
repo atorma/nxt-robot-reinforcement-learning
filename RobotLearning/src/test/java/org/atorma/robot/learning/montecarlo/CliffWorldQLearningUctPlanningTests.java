@@ -19,6 +19,7 @@ public class CliffWorldQLearningUctPlanningTests {
 	
 	private QLearningUctPlanning uctPlanning;
 	private int planningHorizon = 25;
+	private double uctConstant = 2;
 	
 	private ExactCliffWorldForwardModel model;
 	private CliffWorldStateDiscretizer stateDiscretizer = new CliffWorldStateDiscretizer();
@@ -45,7 +46,7 @@ public class CliffWorldQLearningUctPlanningTests {
 		uctParams.learningRate = learningRate;
 		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, 0.8);
 		uctParams.planningHorizon = planningHorizon;
-		uctParams.uctConstant = 3.0;
+		uctParams.uctConstant = uctConstant;
 		uctPlanning = new QLearningUctPlanning(uctParams);
 	}
 	

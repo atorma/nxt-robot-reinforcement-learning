@@ -22,7 +22,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	private BumperModel model;
 	
 	private QTable qTable;
-	private double discountFactor = 0.9;
+	private double discountFactor = 0.3;
 	private PrioritizedSweeping prioritizedSweeping;
 
 	private double epsilon = 0.1;
@@ -52,9 +52,9 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 	public ObjectTrackingPrioritizedSweepingBumper() {
 		
 		List<CircleSector> obstacleSectors = Arrays.asList(
-				new CircleSector(270, 330),
-				new CircleSector(330, 30),
-				new CircleSector(30, 90));
+				new CircleSector(-45, -15),
+				new CircleSector(-15, 15),
+				new CircleSector(15, 45));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
@@ -93,7 +93,6 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 		} else {
 			currentState = ModeledBumperState.initialize(currentPercept);
 		}
-		int currentStateId = stateDiscretizer.getId(currentState);
 		
 		TransitionReward transitionReward = null;
 		if (previousAction != null) {
@@ -111,6 +110,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 				observedTransitions.add(transitionReward);
 			}
 
+			int currentStateId = stateDiscretizer.getId(currentState);
 			action = BumperAction.getAction(epsilonGreedyPolicy.getActionId(currentStateId));
 			//action = BumperAction.getAction(boltzmannPolicy.getActionId(currentStateId));
 			//boltzmannPolicy.setTemperature(boltzmannPolicy.getTemperature() * temperatureDiscountFactor);

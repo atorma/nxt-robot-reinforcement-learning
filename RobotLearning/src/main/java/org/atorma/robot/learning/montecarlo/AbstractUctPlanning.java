@@ -20,10 +20,10 @@ public abstract class AbstractUctPlanning {
 	protected int horizon;
 	protected double uctConstant;
 	protected double discountFactor;
-	protected QTable uctQValues;
+	protected QTable uctQValues = new HashMapQTable();
 	
-	protected Map<DiscretizedStateAction, Integer> stateActionVisits;
-	protected Map<Integer, Integer> stateVisits;
+	protected Map<DiscretizedStateAction, Integer> stateActionVisits = new HashMap<>();
+	protected Map<Integer, Integer> stateVisits = new HashMap<>();
 	
 	protected State startState;
 
@@ -40,12 +40,15 @@ public abstract class AbstractUctPlanning {
 	
 	public void setRolloutStartState(State state) {
 		startState = state;
-		stateVisits = new HashMap<>();
-		stateActionVisits = new HashMap<>();
+		stateVisits.clear();
+		stateActionVisits.clear();
 		uctQValues = new HashMapQTable(); 
 	}
 	
 	public void performRollouts(int num) {
+		if (startState == null) {
+			return;
+		}
 		for (int i = 0; i < num; i++) {
 			performRollout(startState);
 		}
@@ -92,12 +95,12 @@ public abstract class AbstractUctPlanning {
 		for (DiscreteAction action : model.getAllowedActions(state)) {
 			DiscretizedStateAction sa = new DiscretizedStateAction(stateId, action.getId());
 			
-			double qLt = longTermQValues != null ? longTermQValues.getValue(sa) : 0;
-			double qUct = uctQValues.getValue(sa);
+			double qLt = longTermQValues != null ? 0.5 * longTermQValues.getValue(sa) : 0;
+			double qUct = 0.5 * uctQValues.getValue(sa);
 			
 			int ns = getNumberOfVisits(stateId);
 			int nsa = getNumberOfVisits(stateId, action.getId());
-			double expl = isExploration ? uctConstant*sqrt(2*log(ns)/nsa) : 0;
+			double expl = isExploration ? uctConstant*sqrt(log(ns)/nsa) : 0;
 			
 			double q = qLt + qUct + expl; 
 			

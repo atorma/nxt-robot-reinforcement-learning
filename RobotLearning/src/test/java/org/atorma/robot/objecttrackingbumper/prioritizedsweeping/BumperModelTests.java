@@ -2,21 +2,16 @@ package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import org.atorma.robot.mdp.*;
-import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.simplebumper.BumperAction;
-import org.junit.*;
-import org.paukov.combinatorics.*;
+import org.junit.Before;
+import org.junit.Test;
 
 public class BumperModelTests {
-
-	private static final int PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED = 35;
-	private static final int PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED = 890;
 	
 	// Expected prior collision probabilities given our prior samples
 	// Computed using binomial collision model with beta prior, where the prior
@@ -37,40 +32,36 @@ public class BumperModelTests {
 	@Before
 	public void setUp() {
 		model = new BumperModel(rewardFunction, discretizer); 
+		model.setDefaultCollisionProbabilityPrior(2, 10); 
 		addSimplePriorCollisionSamples();
 	}
 
-	// Here we train the collision model just for those states where there's a single obstacle 
+	// Here we set prior collision probabilities just for those states where there's a single obstacle 
 	// and it's located directly in front of the agent and is near. This allows tests to run fast!
 	private void addSimplePriorCollisionSamples() {
-		ModeledBumperState fromState, toState;
+		ModeledBumperState fromState;
 		BumperAction action;
+		DiscretizedStateAction sa;
 		
 		// Add collisions when an obstacle is close in front, not collision yet, and the agent drives forward
 		fromState = new ModeledBumperState();
 		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 0));
 		fromState.setCollided(false);
 		action = BumperAction.FORWARD;
-		toState = fromState.afterAction(action);
-		toState.setCollided(true);
-		for (int i = 0; i < PRIOR_SAMPLES_WHEN_NOT_YET_COLLIDED; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-			model.update(transition);
-		}
+		sa = new DiscretizedStateAction(discretizer.getId(fromState), action.getId());
+		model.setCollisionProbabilityPrior(sa, 37, 10);
 
 		// Same when already collided before starting the action
 		fromState.setCollided(true);
-		toState = fromState;
-		for (int i = 0; i < PRIOR_SAMPLES_WHEN_ALREADY_COLLIDED; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
-			model.update(transition);
-		}
+		sa = new DiscretizedStateAction(discretizer.getId(fromState), action.getId());
+		model.setCollisionProbabilityPrior(sa, 892, 10);
 	}
 	
 	
 	@Test
-	public void test_prior_collision_probability_when_no_knowledge_of_collisions() {
+	public void test_prior_collision_probability_when_no_observations_yet() {
 		model = new BumperModel(rewardFunction, discretizer); 
+		model.setDefaultCollisionProbabilityPrior(2, 10); 
 		
 		for (int stateId = 0; stateId < discretizer.getNumberOfStates(); stateId++) {
 			for (BumperAction action : BumperAction.values()) {	
@@ -93,7 +84,7 @@ public class BumperModelTests {
 		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_OBSTACLE_AFTER_ALREADY_COLLIDED, model.getCollisionProbability(fromState, action), 0.01);
 	}
 	
-	@Test  // Slow test
+	@Test 
 	public void test_collision_probabilities_with_full_prior_samples() {
 		ModeledBumperState fromState = getState(BumperAction.DRIVE_DISTANCE_CM);
 		fromState.setCollided(false);
@@ -107,6 +98,7 @@ public class BumperModelTests {
 		
 		// Now with full model training
 		model = new BumperModel(rewardFunction, discretizer); 
+		model.setDefaultCollisionProbabilityPrior(2, 10); 
 		BumperModelUtils.setPriorCollisionProbabilities(model, discretizer, PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_OBSTACLE_AFTER_ALREADY_COLLIDED);
 		assertEquals(PRIOR_COLLISION_PROB_WHEN_MOVING_TOWARD_NEAR_OBSTACLE, model.getCollisionProbability(fromState, action), 0.01); 
 		

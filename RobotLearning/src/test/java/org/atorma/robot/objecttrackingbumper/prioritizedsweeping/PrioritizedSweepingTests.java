@@ -1,19 +1,18 @@
 package org.atorma.robot.objecttrackingbumper.prioritizedsweeping;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
-import org.atorma.robot.discretization.StateDiscretizer;
 import org.atorma.robot.learning.ArrayQTable;
 import org.atorma.robot.learning.prioritizedsweeping.PrioritizedSweeping;
 import org.atorma.robot.mdp.StateAction;
-import org.atorma.robot.mdp.TransitionReward;
 import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
-import org.atorma.robot.objecttrackingbumper.BumperRewardFunction;
-import org.atorma.robot.simplebumper.*;
+import org.atorma.robot.simplebumper.BumperAction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,7 +21,7 @@ public class PrioritizedSweepingTests {
 	private PrioritizedSweeping prioritizedSweeping;
 	private double discountFactor = 0.9;
 	
-	private StateDiscretizer bumperStateDiscretizer;
+	private BumperStateDiscretizer bumperStateDiscretizer;
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private BumperModel model;
 	private List<CircleSector> obstacleSectors;
@@ -32,12 +31,12 @@ public class PrioritizedSweepingTests {
 	@Before
 	public void setUp() {
 		obstacleSectors = Arrays.asList(
-				new CircleSector(270, 330),
-				new CircleSector(330, 30),
-				new CircleSector(30, 90));
+				new CircleSector(-45, -15),
+				new CircleSector(-15, 15),
+				new CircleSector(15, 45));
 		bumperStateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		model = new BumperModel(rewardFunction, bumperStateDiscretizer);
-		setPriorCollisionProbabilities();
+		BumperModelUtils.setPriorCollisionProbabilities(model, bumperStateDiscretizer, 0.8, 0.99);
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -47,31 +46,6 @@ public class PrioritizedSweepingTests {
 		prioritizedSweeping.setQTable(new ArrayQTable(bumperStateDiscretizer.getNumberOfStates(), BumperAction.values().length));
 	}
 	
-	private void setPriorCollisionProbabilities() {
-		ModeledBumperState fromState, toState;
-		BumperAction action;
-		
-		// Add collisions when an obstacle is close in front, not collision yet, and the agent drives forward
-		fromState = new ModeledBumperState();
-		fromState.addObservation(TrackedObject.inPolarDegreeCoordinates(BumperAction.DRIVE_DISTANCE_CM, 0));
-		fromState.setCollided(false);
-		action = BumperAction.FORWARD;
-		toState = fromState.afterAction(action);
-		toState.setCollided(true);
-		for (int i = 0; i < 80; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); // the reward doesn't matter in this implementation
-			model.update(transition);
-		}
-
-		// Same when already collided before starting the action
-		fromState.setCollided(true);
-		toState = fromState;
-		for (int i = 0; i < 180; i++) {
-			TransitionReward transition = new TransitionReward(fromState, action, toState, -100); 
-			model.update(transition);
-		}
-		
-	}
 
 	@Test
 	public void test_agent_bypasses_obstacle() {
@@ -106,14 +80,14 @@ public class PrioritizedSweepingTests {
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
 		System.out.println("Best action " + action);
-		assertFalse(action == BumperAction.FORWARD);
+		assertTrue(action == BumperAction.FORWARD);
 		
 		currentState = currentState.afterAction(action);
 		
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
 		System.out.println("Best action " + action);
-		assertFalse(action == BumperAction.FORWARD);
+		assertTrue(action == BumperAction.FORWARD);
 		
 		currentState = currentState.afterAction(action);
 		
