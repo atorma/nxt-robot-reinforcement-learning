@@ -1,4 +1,4 @@
-package org.atorma.robot.objecttrackingbumper.montecarlo;
+package org.atorma.robot.objecttrackingbumper;
 
 import java.io.File;
 import java.util.Arrays;
