@@ -133,7 +133,7 @@ public class ObjectTrackingPrioritizedSweepingBumper implements DiscreteRobotCon
 					
 					TransitionReward transitionReward = observedTransitions.poll();
 					if (transitionReward != null) {
-						//System.out.println("sweeps between observations " + sweepsBetweenObservations);
+						System.out.println("sweeps between observations " + sweepsBetweenObservations);
 						sweepsBetweenObservations = 0;
 						model.update(transitionReward);
 					}
