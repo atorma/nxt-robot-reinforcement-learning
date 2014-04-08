@@ -17,9 +17,9 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private StateActionDiscretizer transitionDiscretizer;
 	
-	private double learningRate = 0.3;
-	private double discountFactor = 0.5;
-	private double traceDecay = 0.7;
+	private double learningRate = 0.1;
+	private double discountFactor = 0.9;
+	private double traceDecay = 0.9;
 	private EligibilityTraces traces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
 	private QTable qTable;
 	private QLearning qLearning;

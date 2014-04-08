@@ -3,13 +3,15 @@ package org.atorma.robot.simplebumper;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.atorma.robot.objecttrackingbumper.ObjectTrackingQLearningBumper;
+
 public class SimbadBumperSimulation {
 
 	public static void main(String[] args) {
-		String experimentName = "OT Q-learning 3x45 deg sectors";
-		QLearningBumper qLearning = new QLearningBumper(createFileName(experimentName));
+		String experimentName = "OTQL 3x45";
+		ObjectTrackingQLearningBumper learningAndControl = new ObjectTrackingQLearningBumper(createFileName(experimentName));
 		
-		SimbadBumper robot = new SimbadBumper(qLearning);
+		SimbadBumper robot = new SimbadBumper(learningAndControl);
 		robot.startSimulationGUI();
 	}
 	
