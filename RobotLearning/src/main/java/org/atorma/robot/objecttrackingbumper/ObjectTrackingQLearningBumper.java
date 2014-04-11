@@ -42,18 +42,18 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	}
 	
 	public ObjectTrackingQLearningBumper() {
-		List<CircleSector> obstacleSectors = Arrays.asList(
-				new CircleSector(-67.5, -22.5),
-				new CircleSector(-22.5, 22.5),
-				new CircleSector(22.5, 67.5));
-//		List<CircleSector> obstacleSectors = Arrays.asList(new CircleSector(-45, 45));
+//		List<CircleSector> obstacleSectors = Arrays.asList(
+//				new CircleSector(-180, -60),
+//				new CircleSector(-60, 60),
+//				new CircleSector(60, 180));
+		List<CircleSector> obstacleSectors = Arrays.asList(new CircleSector(-180, 180));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
-		qLearning = new QLearning(learningRate, traces, qTable);
-//		qLearning = new QLearning(learningRate, discountFactor, qTable);
+//		qLearning = new QLearning(learningRate, traces, qTable);
+		qLearning = new QLearning(learningRate, discountFactor, qTable);
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qLearning, BumperAction.values());
 	}
 	
