@@ -1,6 +1,5 @@
 package org.atorma.robot.objecttrackingbumper;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,14 +7,11 @@ import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.*;
 import org.atorma.robot.learning.montecarlo.QLearningUctPlanning;
 import org.atorma.robot.learning.montecarlo.QLearningUctPlanningParameters;
-import org.atorma.robot.logging.CsvLogWriter;
 import org.atorma.robot.mdp.*;
 import org.atorma.robot.objecttracking.CircleSector;
-import org.atorma.robot.objecttrackingbumper.*;
-import org.atorma.robot.simplebumper.BumperAction;
-import org.atorma.robot.simplebumper.BumperPercept;
+import org.atorma.robot.simplebumper.*;
 
-public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
+public class QLearningUctPlanningBumper implements DiscreteRobotController {
 
 	private BumperModel model;
 
@@ -27,42 +23,46 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 	private QTable qTable;
 	private QLearning qLearning;
 	private double discountFactor = 0.9;
-	private double learningRate = 0.2;
+	private double learningRate = 0.1;
 	private double traceDecay = 0.9;
 	private EligibilityTraces traces;
 	
 	private QLearningUctPlanning uctPlanning;
 	private int planningHorizon = 20;
+	private double learningRatePlanning = 0.1;
+	private double traceDecayPlanning = 0.9;
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
 	
 	private double accumulatedReward = 0;
 	private int accumulatedCollisions = 0;
-	private CsvLogWriter logWriter;
+	
+	private BumperLogWriter logWriter;
 	
 	private volatile boolean actionRequested;
 
 	
 	
 	
-	public ObjectTrackingMonteCarloBumper(String logFile) {
+	public QLearningUctPlanningBumper(String logFile) {
 		this();
-		logWriter = new CsvLogWriter(new File(logFile), "Accumulated reward", "Accumulated collisions", "Collided", "Action"); 
+		logWriter = new BumperLogWriter(logFile); 
 	}
 	
 
-	public ObjectTrackingMonteCarloBumper() {
+	public QLearningUctPlanningBumper() {
 		obstacleSectors = Arrays.asList(
-				new CircleSector(-77, -30),
+				new CircleSector(-90, -30),
 				new CircleSector(-30, 30),
-				new CircleSector(30, 75));
+				new CircleSector(30, 90));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 		
 		model = new BumperModel(rewardFunction, stateDiscretizer);
-//		BumperModelUtils.setPriorCollisionProbabilities(model, stateDiscretizer, 0.8, 0.99);
+		model.setDefaultCollisionProbabilityPrior(2, 10);
+		BumperModelUtils.setPriorCollisionProbabilities(model, stateDiscretizer, 0.8, 0.99);
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		traces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
@@ -73,9 +73,10 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		uctParams.allActions = BumperAction.values();
 		uctParams.stateDiscretizer = stateDiscretizer;
 		uctParams.planningHorizon = planningHorizon;
-		uctParams.learningRate = learningRate;
-		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
-		uctParams.uctConstant = (1 + 100)/(1- discountFactor);
+		uctParams.learningRate = learningRatePlanning;
+		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, traceDecayPlanning);
+//		uctParams.uctConstant = (1 + 100)/(1- discountFactor);
+		uctParams.uctConstant = 25;
 		uctParams.longTermQValues = qTable;
 		uctPlanning = new QLearningUctPlanning(uctParams);
 		
@@ -90,7 +91,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-			model.printCollisionProbabilities();
+//			model.printCollisionProbabilities();
 		}
 		
 		ModeledBumperState currentState;
@@ -128,7 +129,7 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 		previousAction = action;
 		
 		if (logWriter != null) {
-			logWriter.addRow(accumulatedReward, accumulatedCollisions, currentState.isCollided(), action);
+			logWriter.log(accumulatedReward, accumulatedCollisions, currentState.isCollided(), action);
 		}
 		
 		return action.getId();
@@ -148,11 +149,11 @@ public class ObjectTrackingMonteCarloBumper implements DiscreteRobotController {
 						try {
 							uctPlanning.wait();
 						} catch (InterruptedException e) {}
-						//System.out.println("Rollouts: " + rolloutsBetweenActions);
+//						System.out.println("Rollouts: " + rolloutsBetweenActions);
 						rolloutsBetweenActions = 0;
 					}
 
-					uctPlanning.performRollouts(1); // Increase the number to ensure minimum
+					uctPlanning.performRollouts(60); // Increase the number to ensure minimum
 					rolloutsBetweenActions++;
 				}
 			}

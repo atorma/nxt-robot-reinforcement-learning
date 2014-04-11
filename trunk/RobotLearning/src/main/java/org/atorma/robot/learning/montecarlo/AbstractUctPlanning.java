@@ -96,7 +96,7 @@ public abstract class AbstractUctPlanning {
 			DiscretizedStateAction sa = new DiscretizedStateAction(stateId, action.getId());
 			
 			double qLt = longTermQValues != null ? 0.5 * longTermQValues.getValue(sa) : 0;
-			double qUct = 0.5 * uctQValues.getValue(sa);
+			double qUct =longTermQValues != null ? 0.5 * uctQValues.getValue(sa) : uctQValues.getValue(sa);
 			
 			int ns = getNumberOfVisits(stateId);
 			int nsa = getNumberOfVisits(stateId, action.getId());

@@ -43,15 +43,16 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 	
 	public PrioritizedSweepingBumper() {
 		List<CircleSector> obstacleSectors = Arrays.asList(
-				new CircleSector(-67.5, -22.5),
-				new CircleSector(-22.5, 22.5),
-				new CircleSector(22.5, 67.5));
+				new CircleSector(-180, -60),
+				new CircleSector(-60, 60),
+				new CircleSector(60, 180));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
 		
 		model = new BumperModel(rewardFunction, stateDiscretizer);
-//		BumperModelUtils.setPriorCollisionProbabilities(model, stateDiscretizer, 0.8, 0.99);
+		model.setDefaultCollisionProbabilityPrior(2, 10);
+		BumperModelUtils.setPriorCollisionProbabilities(model, stateDiscretizer, 0.8, 0.99);
 		
 		prioritizedSweeping = new PrioritizedSweeping();
 		prioritizedSweeping.setDiscountFactor(discountFactor);
@@ -73,7 +74,7 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-			model.printCollisionProbabilities();
+//			model.printCollisionProbabilities();
 		}
 		
 		ModeledBumperState currentState;
@@ -131,11 +132,11 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 					
 					TransitionReward transitionReward = observedTransitions.poll();
 					if (transitionReward != null) {
-						System.out.println("sweeps between observations " + sweepsBetweenObservations);
+//						System.out.println("sweeps between observations " + sweepsBetweenObservations);
 						sweepsBetweenObservations = 0;
 						model.update(transitionReward);
 					}
-					sweepsBetweenObservations += prioritizedSweeping.performIterations(1); // Increase the number of iterations to ensure minimum
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(1200); // Increase the number of iterations to ensure minimum
 					
 				}
 			}

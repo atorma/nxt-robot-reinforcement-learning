@@ -70,6 +70,9 @@ public class PrioritizedSweepingTests {
 		
 		currentState = currentState.afterAction(action);
 		
+		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, BumperAction.FORWARD));
+		prioritizedSweeping.performIterations(3000);
+		
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
 		System.out.println("Best action " + action);
@@ -77,19 +80,28 @@ public class PrioritizedSweepingTests {
 		
 		currentState = currentState.afterAction(action);
 		
-		action = getBestActionInState(currentState);
-		System.out.println("State " + currentState);
-		System.out.println("Best action " + action);
-		assertTrue(action == BumperAction.FORWARD);
-		
-		currentState = currentState.afterAction(action);
+		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, BumperAction.FORWARD));
+		prioritizedSweeping.performIterations(3000);
 		
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
 		System.out.println("Best action " + action);
-		assertTrue(action == BumperAction.FORWARD);
+		assertFalse(action == BumperAction.FORWARD);
 		
 		currentState = currentState.afterAction(action);
+		
+		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, BumperAction.FORWARD));
+		prioritizedSweeping.performIterations(3000);
+		
+		action = getBestActionInState(currentState);
+		System.out.println("State " + currentState);
+		System.out.println("Best action " + action);
+		assertFalse(action == BumperAction.FORWARD);
+		
+		currentState = currentState.afterAction(action);
+		
+		prioritizedSweeping.setSweepStartStateAction(new StateAction(currentState, BumperAction.FORWARD));
+		prioritizedSweeping.performIterations(3000);
 		
 		action = getBestActionInState(currentState);
 		System.out.println("State " + currentState);
