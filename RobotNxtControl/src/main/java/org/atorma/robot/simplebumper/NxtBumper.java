@@ -12,7 +12,7 @@ import org.atorma.robot.mdp.State;
 
 public class NxtBumper extends NxtRobot {
 	
-	public static final double WHEEL_DIAMETER_CM = 5.6;
+	public static final double WHEEL_DIAMETER_CM = 5.3; // calibrated
 	public static final double WHEEL_WIDTH_CM = 2.6;
 	public static final double TRACK_WIDTH_EDGE_TO_EDGE_CM = 19.3;
 	
