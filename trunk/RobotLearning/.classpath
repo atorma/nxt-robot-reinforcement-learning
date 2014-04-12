@@ -20,7 +20,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/RobotCore"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RobotSimulation"/>
 	<classpathentry kind="lib" path="lib/opencsv-2.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
