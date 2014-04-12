@@ -75,8 +75,8 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 		uctParams.planningHorizon = planningHorizon;
 		uctParams.learningRate = learningRatePlanning;
 		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, traceDecayPlanning);
-//		uctParams.uctConstant = (1 + 100)/(1- discountFactor);
-		uctParams.uctConstant = 25;
+		uctParams.uctConstant = (1 + 100)/(1- discountFactor);
+//		uctParams.uctConstant = 25;
 		uctParams.longTermQValues = qTable;
 		uctPlanning = new QLearningUctPlanning(uctParams);
 		
