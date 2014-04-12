@@ -15,11 +15,7 @@ public class BumperPercept implements State {
 	}
 	
 	public BumperPercept(int distanceToObstacle, boolean isCollided) {
-		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0, 0};
-	}
-	
-	public BumperPercept(int distanceToObstacle, boolean isCollided, int lightValue) {
-		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0, lightValue};
+		this.values = new double[] {distanceToObstacle, isCollided ? 1 : 0};
 	}
 	
 	public BumperPercept(double[] values) {
@@ -39,16 +35,11 @@ public class BumperPercept implements State {
 	public boolean isCollided() {
 		return values[1] > 0;
 	}
-	
-	public int getLightValue() {
-		return (int) values[2];
-	}
 
 	@Override
 	public String toString() {
 		return "BumperPercept [getDistanceToObstacle()="
-				+ getDistanceToObstacleInFrontCm() + ", isCollided()=" + isCollided()
-				+ ", getLightValue()=" + getLightValue() + "]";
+				+ getDistanceToObstacleInFrontCm() + ", isCollided()=" + isCollided() + "]";
 	}
 
 	

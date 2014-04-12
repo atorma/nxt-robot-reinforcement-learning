@@ -1,6 +1,5 @@
 package org.atorma.robot.simplebumper;
 
-import lejos.nxt.LightSensor;
 import lejos.nxt.Motor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.TouchSensor;
@@ -18,7 +17,6 @@ public class NxtBumper extends NxtRobot {
 	public static final double TRACK_WIDTH_EDGE_TO_EDGE_CM = 19.3;
 	
 	private UltrasonicSensor ultrasonicSensor = new UltrasonicSensor(SensorPort.S3);
-	private LightSensor lightSensor = new LightSensor(SensorPort.S1, false);
 	private TouchSensor touchSensor = new TouchSensor(SensorPort.S4);
 	private DifferentialPilot pilot = new DifferentialPilot(WHEEL_DIAMETER_CM, TRACK_WIDTH_EDGE_TO_EDGE_CM - WHEEL_WIDTH_CM , Motor.A, Motor.C, false);
 	
@@ -30,7 +28,8 @@ public class NxtBumper extends NxtRobot {
 	
 	@Override
 	public State getCurrentState() {
-		BumperPercept state = new BumperPercept(ultrasonicSensor.getDistance(), touchSensor.isPressed(), lightSensor.readNormalizedValue());
+		int distance = touchSensor.isPressed() ? 0 : ultrasonicSensor.getDistance();
+		BumperPercept state = new BumperPercept(distance, touchSensor.isPressed());
 		return state;
 	}
 	

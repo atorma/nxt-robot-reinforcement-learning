@@ -42,7 +42,7 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	
 	private volatile boolean actionRequested;
 
-	
+	private long actionTime = -1;
 	
 	
 	public QLearningUctPlanningBumper(String logFile) {
@@ -87,12 +87,18 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	
 	@Override
 	public int getActionId(double[] currentPerceptValues) {
+		long currentTime = System.currentTimeMillis();
+		if (actionTime > 0) {
+			System.out.println("Action interval: " + (currentTime - actionTime));
+		}
+		actionTime = currentTime;
 		
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
 //			model.printCollisionProbabilities();
 		}
+		System.out.println("Distance " + currentPercept.getDistanceToObstacleInFrontCm());
 		
 		ModeledBumperState currentState;
 		TransitionReward transitionReward = null;
@@ -113,6 +119,7 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 		actionRequested = true;
 		BumperAction action;
 		synchronized(uctPlanning) {
+			//System.out.println("Getting action...");
 			if (transitionReward != null) {
 				model.update(transitionReward);
 				qLearning.update(transitionDiscretizer.discretize(transitionReward));
@@ -143,19 +150,21 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 			int rolloutsBetweenActions = 0;
 			
 			while (true) {
+				
 				synchronized (uctPlanning) {
-					
 					while (actionRequested) {
 						try {
 							uctPlanning.wait();
 						} catch (InterruptedException e) {}
-//						System.out.println("Rollouts: " + rolloutsBetweenActions);
+						System.out.println("Rollouts: " + rolloutsBetweenActions);
 						rolloutsBetweenActions = 0;
 					}
-
-					uctPlanning.performRollouts(60); // Increase the number to ensure minimum
-					rolloutsBetweenActions++;
 				}
+				
+				synchronized (uctPlanning) {
+					uctPlanning.performRollouts(1); // Increase the number to ensure minimum	
+				}
+				rolloutsBetweenActions++;
 			}
 			
 		}
