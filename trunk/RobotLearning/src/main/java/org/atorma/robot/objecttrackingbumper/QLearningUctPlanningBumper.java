@@ -30,8 +30,8 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	
 	private QLearningUctPlanning uctPlanning;
 	private int planningHorizon = 5;
-	private double learningRatePlanning = 0.2;
-	private double traceDecayPlanning = 0.7;
+	private double learningRatePlanning = 0.1;
+	private double traceDecayPlanning = 0.5;
 	private double uctConstant = (1 + 100)/(1- discountFactor);
 	
 	private ModeledBumperState previousState;
