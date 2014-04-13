@@ -26,7 +26,6 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
-	private Queue<TransitionReward> observedTransitions = new LinkedList<>();
 	
 	private double accumulatedReward = 0;
 	private int accumulatedCollisions = 0;
@@ -42,10 +41,14 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 	}
 	
 	public PrioritizedSweepingBumper() {
+//		List<CircleSector> obstacleSectors = Arrays.asList(
+//				new CircleSector(-65.7, -22.5),
+//				new CircleSector(-22.5, 22.5),
+//				new CircleSector(22.5, 67.5));
 		List<CircleSector> obstacleSectors = Arrays.asList(
 				new CircleSector(-180, -60),
 				new CircleSector(-60, 60),
-				new CircleSector(60, 180));
+				new CircleSector(60, 120));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
@@ -58,7 +61,7 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 		prioritizedSweeping.setDiscountFactor(discountFactor);
 		prioritizedSweeping.setStateDiscretizer(stateDiscretizer);
 		prioritizedSweeping.setModel(model);
-		prioritizedSweeping.setQValueChangeThreshold(1E-4);
+		prioritizedSweeping.setQValueChangeThreshold(0.01);
 		prioritizedSweeping.setQTable(qTable);
 		
 		epsilonGreedyPolicy = new EpsilonGreedyPolicy(epsilon, qTable, BumperAction.values());
@@ -94,7 +97,7 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 		synchronized (prioritizedSweeping) { // synchronize on observedTransitions, qTable, prioritizedSweeping
 			
 			if (transitionReward != null) {
-				observedTransitions.add(transitionReward);
+				model.update(transitionReward);
 			}
 
 			int currentStateId = stateDiscretizer.getId(currentState);
@@ -122,23 +125,21 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 			int sweepsBetweenObservations = 0;
 			
 			while (true) {
+				
 				synchronized (prioritizedSweeping) {
-					
 					while (actionRequested) {
 						try {
 							prioritizedSweeping.wait();
 						} catch (InterruptedException e) {}
-					}
-					
-					TransitionReward transitionReward = observedTransitions.poll();
-					if (transitionReward != null) {
 //						System.out.println("sweeps between observations " + sweepsBetweenObservations);
 						sweepsBetweenObservations = 0;
-						model.update(transitionReward);
 					}
-					sweepsBetweenObservations += prioritizedSweeping.performIterations(1200); // Increase the number of iterations to ensure minimum
-					
 				}
+				
+				synchronized (prioritizedSweeping) {
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(1200); // Increase the number of iterations to ensure minimum
+				}
+				
 			}
 			
 		}
