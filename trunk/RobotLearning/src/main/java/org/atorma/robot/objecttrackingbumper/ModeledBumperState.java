@@ -2,10 +2,9 @@ package org.atorma.robot.objecttrackingbumper;
 
 import org.atorma.robot.objecttracking.ObjectTrackingModel;
 import org.atorma.robot.objecttracking.TrackedObject;
-import org.atorma.robot.simplebumper.BumperAction;
-import org.atorma.robot.simplebumper.BumperPercept;
+import org.atorma.robot.simplebumper.*;
 
-public class ModeledBumperState extends ObjectTrackingModel {
+public class ModeledBumperState extends ObjectTrackingModel implements CollisionState {
 
 	private boolean isCollided;
 	

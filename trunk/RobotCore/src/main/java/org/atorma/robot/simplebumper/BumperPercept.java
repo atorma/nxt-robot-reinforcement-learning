@@ -2,7 +2,7 @@ package org.atorma.robot.simplebumper;
 
 import org.atorma.robot.mdp.State;
 
-public class BumperPercept implements State {
+public class BumperPercept implements State, CollisionState {
 	
 	public static final int MAX_ULTRASONIC_DIST = 255;
 	public static final int MIN_ULTRASONIC_DIST = 7;

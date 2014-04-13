@@ -7,11 +7,11 @@ public class BumperRewardFunction implements RewardFunction {
 
 	@Override
 	public double getReward(Transition transition) {
-		BumperPercept toState = (BumperPercept) transition.getToState();
+		CollisionState toState = (CollisionState) transition.getToState();
 		BumperAction action = (BumperAction) transition.getAction();
 		
 		if (toState.isCollided()) {
-			return -100;
+			return -10;
 		} else if (action.equals(BumperAction.FORWARD)) {
 			return 1;
 		} else if (action.equals(BumperAction.BACKWARD)) {
