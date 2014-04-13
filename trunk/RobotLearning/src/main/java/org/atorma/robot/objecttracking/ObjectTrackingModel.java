@@ -109,6 +109,10 @@ public class ObjectTrackingModel implements State {
 		return objectsBySector.get(sectorIndex);
 	}
 	
+	public TrackedObject getNearestInSectorDegrees(CircleSector sector) {
+		return getNearestInSectorDegrees(sector.getFromAngleDeg(), sector.getToAngleDeg());
+	}
+	
 	public TrackedObject getNearestInSectorDegrees(double leftDegrees, double rightDegrees) {
 		int fromSectorId = circleSectorDiscretizer.discretize(leftDegrees);
 		int toSectorId = circleSectorDiscretizer.discretize(rightDegrees);
