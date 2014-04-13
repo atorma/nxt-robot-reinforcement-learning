@@ -102,6 +102,8 @@ public abstract class AbstractUctPlanning {
 			int nsa = getNumberOfVisits(stateId, action.getId());
 			double expl = isExploration ? uctConstant*sqrt(log(ns)/nsa) : 0;
 			
+			//System.out.println("qLt="+qLt+", qUct="+qUct+", expl="+expl);
+			
 			double q = qLt + qUct + expl; 
 			
 			if (q > bestValue) {

@@ -1,7 +1,6 @@
 package org.atorma.robot.objecttrackingbumper;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.atorma.robot.DiscreteRobotController;
 import org.atorma.robot.learning.*;
@@ -22,15 +21,18 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 
 	private QTable qTable;
 	private QLearning qLearning;
-	private double discountFactor = 0.9;
-	private double learningRate = 0.1;
-	private double traceDecay = 0.9;
+	private double discountFactor = 0.5;
+	private double learningRate = 0.2;
+	private double traceDecay = 0.7;
 	private EligibilityTraces traces;
+	private Random random = new Random();
+	private double epsilon = 0.1;
 	
 	private QLearningUctPlanning uctPlanning;
-	private int planningHorizon = 20;
-	private double learningRatePlanning = 0.1;
-	private double traceDecayPlanning = 0.9;
+	private int planningHorizon = 5;
+	private double learningRatePlanning = 0.2;
+	private double traceDecayPlanning = 0.7;
+	private double uctConstant = (1 + 100)/(1- discountFactor);
 	
 	private ModeledBumperState previousState;
 	private BumperAction previousAction;
@@ -42,8 +44,6 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	
 	private volatile boolean actionRequested;
 
-	private long actionTime = -1;
-	
 	
 	public QLearningUctPlanningBumper(String logFile) {
 		this();
@@ -75,8 +75,7 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 		uctParams.planningHorizon = planningHorizon;
 		uctParams.learningRate = learningRatePlanning;
 		uctParams.eligibilityTraces = new ReplacingEligibilityTraces(discountFactor, traceDecayPlanning);
-		uctParams.uctConstant = (1 + 100)/(1- discountFactor);
-//		uctParams.uctConstant = 25;
+		uctParams.uctConstant = uctConstant;
 		uctParams.longTermQValues = qTable;
 		uctPlanning = new QLearningUctPlanning(uctParams);
 		
@@ -87,18 +86,11 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	
 	@Override
 	public int getActionId(double[] currentPerceptValues) {
-		long currentTime = System.currentTimeMillis();
-		if (actionTime > 0) {
-			System.out.println("Action interval: " + (currentTime - actionTime));
-		}
-		actionTime = currentTime;
 		
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-//			model.printCollisionProbabilities();
 		}
-		System.out.println("Distance " + currentPercept.getDistanceToObstacleInFrontCm());
 		
 		ModeledBumperState currentState;
 		TransitionReward transitionReward = null;
@@ -112,20 +104,18 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 			currentState = ModeledBumperState.initialize(currentPercept);
 		}
 		
-//		for (CircleSector cs : obstacleSectors) {
-//			System.out.println(cs + " " + currentState.getNearestInSectorDegrees(cs.getFromAngleDeg(), cs.getToAngleDeg()));
-//		}
-
 		actionRequested = true;
 		BumperAction action;
 		synchronized(uctPlanning) {
-			//System.out.println("Getting action...");
 			if (transitionReward != null) {
 				model.update(transitionReward);
 				qLearning.update(transitionDiscretizer.discretize(transitionReward));
 			}
 			
 			action = (BumperAction) uctPlanning.getPlannedAction(currentState);
+			if (random.nextDouble() < epsilon) {
+				action = BumperAction.values()[random.nextInt(BumperAction.values().length)];
+			}
 			actionRequested = false;
 			
 			uctPlanning.setRolloutStartState(currentState);
@@ -144,6 +134,8 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	
 
 	private class Sweeper implements Runnable {
+		
+		private final int minRollouts = 120;
 
 		@Override
 		public void run() {
@@ -156,15 +148,15 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 						try {
 							uctPlanning.wait();
 						} catch (InterruptedException e) {}
-						System.out.println("Rollouts: " + rolloutsBetweenActions);
+//						System.out.println("Rollouts: " + rolloutsBetweenActions);
 						rolloutsBetweenActions = 0;
 					}
 				}
 				
 				synchronized (uctPlanning) {
-					uctPlanning.performRollouts(1); // Increase the number to ensure minimum	
+					uctPlanning.performRollouts(minRollouts); // Increase the number to ensure minimum	
 				}
-				rolloutsBetweenActions++;
+				rolloutsBetweenActions += minRollouts;
 			}
 			
 		}
