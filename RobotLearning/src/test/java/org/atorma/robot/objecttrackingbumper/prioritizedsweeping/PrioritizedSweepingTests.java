@@ -13,6 +13,7 @@ import org.atorma.robot.objecttracking.CircleSector;
 import org.atorma.robot.objecttracking.TrackedObject;
 import org.atorma.robot.objecttrackingbumper.*;
 import org.atorma.robot.simplebumper.BumperAction;
+import org.atorma.robot.simplebumper.BumperRewardFunction;
 import org.junit.Before;
 import org.junit.Test;
 
