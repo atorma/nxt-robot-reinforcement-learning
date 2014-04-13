@@ -18,20 +18,21 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 	private List<CircleSector> obstacleSectors;
 	private BumperStateDiscretizer stateDiscretizer;
 	private StateActionDiscretizer transitionDiscretizer;
+	
+	private double discountFactor = 0.7;
 
 	private QTable qTable;
 	private QLearning qLearning;
-	private double discountFactor = 0.5;
 	private double learningRate = 0.2;
-	private double traceDecay = 0.7;
+	private double traceDecay = 0.9;
 	private EligibilityTraces traces;
 	private Random random = new Random();
 	private double epsilon = 0.1;
 	
 	private QLearningUctPlanning uctPlanning;
-	private int planningHorizon = 5;
-	private double learningRatePlanning = 0.1;
-	private double traceDecayPlanning = 0.5;
+	private int planningHorizon = 10;
+	private double learningRatePlanning = 0.2;
+	private double traceDecayPlanning = 0.8;
 	private double uctConstant = (1 + 100)/(1- discountFactor);
 	
 	private ModeledBumperState previousState;
@@ -53,9 +54,9 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 
 	public QLearningUctPlanningBumper() {
 		obstacleSectors = Arrays.asList(
-				new CircleSector(-90, -30),
-				new CircleSector(-30, 30),
-				new CircleSector(30, 90));
+				new CircleSector(-180, -60),
+				new CircleSector(-60, 60),
+				new CircleSector(60, 180));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);

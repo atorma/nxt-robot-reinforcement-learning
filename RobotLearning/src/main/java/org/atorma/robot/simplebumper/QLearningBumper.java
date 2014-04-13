@@ -12,8 +12,9 @@ public class QLearningBumper implements DiscreteRobotController {
 	private BumperRewardFunction rewardFunction = new BumperRewardFunction();
 	private StateActionDiscretizer transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
 	
+	private double discountFactor = 0.9;
+	
 	private double learningRate = 0.2;
-	private double discountFactor = 0.7;
 	private QTable qTable;
 	private QLearning qLearning;
 	
@@ -41,7 +42,6 @@ public class QLearningBumper implements DiscreteRobotController {
 	}
 	
 	
-	// One step of Q-learning is so fast that there's no point in doing learning in a separate thread
 	@Override
 	public int getActionId(double[] state) {
 		BumperPercept currentState = new BumperPercept(state);

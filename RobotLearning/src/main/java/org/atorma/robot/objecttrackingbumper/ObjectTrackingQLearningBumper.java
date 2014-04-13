@@ -18,8 +18,8 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	private StateActionDiscretizer transitionDiscretizer;
 	
 	private double learningRate = 0.2;
-	private double discountFactor = 0.6;
-	private double traceDecay = 0.7;
+	private double discountFactor = 0.9;
+	private double traceDecay = 0.9;
 	private EligibilityTraces traces = new ReplacingEligibilityTraces(discountFactor, traceDecay);
 	private QTable qTable;
 	private QLearning qLearning;
@@ -43,10 +43,10 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	public ObjectTrackingQLearningBumper() {
 		List<CircleSector> obstacleSectors = Arrays.asList(
-				new CircleSector(-90, -30),
-				new CircleSector(-30, 30),
-				new CircleSector(30, 90));
-//		List<CircleSector> obstacleSectors = Arrays.asList(new CircleSector(-180, 180));
+				new CircleSector(-180, -60),
+				new CircleSector(-60, 60),
+				new CircleSector(60, 180));
+//		List<CircleSector> obstacleSectors = Arrays.asList(new CircleSector(-60, 60));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);

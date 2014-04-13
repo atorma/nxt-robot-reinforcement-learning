@@ -41,10 +41,6 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 	}
 	
 	public PrioritizedSweepingBumper() {
-//		List<CircleSector> obstacleSectors = Arrays.asList(
-//				new CircleSector(-65.7, -22.5),
-//				new CircleSector(-22.5, 22.5),
-//				new CircleSector(22.5, 67.5));
 		List<CircleSector> obstacleSectors = Arrays.asList(
 				new CircleSector(-180, -60),
 				new CircleSector(-60, 60),
@@ -77,7 +73,7 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-//			model.printCollisionProbabilities();
+			model.printCollisionProbabilities();
 		}
 		
 		ModeledBumperState currentState;
@@ -119,6 +115,8 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 	}
 	
 	private class Sweeper implements Runnable {
+		
+		private final int minSweeps = 1; // Increase the number of iterations to ensure minimum
 
 		@Override
 		public void run() {
@@ -137,7 +135,7 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 				}
 				
 				synchronized (prioritizedSweeping) {
-					sweepsBetweenObservations += prioritizedSweeping.performIterations(1200); // Increase the number of iterations to ensure minimum
+					sweepsBetweenObservations += prioritizedSweeping.performIterations(minSweeps); 
 				}
 				
 			}
