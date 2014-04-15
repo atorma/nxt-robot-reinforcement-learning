@@ -54,9 +54,9 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 
 	public QLearningUctPlanningBumper() {
 		obstacleSectors = Arrays.asList(
-				new CircleSector(-180, -60),
-				new CircleSector(-60, 60),
-				new CircleSector(60, 180));
+				new CircleSector(-65.5, -22.5),
+				new CircleSector(-22.5, 22.5),
+				new CircleSector(22.5, 67.5));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);
@@ -136,7 +136,7 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 
 	private class Sweeper implements Runnable {
 		
-		private final int minRollouts = 120;
+		private final int minRollouts = 1;
 
 		@Override
 		public void run() {
