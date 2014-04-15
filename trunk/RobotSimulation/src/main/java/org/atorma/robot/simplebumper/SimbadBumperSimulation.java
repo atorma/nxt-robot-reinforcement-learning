@@ -9,8 +9,8 @@ import org.atorma.robot.objecttrackingbumper.*;
 public class SimbadBumperSimulation {
 
 	public static void main(String[] args) {
-		String experimentName = "UCT 3x45";
-		DiscreteRobotController learningAndControl = new QLearningUctPlanningBumper(createFileName(experimentName));
+		String experimentName = "OTQL 3x45";
+		DiscreteRobotController learningAndControl = new ObjectTrackingQLearningBumper(createFileName(experimentName));
 		
 		SimbadBumper robot = new SimbadBumper(learningAndControl);
 		robot.startSimulationGUI();
