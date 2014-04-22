@@ -43,10 +43,10 @@ public class ObjectTrackingQLearningBumper implements DiscreteRobotController {
 	
 	public ObjectTrackingQLearningBumper() {
 		List<CircleSector> obstacleSectors = Arrays.asList(
-				new CircleSector(-67.5, -22.5),
-				new CircleSector(-22.5, 22.5),
-				new CircleSector(22.5, 67.5));
-//		List<CircleSector> obstacleSectors = Arrays.asList(new CircleSector(-60, 60));
+				new CircleSector(-180, -60),
+				new CircleSector(-60, 60),
+				new CircleSector(60, 180));
+//		List<CircleSector> obstacleSectors = Arrays.asList(new CircleSector(-22.5, 22.5));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		transitionDiscretizer = new StateActionDiscretizer(stateDiscretizer, rewardFunction);

@@ -54,7 +54,7 @@ public class QLearningUctPlanningBumper implements DiscreteRobotController {
 
 	public QLearningUctPlanningBumper() {
 		obstacleSectors = Arrays.asList(
-				new CircleSector(-65.5, -22.5),
+				new CircleSector(-67.5, -22.5),
 				new CircleSector(-22.5, 22.5),
 				new CircleSector(22.5, 67.5));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
