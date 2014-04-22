@@ -42,9 +42,9 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 	
 	public PrioritizedSweepingBumper() {
 		List<CircleSector> obstacleSectors = Arrays.asList(
-				new CircleSector(-67.5, -22.5),
-				new CircleSector(-22.5, 22.5),
-				new CircleSector(22.5, 67.5));
+				new CircleSector(-180, -60),
+				new CircleSector(-60, 60),
+				new CircleSector(60, 180));
 		stateDiscretizer = new BumperStateDiscretizer(obstacleSectors);
 		
 		qTable = new ArrayQTable(stateDiscretizer.getNumberOfStates(), BumperAction.values().length);
@@ -73,7 +73,7 @@ public class PrioritizedSweepingBumper implements DiscreteRobotController {
 		BumperPercept currentPercept = new BumperPercept(currentPerceptValues);
 		if (currentPercept.isCollided()) {
 			accumulatedCollisions++;
-			model.printCollisionProbabilities();
+//			model.printCollisionProbabilities();
 		}
 		
 		ModeledBumperState currentState;
