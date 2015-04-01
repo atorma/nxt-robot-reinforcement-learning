@@ -1,0 +1,1 @@
+A robotics reinforcement learning project using Lejos for Lego Mindstorm NXT and Simbad for simulation.
