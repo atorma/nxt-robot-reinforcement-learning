@@ -1,0 +1,2 @@
+# nxt-robot-reinforcement-learning
+Implements reinforcement learning algorithms such as Q-learning (incl. eligibility traces), prioritized sweeping, and Monte-Carlo planning. Uses these algorithms to teach a robot to explore and avoid collisions. A robot control interface is implemented for <a href="http://simbad.sourceforge.net/">Simbad</a> simulator and Lego NXT using <a href="http://www.lejos.org/">LeJOS</a>.
